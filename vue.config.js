@@ -7,5 +7,8 @@ module.exports = {
         return args
       })
   },
+  devServer: {
+    proxy: 'http://localhost:8086'
+  },
   productionSourceMap: false
 }

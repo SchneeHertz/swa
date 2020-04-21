@@ -16,4 +16,8 @@ body {
   /* text-align: center; */
   color: #2c3e50;
 }
+
+textarea {
+  font-family: Arial, Helvetica, sans-serif;
+}
 </style>

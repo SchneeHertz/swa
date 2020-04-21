@@ -18,6 +18,7 @@ export default {
   background-color: #F5F7FA
   color: #909399
   vertical-align: middle
+  text-align: center
   display: table-cell
   position: relative
   border: 1px solid #DCDFE6
@@ -26,6 +27,6 @@ export default {
   border-top-right-radius: 0
   border-bottom-right-radius: 0
   padding: 0 20px
-  width: 1px
+  min-width: 50px
   white-space: nowrap
 </style>

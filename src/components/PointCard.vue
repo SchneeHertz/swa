@@ -2,7 +2,7 @@
   <div class="point-card" :class="shadow ? 'is-' + shadow + '-shadow' : 'is-always-shadow'" :style="{width: width}">
     <div class="point-card__header" v-if="$slots.header">
       <slot name="header"></slot>
-      <el-button type="danger" class="mini-circle-btn" icon="el-third-icon-close" circle></el-button>
+      <el-button type="danger" class="mini-circle-btn" icon="el-third-icon-close" circle @click="handleDeleteButton"></el-button>
       <el-button type="success" class="mini-circle-btn" icon="el-third-icon-file-copy" circle></el-button>
     </div>
     <div class="point-card__body">
@@ -11,12 +11,16 @@
         placeholder="英文描述"
         class="point-description"
         v-model="data['englishDescription']"
+        :autosize="{ minRows: 2, maxRows: 4}"
+        @focus="$emit('focus-point')"
+        @blur="$emit('blur-point')"
       ></el-input>
       <el-input
         type="textarea"
         placeholder="中文描述"
         class="point-description"
         v-model="data['chineseDescription']"
+        :autosize="{ minRows: 2, maxRows: 4}"
       ></el-input>
       <NameFormItem class="point-option"
         v-for="indForm in formList"
@@ -25,7 +29,7 @@
         <template #prepend>{{indForm.description}}</template>
         <template #default>
           <el-select
-            v-model="data[indForm.description]"
+            v-model="data[indForm.key]"
             filterable
           >
             <el-option
@@ -53,11 +57,13 @@ export default {
   props: {
     shadow: String,
     width: String,
-    formList: {
-      type: Array,
-      default: ()=>[]
-    },
+    formList: Array,
     data: Object
+  },
+  methods:{
+    handleDeleteButton () {
+      this.$emit('delete-point')
+    }
   }
 }
 </script>

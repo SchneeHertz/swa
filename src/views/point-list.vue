@@ -11,9 +11,12 @@
             :formList="formList"
             :data.sync="valueObj"
             width="48%"
+            @delete-point="handleDeletePoint(valueObj.id)"
+            @focus-point="handleFocusPoint(valueObj.id)"
+            @blur-point="handleBlurPoint(valueObj.id)"
           >
             <template #header>
-              {{valueObj.id}}
+              {{valueObj.index}}
             </template>
           </PointCard>
           </el-scrollbar>
@@ -61,6 +64,8 @@ import PointCard from '@/components/PointCard.vue'
 
 import {generate as _id } from 'shortid'
 
+const INIT_ID = _id()
+
 export default {
   name: 'PointList',
   components: {
@@ -73,18 +78,25 @@ export default {
       materialList: [],
       shapeList: [],
       konvaGroupList: [],
-      konvaRelation: [],
+      // konvaRelation: [],
+      konvaRelation: [{
+        id: INIT_ID,
+        label: '1'
+      }],
       dragItemId: null,
       configKonva: {
         width: window.innerWidth*0.4,
         height: window.innerHeight
       },
+      // valueList: [],
       valueList: [{
-        id: _id()
+        id: INIT_ID,
+        index: '1'
       }],
       formList: [{
         id: _id(),
-        description: 'material',
+        key: 'material',
+        description: '材质',
         optionList: [{
           label: 'Wood',
           value: 'Wood'
@@ -94,13 +106,25 @@ export default {
         }]
       }, {
         id: _id(),
-        description: 'mouthable',
+        key: 'mouthable',
+        description: '可入口',
         optionList: [{
           label: 'mouthable',
           value: 'mouthable'
         }, {
           label: 'unmouthable',
-          value: 'ummouthable'
+          value: 'unmouthable'
+        }]
+      }, {
+        id: _id(),
+        key: 'weightType',
+        description: '足量',
+        optionList: [{
+          label: '足重',
+          value: 'mainPart'
+        }, {
+          label: '不足重',
+          value: 'tinyPart'
         }]
       }]
     }
@@ -113,24 +137,26 @@ export default {
     .then(res=>{
       this.materialList = res.data.materialList
     })
-    this.shapeList.push(this.createShape(50,50,80,50,'point1'))
-    this.shapeList.push(this.createShape(50,50,80,50,'point2'))
-    this.shapeList.map(e=>{
-      this.konvaRelation.push({
-        id: e.id,
-        label: e.name,
-      })
-    })
+    // this.$options.watch.valueList()
+    this.shapeList.push(this.createShape(INIT_ID, 0, 0, 40, 30, '1'))
   },
-  updated(){
-    if (_.last(this.valueList).englishDescription) {
-      this.valueList.push({id: _id()})
+  watch: {
+    valueList(newVal, oldVal){
+      if ((_.last(newVal) && _.last(newVal).englishDescription) || _.isEmpty(newVal)) {
+        let id = _id()
+        let index = this.findMinIndex(newVal.map(e=>e.index)) + ''
+        let x = 40 * ((+index - 1) % Math.floor(this.configKonva.width / 40))
+        let y = 30 * Math.floor((+index - 1) / Math.floor(this.configKonva.width / 40))
+        newVal.push({id: id, index: index})
+        this.konvaRelation.push({id: id, label: index})
+        this.shapeList.unshift(this.createShape(id, x, y, 40, 30, index))
+      }
     }
   },
   methods: {
-    createShape (x, y, width, height, name) {
+    createShape (id, x, y, width, height, name) {
       return {
-        id: _id(),
+        id: id,
         x: x,
         y: y,
         width: width,
@@ -141,12 +167,15 @@ export default {
         shadowColor: 'black',
         shadowBlur: 10,
         shadowOpacity: 0.4,
+        stroke: '#000000',
+        strokeWidth: 2,
+        strokeEnabled: false,
         sceneFunc (context, shape) {
           context.beginPath()
           context.rect(0, 0, shape.width(), shape.height())
           context.font = '1em Arial'
           context.textAlign = 'center'
-          context.fillText(shape.name(), shape.width()*0.5, shape.height()*0.6)
+          context.fillText(shape.name(), shape.width()*0.5, shape.height()*0.65)
           context.closePath()
           context.fillStrokeShape(shape)
         },
@@ -190,6 +219,17 @@ export default {
         this.dragItemId = e.target.attrs.id
         let findRect = this.findRect(this.shapeList, e.target)
         findRect.fill = 'rgba(0, 255, 0, 0.6)'
+        let findData = _.find(this.valueList, {id: e.target.attrs.id})
+        switch (findData.weightType) {
+          case 'mainPart':
+            findRect.width = 80
+            findRect.height = 50
+            break
+          case 'tinyPart':
+            findRect.width = 60
+            findRect.height = 30
+            break
+        }
         this.moveItem(e.target.attrs.id, this.shapeList, this.shapeList)
       }
     },
@@ -297,6 +337,47 @@ export default {
     },
     findRect (list, shape) {
       return _.find(list, {id: shape.attrs.id}) || {}
+    },
+    findMinIndex (array) {
+      let result
+      _.forOwn(_.sortBy(array, e=>+e), (v,i)=>{
+        if (+v != +i+1) {
+          result = +i+1
+          return false
+        }
+      })
+      return result ? result : array.length+1
+    },
+    handleDeletePoint (id) {
+      let findRect = this.$refs.stage.getNode().find(`#${id}`)[0]
+      this.handleDbClick({target: findRect})
+      let findInSL = _.findIndex(this.shapeList, {id: id})
+      if (findInSL != -1) {
+        this.shapeList.splice(findInSL, 1)
+        this.removeRelation(this.konvaRelation, id)
+        let pointSet = _.findIndex(this.valueList, {id: id})
+        this.valueList.splice(pointSet, 1)
+      } else {
+        this.$message({
+          message: '未知错误',
+          type: 'warning'
+        })
+        console.log(findRect, findInSL)
+      }
+    },
+    findRectData (id) {
+      let result = _.find(this.shapeList, {id: id})
+      if (result) {
+        return result
+      } else {
+        return _.find(_.flatten(this.konvaGroupList.map(e=>e.list)), {id: id})
+      }
+    },
+    handleFocusPoint (id) {
+      this.$set(this.findRectData(id), 'strokeEnabled', true)
+    },
+    handleBlurPoint (id) {
+      this.$set(this.findRectData(id), 'strokeEnabled', false)
     }
   }
 }

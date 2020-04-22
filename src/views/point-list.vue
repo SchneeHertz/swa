@@ -76,23 +76,11 @@ export default {
     return {
       isCollapse: true,
       materialList: [],
-      shapeList: [],
-      konvaGroupList: [],
-      // konvaRelation: [],
-      konvaRelation: [{
-        id: INIT_ID,
-        label: '1'
-      }],
       dragItemId: null,
       configKonva: {
         width: window.innerWidth*0.4,
         height: window.innerHeight
       },
-      // valueList: [],
-      valueList: [{
-        id: INIT_ID,
-        index: '1'
-      }],
       formList: [{
         id: _id(),
         key: 'material',
@@ -130,15 +118,76 @@ export default {
     }
   },
   computed: {
-
+    konvaGroupList:{
+      get () {
+        return this.$store.state.konvaGroupList
+      },
+      set (newVal) {
+        this.$store.commit('updateValue', {
+          key: 'konvaGroupList',
+          value: newVal
+        })
+      }
+    },
+    valueList: {
+      get () {
+        return this.$store.state.valueList
+      },
+      set (newVal) {
+        this.$store.commit('updateValue', {
+          key: 'valueList',
+          value: newVal
+        })
+      }
+    },
+    shapeList: {
+      get () {
+        return this.$store.state.shapeList
+      },
+      set (newVal) {
+        this.$store.commit('updateValue', {
+          key: 'shapeList',
+          value: newVal
+        })
+      }
+    },
+    konvaRelation: {
+      get () {
+        return this.$store.state.konvaRelation
+      },
+      set (newVal) {
+        this.$store.commit('updateValue', {
+          key: 'konvaRelation',
+          value: newVal
+        })
+      }
+    }
   },
   mounted () {
     this.$http.get('/data/getMaterialList')
     .then(res=>{
       this.materialList = res.data.materialList
     })
-    // this.$options.watch.valueList()
-    this.shapeList.push(this.createShape(INIT_ID, 0, 0, 40, 30, '1'))
+    if (_.isEmpty(this.valueList)){
+      this.valueList.push({
+        id: INIT_ID,
+        index: '1'
+      }),
+      this.konvaRelation.push({
+        id: INIT_ID,
+        label: '1'
+      })
+      this.shapeList.push(this.createShape(INIT_ID, 0, 0, 40, 30, '1'))
+    }
+  },
+  updated () {
+    // this.$refs.stage.getNode().draw()
+  },
+  beforeDestroy () {
+    this.valueList = this.valueList
+    this.shapeList = this.shapeList
+    this.konvaGroupList = this.konvaGroupList
+    this.konvaRelation = this.konvaRelation
   },
   watch: {
     valueList(newVal, oldVal){
@@ -151,6 +200,28 @@ export default {
         this.konvaRelation.push({id: id, label: index})
         this.shapeList.unshift(this.createShape(id, x, y, 40, 30, index))
       }
+      this.$store.commit('updateValue', {
+        key: 'valueList',
+        value: newVal
+      })
+    },
+    shapeList (newVal) {
+      this.$store.commit('updateValue', {
+        key: 'shapeList',
+        value: newVal
+      })
+    },
+    konvaGroupList (newVal) {
+      this.$store.commit('updateValue', {
+        key: 'konvaGroupList',
+        value: newVal
+      })
+    },
+    konvaRelation (newVal) {
+      this.$store.commit('updateValue', {
+        key: 'konvaRelation',
+        value: newVal
+      })
     }
   },
   methods: {
@@ -325,6 +396,7 @@ export default {
           }
         }
         removeItemFromGroup(rectRelation)
+        this.konvaGroupList = this.konvaGroupList.filter(e=>e.list.length != 0)
       }
     },
     moveItem (id, fromList, toList) {
@@ -349,7 +421,7 @@ export default {
       return result ? result : array.length+1
     },
     handleDeletePoint (id) {
-      let findRect = this.$refs.stage.getNode().find(`#${id}`)[0]
+      let findRect = this.$refs.stage.getNode().findOne(`#${id}`)
       this.handleDbClick({target: findRect})
       let findInSL = _.findIndex(this.shapeList, {id: id})
       if (findInSL != -1) {

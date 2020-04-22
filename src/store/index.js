@@ -8,6 +8,10 @@ export default new Vuex.Store({
   state: {
     username: 'test',
     authority: 'test',
+    konvaGroupList: [],
+    valueList: [],
+    shapeList: [],
+    konvaRelation: []
   },
   mutations: {
     updateValue (state, payload) {

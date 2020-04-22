@@ -21,6 +21,8 @@
         class="point-description"
         v-model="data['chineseDescription']"
         :autosize="{ minRows: 2, maxRows: 4}"
+        @focus="$emit('focus-point')"
+        @blur="$emit('blur-point')"
       ></el-input>
       <NameFormItem class="point-option"
         v-for="indForm in formList"
@@ -31,6 +33,8 @@
           <el-select
             v-model="data[indForm.key]"
             filterable
+            @focus="$emit('focus-point')"
+            @blur="$emit('blur-point')"
           >
             <el-option
               v-for="op in indForm.optionList"

@@ -5,6 +5,11 @@ Vue.use(VueRouter)
 
 const routes = [
   {
+    path: '/case-info',
+    name: 'CaseInfo',
+    component: () => import('../views/case-info.vue')
+  },
+  {
     path: '/point-list',
     name: 'PointList',
     component: () => import('../views/point-list.vue')

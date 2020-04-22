@@ -1,6 +1,6 @@
 <template>
   <el-container>
-    <BaseHeader activeIndex="test-arrange" :isCollapse="isCollapse"/>
+    <BaseHeader activeIndex="case-info" :isCollapse="isCollapse"/>
     <div style="height:100vh;width:100vw;"></div>
   </el-container>
 </template>
@@ -10,7 +10,7 @@
 import BaseHeader from '@/components/BaseHeader.vue'
 
 export default {
-  name: 'TestArrange',
+  name: 'CaseInfo',
   components: {
     BaseHeader
   },

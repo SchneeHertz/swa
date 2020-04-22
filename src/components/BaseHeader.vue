@@ -10,6 +10,10 @@
       active-text-color="#F18400"
       class="el-menu-vertical"
     >
+      <el-menu-item index="case-info">
+        <i class="el-icon-warning-outline"></i>
+        <template v-slot:title><span>信息</span></template>
+      </el-menu-item>
       <el-menu-item index="point-list">
         <i class="el-icon-scissors"></i>
         <template v-slot:title><span>选点</span></template>

@@ -1,6 +1,6 @@
 <template>
   <el-container>
-    <BaseHeader activeIndex="test-arrange" :isCollapse="isCollapse"/>
+    <BaseHeader activeIndex="test-arrange"/>
     <div style="height:100vh;width:100vw;"></div>
   </el-container>
 </template>
@@ -16,7 +16,6 @@ export default {
   },
   data () {
     return {
-      isCollapse: true,
       materialList: []
     }
   },

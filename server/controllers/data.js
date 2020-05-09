@@ -10,44 +10,51 @@ const getMaterialList = async (ctx) => {
   }
 }
 
-// const saveRegulation = async (ctx) => {
-//   if (isAdmin(ctx)) {
-//     const regulationList = ctx.request.body.regulationList
-//     db.saveRegulation(regulationList)
-//     ctx.body = {
-//       success: true,
-//       info: '保存成功'
-//     }
-//   } else  {
-//     ctx.body = {
-//       success: false,
-//       info: '无操作权限'
-//     }
-//   }
-// }
+const getRegulation = async (ctx) => {
+  ctx.body = {
+    success: true,
+    regulationList: db.getRegulation()
+  }
+}
 
-// const getCondition = async (ctx) => {
-//   ctx.body = {
-//     success: true,
-//     conditionList: db.getCondition()
-//   }
-// }
+const saveRegulation = async (ctx) => {
+  if (isAdmin(ctx)) {
+    const regulationList = ctx.request.body.regulationList
+    db.saveRegulation(regulationList)
+    ctx.body = {
+      success: true,
+      info: '保存成功'
+    }
+  } else  {
+    ctx.body = {
+      success: false,
+      info: '无操作权限'
+    }
+  }
+}
 
-// const saveCondition = async (ctx) => {
-//   if (isAdmin(ctx)) {
-//     const conditionList = ctx.request.body.conditionList
-//     db.saveCondition(conditionList)
-//     ctx.body = {
-//       success: true,
-//       info: '保存成功'
-//     }
-//   } else  {
-//     ctx.body = {
-//       success: false,
-//       info: '无操作权限'
-//     }
-//   }
-// }
+const getCondition = async (ctx) => {
+  ctx.body = {
+    success: true,
+    conditionList: db.getCondition()
+  }
+}
+
+const saveCondition = async (ctx) => {
+  if (isAdmin(ctx)) {
+    const conditionList = ctx.request.body.conditionList
+    db.saveCondition(conditionList)
+    ctx.body = {
+      success: true,
+      info: '保存成功'
+    }
+  } else  {
+    ctx.body = {
+      success: false,
+      info: '无操作权限'
+    }
+  }
+}
 
 // const getInfoList = async (ctx) => {
 //   ctx.body = {
@@ -107,15 +114,17 @@ const testAuth = async (ctx) => {
 // }
 
 const isAdmin =  (ctx) => {
-  let getHeader = _.split(_.get(ctx, 'request.header.authorization'), ' ')[1]
-  return getHeader && jwt.decode(getHeader).authority === 'admin'
+  return true
+  // let getHeader = _.split(_.get(ctx, 'request.header.authorization'), ' ')[1]
+  // return getHeader && jwt.decode(getHeader).authority === 'admin'
 }
 
 module.exports = {
   getMaterialList,
-  // saveRegulation,
-  // getCondition,
-  // saveCondition,
+  getRegulation,
+  saveRegulation,
+  getCondition,
+  saveCondition,
   // getInfoList,
   // saveInfoList,
   testAuth,

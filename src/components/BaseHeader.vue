@@ -4,7 +4,7 @@
       :default-active="activeIndex" 
       mode="vertical" 
       @select="handleSelect" 
-      :collapse="isCollapse"
+      :collapse="true"
       background-color="#606266"
       text-color="#FFFFFF"
       active-text-color="#F18400"
@@ -22,7 +22,11 @@
         <i class="el-icon-document-copy"></i>
         <template v-slot:title><span>安排测试</span></template>
       </el-menu-item>
-      <el-menu-item index="logout" class="to-bottom">
+      <el-menu-item index="testitem-manage">
+        <i class="el-icon-guide"></i>
+        <template v-slot:title><span>测试项目管理</span></template>
+      </el-menu-item>
+      <el-menu-item index="logout">
         <i class="el-icon-user"></i>
         <template v-slot:title><span>{{displayUsername}}</span></template>
       </el-menu-item>
@@ -33,12 +37,10 @@
 export default {
   name:'BaseHeader',
   props:{
-    activeIndex:String,
-    isCollapse: Boolean
+    activeIndex:String
   },
   data () {
-    return {
-    }
+    return {}
   },
   computed:{
     displayUsername(){
@@ -51,7 +53,7 @@ export default {
     // this.$store.commit('updateValue', {key: 'authority', value: userData.authority})
   },
   methods:{
-    handleSelect(index){
+    handleSelect (index) {
       if(index == 'logout'){
         this.$confirm('退出登录', '提示', {
           confirmButtonText: '确定',
@@ -86,15 +88,17 @@ export default {
 }
 </script>
 <style lang="stylus" scoped>
-.to-bottom
-  position:absolute
-  width: 100%
-  bottom: 0
 .btn-block
   width: 100%
 .el-menu-vertical
   height: 100%
 .el-menu-vertical:not(.el-menu--collapse)
-  width: 132px
+  width: 160px
+.el-menu-vertical
+  for row in 1 2
+    li:nth-last-child({row})
+      position: absolute
+      width: 100%
+      bottom: row * 56px - 56px
 </style>
 

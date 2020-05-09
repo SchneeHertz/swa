@@ -18,6 +18,11 @@ const routes = [
     path: '/test-arrange',
     name: 'TestArrange',
     component: () => import('../views/test-arrange.vue')
+  },
+  {
+    path: '/testitem-manage',
+    name: 'TestitemManage',
+    component: () => import('../views/testitem-manage.vue')
   }
 ]
 

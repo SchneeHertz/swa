@@ -1,6 +1,6 @@
 <template>
   <el-container>
-    <BaseHeader activeIndex="point-list" :isCollapse="isCollapse"/>
+    <BaseHeader activeIndex="point-list"/>
     <el-main>
       <el-row>
         <el-col :span="14" style="height:100vh;">
@@ -64,8 +64,6 @@ import PointCard from '@/components/PointCard.vue'
 
 import {generate as _id } from 'shortid'
 
-const INIT_ID = _id()
-
 export default {
   name: 'PointList',
   components: {
@@ -74,7 +72,6 @@ export default {
   },
   data () {
     return {
-      isCollapse: true,
       materialList: [],
       dragItemId: null,
       configKonva: {
@@ -164,11 +161,8 @@ export default {
     }
   },
   mounted () {
-    this.$http.get('/data/getMaterialList')
-    .then(res=>{
-      this.materialList = res.data.materialList
-    })
     if (_.isEmpty(this.valueList)){
+      const INIT_ID = _id()
       this.valueList.push({
         id: INIT_ID,
         index: '1'
@@ -190,7 +184,7 @@ export default {
     this.konvaRelation = this.konvaRelation
   },
   watch: {
-    valueList(newVal, oldVal){
+    valueList (newVal, oldVal) {
       if ((_.last(newVal) && _.last(newVal).englishDescription) || _.isEmpty(newVal)) {
         let id = _id()
         let index = this.findMinIndex(newVal.map(e=>e.index)) + ''

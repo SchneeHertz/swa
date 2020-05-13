@@ -9,6 +9,11 @@ import _ from 'lodash'
 import axios from 'axios'
 import VueKonva from 'vue-konva'
 
+import PerfectScrollbar from 'vue2-perfect-scrollbar'
+import 'vue2-perfect-scrollbar/dist/vue2-perfect-scrollbar.css'
+
+Vue.use(PerfectScrollbar)
+
 Vue.prototype.$http = axios
 Vue.config.productionTip = false
 Vue.use(ElementUI)

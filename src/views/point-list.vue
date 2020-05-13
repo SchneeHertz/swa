@@ -3,54 +3,54 @@
     <BaseHeader activeIndex="point-list"/>
     <el-main>
       <el-row>
-        <el-col :span="14" style="height:100vh;">
-          <el-scrollbar wrap-class="point-card-list">
-          <PointCard
-            v-for="valueObj in valueList"
-            :key="valueObj.id"
-            :formList="formList"
-            :data.sync="valueObj"
-            width="48%"
-            @delete-point="handleDeletePoint(valueObj.id)"
-            @focus-point="handleFocusPoint(valueObj.id)"
-            @blur-point="handleBlurPoint(valueObj.id)"
-          >
-            <template #header>
-              {{valueObj.index}}
-            </template>
-          </PointCard>
-          </el-scrollbar>
+        <el-col :span="14">
+          <PerfectScrollbar class="point-card-list">
+            <PointCard
+              v-for="valueObj in valueList"
+              :key="valueObj.id"
+              :formList="formList"
+              :data.sync="valueObj"
+              width="48%"
+              @delete-point="handleDeletePoint(valueObj.id)"
+              @focus-point="handleFocusPoint(valueObj.id)"
+              @blur-point="handleBlurPoint(valueObj.id)"
+            >
+              <template #header>
+                {{valueObj.index}}
+              </template>
+            </PointCard>
+          </PerfectScrollbar>
         </el-col>
-        <el-col :span="10" style="height:100vh;">
-            <el-scrollbar wrap-class="konva-list">
-              <v-stage
-                ref="stage"
-                :config="configKonva"
-                @dragstart="handleDragstart"
-                @dragend="handleDragend"
-                @drop="handleDrop"
-                @dblclick="handleDbClick"
-              >
-                <v-layer ref="layer">
-                  <v-group
-                    v-for="group in konvaGroupList"
-                    :key="group.id"
-                    :config="group"
-                  >
-                    <v-shape
-                      v-for="item in group.list"
-                      :key="item.id"
-                      :config="item"
-                    ></v-shape>
-                  </v-group>
+        <el-col :span="10">
+          <PerfectScrollbar class="konva-list">
+            <v-stage
+              ref="stage"
+              :config="configKonva"
+              @dragstart="handleDragstart"
+              @dragend="handleDragend"
+              @drop="handleDrop"
+              @dblclick="handleDbClick"
+            >
+              <v-layer ref="layer">
+                <v-group
+                  v-for="group in konvaGroupList"
+                  :key="group.id"
+                  :config="group"
+                >
                   <v-shape
-                    v-for="item in shapeList"
+                    v-for="item in group.list"
                     :key="item.id"
                     :config="item"
                   ></v-shape>
-                </v-layer>
-              </v-stage>
-            </el-scrollbar>
+                </v-group>
+                <v-shape
+                  v-for="item in shapeList"
+                  :key="item.id"
+                  :config="item"
+                ></v-shape>
+              </v-layer>
+            </v-stage>
+          </PerfectScrollbar>
         </el-col>
       </el-row>
     </el-main>
@@ -452,12 +452,11 @@ export default {
 <style lang="stylus" scoped>
 .el-main
   padding: 0
+.ps.point-card-list
+  height: 100vh
+.ps.konva-list
+  border-left: 1px solid grey
 </style>
 
 <style lang="stylus">
-.point-card-list
-  height: 100vh
-.konva-list
-  height: 100vh
-  border-left: 1px solid grey
 </style>

@@ -4,7 +4,10 @@
     <el-main>
       <el-row>
         <el-col :span="14">
-          <PerfectScrollbar class="point-card-list">
+          <overlay-scrollbars
+            :options="{scrollbars: {autoHide: 'scroll'}}"
+            class="point-card-list"
+          >
             <PointCard
               v-for="valueObj in valueList"
               :key="valueObj.id"
@@ -19,10 +22,13 @@
                 {{valueObj.index}}
               </template>
             </PointCard>
-          </PerfectScrollbar>
+          </overlay-scrollbars>
         </el-col>
         <el-col :span="10">
-          <PerfectScrollbar class="konva-list">
+          <overlay-scrollbars
+            :options="{scrollbars: {autoHide: 'scroll'}}"
+            class="konva-list"
+          >
             <v-stage
               ref="stage"
               :config="configKonva"
@@ -50,7 +56,7 @@
                 ></v-shape>
               </v-layer>
             </v-stage>
-          </PerfectScrollbar>
+          </overlay-scrollbars>
         </el-col>
       </el-row>
     </el-main>
@@ -173,9 +179,6 @@ export default {
       })
       this.shapeList.push(this.createShape(INIT_ID, 0, 0, 40, 30, '1'))
     }
-  },
-  updated () {
-    // this.$refs.stage.getNode().draw()
   },
   beforeDestroy () {
     this.valueList = this.valueList
@@ -452,9 +455,9 @@ export default {
 <style lang="stylus" scoped>
 .el-main
   padding: 0
-.ps.point-card-list
+.point-card-list
   height: 100vh
-.ps.konva-list
+.konva-list
   border-left: 1px solid grey
 </style>
 

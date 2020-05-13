@@ -9,10 +9,9 @@ import _ from 'lodash'
 import axios from 'axios'
 import VueKonva from 'vue-konva'
 
-import PerfectScrollbar from 'vue2-perfect-scrollbar'
-import 'vue2-perfect-scrollbar/dist/vue2-perfect-scrollbar.css'
-
-Vue.use(PerfectScrollbar)
+import { OverlayScrollbarsPlugin } from 'overlayscrollbars-vue'
+import 'overlayscrollbars/css/OverlayScrollbars.css'  
+Vue.use(OverlayScrollbarsPlugin)
 
 Vue.prototype.$http = axios
 Vue.config.productionTip = false

@@ -3,7 +3,9 @@
     <div class="name-select__prepend" v-if="$slots.prepend">
       <slot name="prepend"></slot>
     </div>
-    <slot></slot>
+    <div class="name-select__body">
+      <slot></slot>
+    </div>
   </div>
 </template>
 
@@ -29,4 +31,6 @@ export default {
   padding: 0 20px
   min-width: 50px
   white-space: nowrap
+.name-select__body
+  display: table-cell
 </style>

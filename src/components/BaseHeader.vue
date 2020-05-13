@@ -91,7 +91,7 @@ export default {
 .btn-block
   width: 100%
 .el-menu-vertical
-  height: 100%
+  height: 100vh
 .el-menu-vertical:not(.el-menu--collapse)
   width: 160px
 .el-menu-vertical

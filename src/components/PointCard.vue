@@ -96,8 +96,6 @@ export default {
   padding: 8px 16px
 .point-card__body .point-description, .point-card__body .point-option
   margin: 2px 0
-.point-card__body .el-select
-  display: table-cell
 </style>
 
 <style lang="stylus">

@@ -2,7 +2,7 @@
   <el-container>
     <BaseHeader activeIndex="testitem-manage"/>
     <el-container style="height:100vh;width:100vw;">
-      <el-aside width="132px">
+      <el-aside width="132px" class="nav-aside">
         <el-menu
           class="menu"
           @select="handleMenuSelect"
@@ -25,14 +25,22 @@
       <el-main v-if="activePage === 'condition'" class="condition-pane">
         <el-tabs type="border-card" v-model="activeConditionTab">
           <el-tab-pane label="单选" name="single">
-            <ConditionCard
+            <ConditionCardSingle
               v-for="condition in singleConditionList"
               :key="condition.id"
-            
-            />
+              :data="condition"
+              width="48%"
+            >
+            </ConditionCardSingle>
           </el-tab-pane>
           <el-tab-pane label="多选" name="multiple">
-
+            <ConditionCardSingle
+              v-for="condition in multipleConditionList"
+              :key="condition.id"
+              :data="condition"
+              width="48%"
+            >
+            </ConditionCardSingle>
           </el-tab-pane>
           <el-tab-pane label="数值" name="number">
 
@@ -49,7 +57,7 @@
           <el-button type="success" class="bigicon" icon="el-third-icon-save" circle @click="saveCondition" title="保存"></el-button>
         </div>
         <el-dialog
-          title="编辑条件"
+          title="新增条件"
           :visible.sync="conditionDialogVisible"
           width="65%"
           class="condition-dialog"
@@ -57,16 +65,49 @@
           <el-input v-model="conditionDialogData.name" class="card-line">
             <template v-slot:prepend>条件名</template>
           </el-input>
-          <el-input v-model="conditionDialogData.rank" type="number" placeholder="输入整数，越大优先度越高" class="card-line">
-            <template v-slot:prepend>优先度</template>
-          </el-input>
           <template v-slot:footer>
             <el-button type="info" @click="conditionDialogVisible = false">取消</el-button>
-            <el-button type="primary" @click="confirmConditionEdit">确定</el-button>
+            <el-button type="primary" @click="confirmConditionAdd">确定</el-button>
           </template>
         </el-dialog>
       </el-main>
       <el-main v-else-if="activePage === 'testitem'" class="testitem-pane">
+        <el-table
+          ref="regulation-table"
+          :data="displaySlicedRegultionList"
+          highlight-current-row
+          stripe
+          height="50vh"
+          class="regulation-table"
+        >
+          <el-table-column
+            prop="name"
+            width="300"
+            fixed
+          >
+            <template  v-slot:header>
+                <el-input
+                  v-model="searchName"
+                  size="mini"
+                  placeholder="名称，输入筛选"
+                  clearable/>
+              </template>
+          </el-table-column>
+        </el-table>
+        <el-pagination
+          :current-page.sync="pageTable"
+          :page-sizes="[50, 100, 200, 500]"
+          :page-size.sync="pageSize"
+          layout="total, sizes, prev, pager, next, jumper"
+          :total="displayRegulationCount"
+          class="regulation-table-pagination"
+        ></el-pagination>
+        <div class="bottom-function-btn">
+          <el-button type="primary" class="bigicon" icon="el-third-icon-plus" circle @click="addRegulation" title="新增"></el-button>
+          <el-button type="success" class="bigicon" icon="el-third-icon-save" circle @click="saveRegulation" title="保存"></el-button>
+        </div>
+      </el-main>
+      <el-main v-else-if="activePage === 'client-request'" class="client-request-pane">
 
       </el-main>
     </el-container>
@@ -76,7 +117,7 @@
 <script>
 
 import BaseHeader from '@/components/BaseHeader.vue'
-import ConditionCard from '@/components/ConditionCard.vue'
+import ConditionCardSingle from '@/components/ConditionCardSingle.vue'
 
 import {generate as _id } from 'shortid'
 
@@ -84,7 +125,7 @@ export default {
   name: 'TestitemManage',
   components: {
     BaseHeader,
-    ConditionCard
+    ConditionCardSingle
   },
   data () {
     return {
@@ -94,7 +135,10 @@ export default {
       activePage: 'condition',
       activeConditionTab: 'single',
       conditionDialogVisible: false,
-      conditionDialogData: {}
+      conditionDialogData: {},
+      searchName: undefined,
+      pageTable: 1,
+      pageSize: 100,
     }
   },
   computed: {
@@ -103,12 +147,21 @@ export default {
     },
     multipleConditionList () {
       return this.conditionList['multiple']
-    }
+    },
+    displayRegulationList () {
+      return this.regulationList.filter(data => !this.searchName || data.name.toLowerCase().includes(this.searchName.toLowerCase()))
+    },
+    displayRegulationCount () {
+      return this.displayRegulationList.length
+    },
+    displaySlicedRegultionList () {
+      return _.chunk(this.displayRegulationList, this.pageSize)[this.pageTable-1]
+    },
   },
   mounted () {
-    this.$http.get('/data/getMaterialList')
+    this.$http.get('/data/getRegulation')
     .then(res=>{
-      this.materialList = res.data.materialList
+      this.regulationList = res.data.regulationList
     })
     this.$http.get('/data/getCondition')
     .then(res=>{
@@ -127,28 +180,101 @@ export default {
       }
       this.conditionDialogVisible = true
     },
-    confirmConditionEdit () {
-      switch (this.conditionDialogData.modify) {
-        case 'add':
-          this.conditionList[this.conditionDialogData.cat].push(this.conditionDialogData)
-          break
-      }
+    confirmConditionAdd () {
+      this.conditionList[this.conditionDialogData.cat].push(this.conditionDialogData)
       this.conditionDialogVisible = false
     },
     saveCondition () {
-
+      this.$http.post('/data/saveCondition', {
+        conditionList: this.conditionList
+      })
+      .then(res=>{
+        if(res.data.success){
+          this.$message({
+            type: 'success',
+            message: res.data.info
+          })
+          this.$http.get('/data/getCondition')
+          .then(res=>{
+            this.conditionList = res.data.conditionList
+          })
+        } else {
+          this.$message({
+            type: 'warning',
+            message: res.data.info
+          })
+        }
+      })
+      .catch(() => {
+        this.$message({
+          type: 'warning',
+          message: '未知错误'
+        })
+      })
     },
+    addRegulation () {
+      this.$prompt('请输入法规名称', '提示', {
+        confirmButtonText: '确定',
+        cancelButtonText: '取消'
+      }).then(({ value }) => {
+        this.regulationList.push({
+          name: value,
+          id: _id(),
+          modify: 'add',
+          // condition: [],
+          // info: {}
+        })
+        this.$refs['regulation-table'].setCurrentRow(_.last(this.regulationList))
+        // this.selectRegulation = _.last(this.regulationList)
+      }).catch(() => {
+        this.$message({
+          type: 'info',
+          message: '已取消'
+        })
+      })
+    },
+    saveRegulation () {
+      this.$http.post('/data/saveRegulation', {
+        regulationList: _.filter(this.regulationList, 'modify')
+      })
+      .then(res=>{
+        if(res.data.success){
+          this.$message({
+            type: 'success',
+            message: res.data.info
+          })
+          this.$http.get('/data/getRegulation')
+          .then(res=>{
+            this.regulationList = res.data.regulationList
+          })
+        } else {
+          this.$message({
+            type: 'warning',
+            message: res.data.info
+          })
+        }
+      })
+      .catch(() => {
+        this.$message({
+          type: 'warning',
+          message: '未知错误'
+        })
+      })
+    },
+
+
   }
 }
 </script>
 
 <style lang="stylus" scoped>
+.nav-aside
+  border-right: solid 1px rgb(220, 223, 230)
 .condition-pane
   padding: 0
 .condition-pane .el-tabs
   height: calc(100vh - 2px)
-  // border-bottom-width: 0
-  // border-top-width: 0
+  border-left: none
 .condition-card
   vertical-align: top
   width: 39vw

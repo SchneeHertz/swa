@@ -1,0 +1,145 @@
+<template>
+  <div class="condition-card" :class="shadow ? 'is-' + shadow + '-shadow' : 'is-always-shadow'" :style="{width: width}">
+    <div class="condition-card__header">
+      <span>{{data.name}}</span>
+      <slot name="header"></slot>
+      <span class="modify-remark" v-if="data.modify === 'add'">(新增)</span>
+      <span class="modify-remark" v-if="data.modify === 'modify'">(已修改)</span>
+      <span class="modify-remark" v-if="data.modify === 'delete'">(将要删除)</span>
+      <el-button style="float: right; margin: -3px 0px" type="danger" size="mini" @click="deleteCondition">删除</el-button>
+      <el-button style="float: right; margin: -3px 18px" type="primary" size="mini" @click="modifyCondition">编辑</el-button>
+    </div>
+    <div class="condition-card__body">
+      <div class="card-line">
+        <label class="card-label">描述: <span>{{data.description}}</span></label>
+      </div>
+      <div class="card-line">
+        <label class="card-label">排序: <span>{{data.rank}}</span></label>
+      </div>
+      <div class="card-line" v-for="(answer, i) in data.list" :key="answer.value">
+        <label class="card-label">选项{{i+1}}: <span>{{answer.value}}({{answer.remark}})</span></label>
+      </div>
+      <slot></slot>
+    </div>
+    <el-dialog
+      title="编辑条件"
+      :visible.sync="dialogVisible"
+      width="65%"
+      class="edit-dialog"
+    >
+      <el-input
+        v-model="dialogData.name"
+        class="condition-line"
+      >
+        <template #prepend>条件名</template>
+      </el-input>
+      <el-input
+        v-model="dialogData.description"
+        class="condition-line"
+      >
+        <template #prepend>描述</template>
+      </el-input>
+      <NameFormItem class="condition-line">
+        <template #prepend>排序</template>
+        <template #default>
+          <el-input-number v-model="dialogData.rank" />
+        </template>
+      </NameFormItem>
+      <div class="card-line" v-for="(op, i) in dialogData.list" :key="i">
+        <el-input v-model="op.value" placeholder="选项值">
+          <template v-slot:prepend>选项{{i+1}}:</template>
+        </el-input>
+        <el-input v-model="op.remark" placeholder="选项说明"/>
+        <el-button type="danger" @click="removeOption(op.value)">删除</el-button>
+      </div>
+      <div class="card-line">
+        <el-button type="primary" size="mini" @click="addOption">增加一个选项</el-button>
+      </div>
+      <span slot="footer" class="dialog-footer">
+        <el-button type="info" @click="dialogVisible = false">取消</el-button>
+        <el-button type="primary" @click="confirmEdit">确定</el-button>
+      </span>
+    </el-dialog>
+  </div>
+</template>
+
+<script>
+import NameFormItem from '@/components/NameFormItem.vue'
+
+export default {
+  name: 'ConditionCardSingle',
+  components: {
+    NameFormItem
+  },
+  props: {
+    shadow: String,
+    width: String,
+    data: {
+      type: Object,
+      default: {}
+    }
+  },
+  data () {
+    return {
+      dialogVisible: false,
+      dialogData: {}
+    }
+  },
+  methods: {
+    modifyCondition () {
+      this.dialogData = _.cloneDeep(this.data)
+      this.dialogVisible = true
+    },
+    addOption () {
+      !_.isArray(this.dialogData.list) ? this.$set(this.dialogData, 'list', []) : ''
+      this.dialogData.list.push({})
+    },
+    removeOption (value) {
+      this.$set(this.dialogData, 'list', _.filter(this.dialogData.list, o=>o.value != value))
+    },
+    confirmEdit () {
+      _.assign(this.data, {modify: 'modify'}, this.dialogData)
+      this.dialogVisible = false
+    },
+    deleteCondition () {
+      this.$set(this.data, 'modify', 'delete')
+    }
+  }
+}
+</script>
+
+<style lang="stylus" scoped>
+.condition-card
+  display: inline-block
+  margin: 4px
+  border-radius: 4px
+  border: 1px solid #EBEEF5
+  background-color: #fff
+  overflow: hidden
+  color: #303133
+  transition: 0.3s
+.is-always-shadow, .is-hover-shadow:focus, .is-hover-shadow:hover
+  box-shadow: 0 2px 12px 0 rgba(0,0,0,0.1)
+.condition-card__header
+  padding: 12px 16px
+  border-bottom: 1px solid #EBEEF5
+  box-sizing: border-box
+.modify-remark
+  color: red
+.condition-card__body
+  padding: 8px 16px
+.condition-line, .card-line
+  margin: 6px 0
+.card-label
+  color: grey
+.card-label span 
+  color #2c3e50
+.edit-dialog .card-line .el-input
+  width: 28vw
+</style>
+
+<style lang="stylus">
+.condition-line .el-input-group__prepend
+  text-align: center
+  min-width: 50px
+</style>

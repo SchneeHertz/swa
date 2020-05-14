@@ -1,6 +1,10 @@
 <template>
-  <div>
-    <div class="name-select__prepend" v-if="$slots.prepend">
+  <div :style="initStyle">
+    <div 
+      class="name-select__prepend"
+      v-if="$slots.prepend"
+      :style="{'min-width': prependWidth}"
+    >
       <slot name="prepend"></slot>
     </div>
     <div class="name-select__body">
@@ -11,7 +15,14 @@
 
 <script>
 export default {
-  name: 'NameFormItem'
+  name: 'NameFormItem',
+  props: {
+    initStyle: Object,
+    prependWidth: {
+      type: String,
+      default: ()=>'4em'
+    }
+  }
 }
 </script>
 
@@ -29,7 +40,6 @@ export default {
   border-top-right-radius: 0
   border-bottom-right-radius: 0
   padding: 0 20px
-  min-width: 50px
   white-space: nowrap
 .name-select__body
   display: table-cell

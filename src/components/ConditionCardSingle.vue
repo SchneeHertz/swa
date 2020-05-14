@@ -39,20 +39,20 @@
       >
         <template #prepend>描述</template>
       </el-input>
-      <NameFormItem class="condition-line">
+      <NameFormItem class="condition-line" prependWidth="50px">
         <template #prepend>排序</template>
         <template #default>
           <el-input-number v-model="dialogData.rank" />
         </template>
       </NameFormItem>
-      <div class="card-line" v-for="(op, i) in dialogData.list" :key="i">
+      <div class="condition-line" v-for="(op, i) in dialogData.list" :key="i">
         <el-input v-model="op.value" placeholder="选项值">
           <template v-slot:prepend>选项{{i+1}}:</template>
         </el-input>
         <el-input v-model="op.remark" placeholder="选项说明"/>
         <el-button type="danger" @click="removeOption(op.value)">删除</el-button>
       </div>
-      <div class="card-line">
+      <div class="condition-line">
         <el-button type="primary" size="mini" @click="addOption">增加一个选项</el-button>
       </div>
       <span slot="footer" class="dialog-footer">
@@ -76,7 +76,7 @@ export default {
     width: String,
     data: {
       type: Object,
-      default: {}
+      default: ()=>{return {}}
     }
   },
   data () {
@@ -128,13 +128,13 @@ export default {
   color: red
 .condition-card__body
   padding: 8px 16px
-.condition-line, .card-line
+.condition-line
   margin: 6px 0
 .card-label
   color: grey
 .card-label span 
   color #2c3e50
-.edit-dialog .card-line .el-input
+.edit-dialog .condition-line .el-input
   width: 28vw
 </style>
 

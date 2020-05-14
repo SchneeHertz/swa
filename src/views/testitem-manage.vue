@@ -12,6 +12,14 @@
             <i class="el-icon-document-checked"></i>
             <span slot="title">条件</span>
           </el-menu-item>
+          <el-menu-item index="material">
+            <i class="el-third-icon-gold"></i>
+            <span slot="title">材料</span>
+          </el-menu-item>
+          <el-menu-item index="method">
+            <i class="el-third-icon-experiment"></i>
+            <span slot="title">测试方法</span>
+          </el-menu-item>
           <el-menu-item index="testitem">
             <i class="el-icon-document"></i>
             <span slot="title">测试项目</span>
@@ -71,37 +79,79 @@
           </template>
         </el-dialog>
       </el-main>
+      <el-main v-if="activePage === 'material'" class="material-pane">
+        <MaterialCard
+          v-for="material in materialList"
+          :key="material.id"
+          :data="material"
+          width="48%"
+        ></MaterialCard>
+      </el-main>
       <el-main v-else-if="activePage === 'testitem'" class="testitem-pane">
-        <el-table
-          ref="regulation-table"
-          :data="displaySlicedRegultionList"
-          highlight-current-row
-          stripe
-          height="50vh"
-          class="regulation-table"
-        >
-          <el-table-column
-            prop="name"
-            width="300"
-            fixed
-          >
-            <template  v-slot:header>
-                <el-input
-                  v-model="searchName"
-                  size="mini"
-                  placeholder="名称，输入筛选"
-                  clearable/>
-              </template>
-          </el-table-column>
-        </el-table>
-        <el-pagination
-          :current-page.sync="pageTable"
-          :page-sizes="[50, 100, 200, 500]"
-          :page-size.sync="pageSize"
-          layout="total, sizes, prev, pager, next, jumper"
-          :total="displayRegulationCount"
-          class="regulation-table-pagination"
-        ></el-pagination>
+        <el-row>
+          <el-col :span="6">
+            <div class="testitem-filter">
+              <el-input
+                v-model="searchName"
+                clearable
+                class="card-line"
+              >
+                <template #prepend><span class="testitem-filter-prepend">筛选</span></template>
+              </el-input>
+              <NameFormItem class="card-line" prependWidth="2em">
+                <template #prepend>分组</template>
+                <template #default>
+                  <el-select
+                    v-model="searchGroup"
+                    multiple
+                    clearable
+                  >
+                    <el-option value="Total">Total</el-option>
+                    <el-option value="Soluble">Soluble</el-option>
+                  </el-select>
+                </template>
+              </NameFormItem>
+            </div>
+            <div>
+              <overlay-scrollbars
+                :options="{scrollbars: {autoHide: 'scroll'}}"
+                class="regulation-list"
+              >
+                <li class="list">
+                  <ul
+                    class="regulation-ul"
+                    :class="{'active-regulation': selectRegulation.id == regulation.id}"
+                    v-for="regulation in displaySlicedRegultionList"
+                    :key="regulation.id"
+                    @click="handleSelectRegulation(regulation.id)"
+                  >
+                    {{regulation.name}}
+                  </ul>
+                </li>
+              </overlay-scrollbars>
+              <el-pagination
+                :current-page.sync="pageTable"
+                :page-size="100"
+                layout="total, prev, pager, next"
+                :total="displayRegulationCount"
+                class="regulation-table-pagination"
+              ></el-pagination> 
+            </div>
+          </el-col>
+          <el-col :span="18">
+            <el-tabs type="border-card">
+              <el-tab-pane label="信息" name="info">
+
+              </el-tab-pane>
+              <el-tab-pane label="方法" name="method">
+
+              </el-tab-pane>
+              <el-tab-pane label="条件" name="condition">
+
+              </el-tab-pane>
+            </el-tabs>
+          </el-col>
+        </el-row>
         <div class="bottom-function-btn">
           <el-button type="primary" class="bigicon" icon="el-third-icon-plus" circle @click="addRegulation" title="新增"></el-button>
           <el-button type="success" class="bigicon" icon="el-third-icon-save" circle @click="saveRegulation" title="保存"></el-button>
@@ -118,6 +168,8 @@
 
 import BaseHeader from '@/components/BaseHeader.vue'
 import ConditionCardSingle from '@/components/ConditionCardSingle.vue'
+import MaterialCard from '@/components/MaterialCard.vue'
+import NameFormItem from '@/components/NameFormItem.vue'
 
 import {generate as _id } from 'shortid'
 
@@ -125,7 +177,9 @@ export default {
   name: 'TestitemManage',
   components: {
     BaseHeader,
-    ConditionCardSingle
+    ConditionCardSingle,
+    MaterialCard,
+    NameFormItem
   },
   data () {
     return {
@@ -137,8 +191,9 @@ export default {
       conditionDialogVisible: false,
       conditionDialogData: {},
       searchName: undefined,
+      searchGroup: undefined,
       pageTable: 1,
-      pageSize: 100,
+      selectRegulation: {}
     }
   },
   computed: {
@@ -155,10 +210,14 @@ export default {
       return this.displayRegulationList.length
     },
     displaySlicedRegultionList () {
-      return _.chunk(this.displayRegulationList, this.pageSize)[this.pageTable-1]
+      return _.chunk(this.displayRegulationList, 100)[this.pageTable-1]
     },
   },
   mounted () {
+    this.$http.get('/data/getMaterialList')
+    .then(res=>{
+      this.materialList = res.data.materialList
+    })
     this.$http.get('/data/getRegulation')
     .then(res=>{
       this.regulationList = res.data.regulationList
@@ -224,7 +283,6 @@ export default {
           // condition: [],
           // info: {}
         })
-        this.$refs['regulation-table'].setCurrentRow(_.last(this.regulationList))
         // this.selectRegulation = _.last(this.regulationList)
       }).catch(() => {
         this.$message({
@@ -261,8 +319,9 @@ export default {
         })
       })
     },
-
-
+    handleSelectRegulation (id) {
+      this.selectRegulation = _.cloneDeep(_.find(this.regulationList, {id: id}))
+    }
   }
 }
 </script>
@@ -270,9 +329,9 @@ export default {
 <style lang="stylus" scoped>
 .nav-aside
   border-right: solid 1px rgb(220, 223, 230)
-.condition-pane
+.condition-pane, .testitem-pane
   padding: 0
-.condition-pane .el-tabs
+.condition-pane .el-tabs, .testitem-pane .el-tabs
   height: calc(100vh - 2px)
   border-left: none
 .condition-card
@@ -280,17 +339,42 @@ export default {
   width: 39vw
   margin: 0.4vh 0.4vw
   display: inline-block
-.card-line
+.card-line:first-child
   margin: 6px 0
+.card-line:not(:first-child)
+  margin-bottom: 6px
 .bottom-function-btn
   position: absolute
   bottom: 2em
   right: 2em
 .bigicon
   box-shadow: 0 2px 12px 0 rgba(0,0,0,0.2)
+
+.testitem-filter
+  height: 12vh
+.testitem-filter-prepend
+  padding: 0 2px
+.regulation-list
+  border: solid 1px rgb(220, 223, 230)
+  height: calc(88vh - 36px)
+.regulation-list .list
+  display: block
+.regulation-list .regulation-ul
+  margin: 0
+  padding: 10px 8px
+  border-top: solid 1px lightgrey 
+  border-bottom: solid 1px lightgrey
+.regulation-ul.active-regulation
+  background-color: #FFCC66
 </style>
 
 <style lang="stylus">
 .bottom-function-btn .bigicon [class^="el-third-icon"]
   font-size: 25px
+.el-menu-item [class^="el-third-icon"]
+  margin: 0 8px 0 3px
+  width: 24px
+  text-align: center
+  font-size: 18px
+  vertical-align: middle
 </style>

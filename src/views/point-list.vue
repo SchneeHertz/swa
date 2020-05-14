@@ -4,6 +4,18 @@
     <el-main>
       <el-row>
         <el-col :span="14">
+          <div style="height: 4vh; text-align: right;">
+            <el-button-group style="margin: 5px;">
+            <el-button size="mini" >超小按钮</el-button>
+            <el-button size="mini" >超小按钮</el-button>
+            <el-button size="mini" >超小按钮</el-button>
+            <el-button size="mini" >超小按钮</el-button>
+            <el-button size="mini" >超小按钮</el-button>
+            <el-button size="mini" >超小按钮</el-button>
+            <el-button size="mini" >超小按钮</el-button>
+            <el-button size="mini" >超小按钮</el-button>
+            </el-button-group>
+          </div>
           <overlay-scrollbars
             :options="{scrollbars: {autoHide: 'scroll'}}"
             class="point-card-list"
@@ -14,9 +26,11 @@
               :formList="formList"
               :data.sync="valueObj"
               width="48%"
+              :isSelected="valueObj.isSelected"
               @delete-point="handleDeletePoint(valueObj.id)"
               @focus-point="handleFocusPoint(valueObj.id)"
               @blur-point="handleBlurPoint(valueObj.id)"
+              @select-point="handleSelectPoint(valueObj.id)"
             >
               <template #header>
                 {{valueObj.index}}
@@ -447,6 +461,10 @@ export default {
     },
     handleBlurPoint (id) {
       this.$set(this.findRectData(id), 'strokeEnabled', false)
+    },
+    handleSelectPoint(id) {
+      let findPoint =  _.find(this.valueList, {id: id})
+      this.$set(findPoint, 'isSelected', !findPoint.isSelected)
     }
   }
 }
@@ -456,9 +474,9 @@ export default {
 .el-main
   padding: 0
 .point-card-list
-  height: 100vh
+  height: 96vh
 .konva-list
-  border-left: 1px solid grey
+  border-left: 1px solid rgb(220, 223, 230)
 </style>
 
 <style lang="stylus">

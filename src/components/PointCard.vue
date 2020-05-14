@@ -1,6 +1,12 @@
 <template>
-  <div class="point-card" :class="shadow ? 'is-' + shadow + '-shadow' : 'is-always-shadow'" :style="{width: width}">
-    <div class="point-card__header" v-if="$slots.header">
+  <div class="point-card" 
+    :class="[shadow ? 'is-' + shadow + '-shadow' : 'is-always-shadow', {'select-point-card': isSelected}]"
+    :style="{width: width}"
+  >
+    <div
+      class="point-card__header"
+      @click="handlePointCard($event)"
+    >
       <slot name="header"></slot>
       <el-button type="danger" class="mini-circle-btn" icon="el-third-icon-close" circle @click="handleDeleteButton"></el-button>
       <el-button type="success" class="mini-circle-btn" icon="el-third-icon-file-copy" circle></el-button>
@@ -62,11 +68,20 @@ export default {
     shadow: String,
     width: String,
     formList: Array,
-    data: Object
+    data: {
+      type: Object,
+      default: ()=>{return {}}
+    },
+    isSelected: Boolean
   },
   methods:{
     handleDeleteButton () {
       this.$emit('delete-point')
+    },
+    handlePointCard (e) {
+      if (e.target.classList.contains('point-card__header')){
+        this.$emit('select-point')
+      }
     }
   }
 }
@@ -84,6 +99,8 @@ export default {
   transition: 0.3s
 .is-always-shadow, .is-hover-shadow:focus, .is-hover-shadow:hover
   box-shadow: 0 2px 12px 0 rgba(0,0,0,0.1)
+.select-point-card
+  box-shadow: 0 2px 12px 0 rgba(0, 128, 255, 0.8)
 .point-card__header
   padding: 8px 16px
   border-bottom: 1px solid #EBEEF5

@@ -19,6 +19,24 @@ const getMaterialList = () => {
   return db.get('materialList').value()
 }
 
+const saveMaterialList = (materialList) => {
+  let existMaterialList = db.get('materialList').value()
+  _.forIn(materialList, material=>{
+    switch (material.modify) {
+      case 'add':
+      case 'modify':
+        delete material.modify
+        _.upsert(existMaterialList, material)
+        break
+      case 'delete':
+        delete material.modify
+        _.removeById(existMaterialList, material.id)
+        break
+    }
+  })
+  db.set('materialList', existMaterialList).write()
+}
+
 const getRegulation = () => {
   return db.get('regulation').value()
 }
@@ -75,6 +93,7 @@ const saveCondition = (conditionList) => {
 
 module.exports = {
   getMaterialList,
+  saveMaterialList,
   getRegulation,
   saveRegulation,
   getCondition,

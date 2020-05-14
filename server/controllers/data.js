@@ -10,6 +10,22 @@ const getMaterialList = async (ctx) => {
   }
 }
 
+const saveMaterialList = async (ctx) => {
+  if (isAdmin(ctx)) {
+    const materialList = ctx.request.body.materialList
+    db.saveMaterialList(materialList)
+    ctx.body = {
+      success: true,
+      info: '保存成功'
+    }
+  } else  {
+    ctx.body = {
+      success: false,
+      info: '无操作权限'
+    }
+  }
+}
+
 const getRegulation = async (ctx) => {
   ctx.body = {
     success: true,
@@ -121,6 +137,7 @@ const isAdmin =  (ctx) => {
 
 module.exports = {
   getMaterialList,
+  saveMaterialList,
   getRegulation,
   saveRegulation,
   getCondition,

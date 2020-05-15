@@ -6,8 +6,8 @@
       <span class="modify-remark" v-if="data.modify === 'add'">(新增)</span>
       <span class="modify-remark" v-if="data.modify === 'modify'">(已修改)</span>
       <span class="modify-remark" v-if="data.modify === 'delete'">(将要删除)</span>
-      <el-button style="float: right; margin: -3px 0px" type="danger" size="mini" @click="deleteCondition">删除</el-button>
-      <el-button style="float: right; margin: -3px 18px" type="primary" size="mini" @click="modifyCondition">编辑</el-button>
+      <el-button style="float: right; margin: -4px 0px" type="danger" size="mini" @click="deleteCondition">删除</el-button>
+      <el-button style="float: right; margin: -4px 18px" type="primary" size="mini" @click="modifyCondition">编辑</el-button>
     </div>
     <div class="condition-card__body">
       <div class="card-line">
@@ -29,30 +29,30 @@
     >
       <el-input
         v-model="dialogData.name"
-        class="condition-line"
+        class="card-line"
       >
         <template #prepend>条件名</template>
       </el-input>
       <el-input
         v-model="dialogData.description"
-        class="condition-line"
+        class="card-line"
       >
         <template #prepend>描述</template>
       </el-input>
-      <NameFormItem class="condition-line" prependWidth="50px">
+      <NameFormItem class="card-line" prependWidth="50px">
         <template #prepend>排序</template>
         <template #default>
           <el-input-number v-model="dialogData.rank" />
         </template>
       </NameFormItem>
-      <div class="condition-line" v-for="(op, i) in dialogData.list" :key="i">
+      <div class="card-line" v-for="(op, i) in dialogData.list" :key="i">
         <el-input v-model="op.value" placeholder="选项值">
           <template v-slot:prepend>选项{{i+1}}:</template>
         </el-input>
         <el-input v-model="op.remark" placeholder="选项说明"/>
         <el-button type="danger" @click="removeOption(op.value)">删除</el-button>
       </div>
-      <div class="condition-line">
+      <div class="card-line">
         <el-button type="primary" size="mini" @click="addOption">增加一个选项</el-button>
       </div>
       <span slot="footer" class="dialog-footer">
@@ -98,7 +98,7 @@ export default {
       this.$set(this.dialogData, 'list', _.filter(this.dialogData.list, o=>o.value != value))
     },
     confirmEdit () {
-      _.assign(this.data, {modify: 'modify'}, this.dialogData)
+      _.assign(this.data, this.dialogData, {modify: 'modify'})
       this.dialogVisible = false
     },
     deleteCondition () {
@@ -128,18 +128,18 @@ export default {
   color: red
 .condition-card__body
   padding: 8px 16px
-.condition-line
+.card-line
   margin: 6px 0
 .card-label
   color: grey
 .card-label span 
   color #2c3e50
-.edit-dialog .condition-line .el-input
+.edit-dialog .card-line .el-input
   width: 28vw
 </style>
 
 <style lang="stylus">
-.condition-line .el-input-group__prepend
+.condition-card .card-line .el-input-group__prepend
   text-align: center
   min-width: 50px
 </style>

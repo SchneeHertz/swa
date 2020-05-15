@@ -64,28 +64,19 @@
           <el-button type="primary" class="bigicon" icon="el-third-icon-plus" circle @click="addCondition" title="新增"></el-button>
           <el-button type="success" class="bigicon" icon="el-third-icon-save" circle @click="saveCondition" title="保存"></el-button>
         </div>
-        <el-dialog
-          title="新增条件"
-          :visible.sync="conditionDialogVisible"
-          width="65%"
-          class="condition-dialog"
-        >
-          <el-input v-model="conditionDialogData.name" class="card-line">
-            <template v-slot:prepend>条件名</template>
-          </el-input>
-          <template v-slot:footer>
-            <el-button type="info" @click="conditionDialogVisible = false">取消</el-button>
-            <el-button type="primary" @click="confirmConditionAdd">确定</el-button>
-          </template>
-        </el-dialog>
       </el-main>
       <el-main v-if="activePage === 'material'" class="material-pane">
         <MaterialCard
           v-for="material in materialList"
           :key="material.id"
           :data="material"
+          :materialOptionList="materialOptionList"
           width="48%"
         ></MaterialCard>
+        <div class="bottom-function-btn">
+          <el-button type="primary" class="bigicon" icon="el-third-icon-plus" circle @click="addMaterial" title="新增"></el-button>
+          <el-button type="success" class="bigicon" icon="el-third-icon-save" circle @click="saveMaterial" title="保存"></el-button>
+        </div>
       </el-main>
       <el-main v-else-if="activePage === 'testitem'" class="testitem-pane">
         <el-row>
@@ -188,8 +179,6 @@ export default {
       regulationList:[],
       activePage: 'condition',
       activeConditionTab: 'single',
-      conditionDialogVisible: false,
-      conditionDialogData: {},
       searchName: undefined,
       searchGroup: undefined,
       pageTable: 1,
@@ -212,6 +201,14 @@ export default {
     displaySlicedRegultionList () {
       return _.chunk(this.displayRegulationList, 100)[this.pageTable-1]
     },
+    materialOptionList () {
+      return {
+        status: _.chain(this.materialList.map(m=>m.status)).flatten().uniq().sortBy().value(),
+        element: _.chain(this.materialList.map(m=>m.element)).flatten().uniq().sortBy().value(),
+        digestion: _.chain(this.materialList.map(m=>m.digestion)).flatten().uniq().sortBy().value(),
+        other: _.chain(this.materialList.map(m=>m.other)).flatten().uniq().sortBy().value()
+      }
+    }
   },
   mounted () {
     this.$http.get('/data/getMaterialList')
@@ -232,16 +229,22 @@ export default {
       this.activePage = index
     },
     addCondition () {
-      this.conditionDialogData = {
-        cat: this.activeConditionTab,
-        modify: 'add',
-        id: _id()
-      }
-      this.conditionDialogVisible = true
-    },
-    confirmConditionAdd () {
-      this.conditionList[this.conditionDialogData.cat].push(this.conditionDialogData)
-      this.conditionDialogVisible = false
+      this.$prompt('请输入条件名称', '提示', {
+        confirmButtonText: '确定',
+        cancelButtonText: '取消'
+      }).then(({ value }) => {
+        this.conditionList[this.activeConditionTab].push({
+          cat: this.activeConditionTab,
+          modify: 'add',
+          id: _id(),
+          name: value
+        })
+      }).catch(() => {
+        this.$message({
+          type: 'info',
+          message: '已取消'
+        })
+      })
     },
     saveCondition () {
       this.$http.post('/data/saveCondition', {
@@ -271,6 +274,51 @@ export default {
         })
       })
     },
+    addMaterial () {
+      this.$prompt('请输入材质名称', '提示', {
+        confirmButtonText: '确定',
+        cancelButtonText: '取消'
+      }).then(({ value }) => {
+        this.materialList.push({
+          name: value,
+          id: _id(),
+          modify: 'add'
+        })
+      }).catch(() => {
+        this.$message({
+          type: 'info',
+          message: '已取消'
+        })
+      })
+    },
+    saveMaterial () {
+      this.$http.post('/data/saveMaterialList', {
+        materialList: _.filter(this.materialList, 'modify')
+      })
+      .then(res=>{
+        if(res.data.success){
+          this.$message({
+            type: 'success',
+            message: res.data.info
+          })
+          this.$http.get('/data/getMaterialList')
+          .then(res=>{
+            this.materialList = res.data.materialList
+          })
+        } else {
+          this.$message({
+            type: 'warning',
+            message: res.data.info
+          })
+        }
+      })
+      .catch(() => {
+        this.$message({
+          type: 'warning',
+          message: '未知错误'
+        })
+      })
+    },
     addRegulation () {
       this.$prompt('请输入法规名称', '提示', {
         confirmButtonText: '确定',
@@ -279,11 +327,8 @@ export default {
         this.regulationList.push({
           name: value,
           id: _id(),
-          modify: 'add',
-          // condition: [],
-          // info: {}
+          modify: 'add'
         })
-        // this.selectRegulation = _.last(this.regulationList)
       }).catch(() => {
         this.$message({
           type: 'info',

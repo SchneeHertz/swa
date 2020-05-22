@@ -11,6 +11,7 @@ _.mixin(LodashId)
 
 db.defaults({
   materialList: [],
+  methodList: [],
   condition: {},
   regulation: []
 }).write()
@@ -35,6 +36,28 @@ const saveMaterialList = (materialList) => {
     }
   })
   db.set('materialList', existMaterialList).write()
+}
+
+const getMethodList = () => {
+  return db.get('methodList').value()
+}
+
+const saveMethodList = (methodList) => {
+  let existMethodList = db.get('methodList').value()
+  _.forIn(methodList, method=>{
+    switch (method.modify) {
+      case 'add':
+      case 'modify':
+        delete method.modify
+        _.upsert(existMethodList, method)
+        break
+      case 'delete':
+        delete method.modify
+        _.removeById(existMethodList, method.id)
+        break
+    }
+  })
+  db.set('methodList', existMethodList).write()
 }
 
 const getRegulation = () => {
@@ -94,6 +117,8 @@ const saveCondition = (conditionList) => {
 module.exports = {
   getMaterialList,
   saveMaterialList,
+  getMethodList,
+  saveMethodList,
   getRegulation,
   saveRegulation,
   getCondition,

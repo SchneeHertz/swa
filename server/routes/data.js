@@ -3,6 +3,8 @@ const router = require('koa-router')()
 
 router.get('/getMaterialList', data.getMaterialList)
 router.post('/saveMaterialList', data.saveMaterialList)
+router.get('/getMethodList', data.getMethodList)
+router.post('/saveMethodList', data.saveMethodList)
 router.get('/getRegulation', data.getRegulation)
 router.post('/saveRegulation', data.saveRegulation)
 router.get('/getCondition', data.getCondition)

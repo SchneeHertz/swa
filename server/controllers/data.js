@@ -26,6 +26,29 @@ const saveMaterialList = async (ctx) => {
   }
 }
 
+const getMethodList = async (ctx) => {
+  ctx.body = {
+    success: true,
+    methodList: db.getMethodList()
+  }
+}
+
+const saveMethodList = async (ctx) => {
+  if (isAdmin(ctx)) {
+    const methodList = ctx.request.body.methodList
+    db.saveMethodList(methodList)
+    ctx.body = {
+      success: true,
+      info: '保存成功'
+    }
+  } else  {
+    ctx.body = {
+      success: false,
+      info: '无操作权限'
+    }
+  }
+}
+
 const getRegulation = async (ctx) => {
   ctx.body = {
     success: true,
@@ -138,6 +161,8 @@ const isAdmin =  (ctx) => {
 module.exports = {
   getMaterialList,
   saveMaterialList,
+  getMethodList,
+  saveMethodList,
   getRegulation,
   saveRegulation,
   getCondition,

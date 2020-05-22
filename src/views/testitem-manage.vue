@@ -1,7 +1,7 @@
 <template>
   <el-container>
     <BaseHeader activeIndex="testitem-manage"/>
-    <el-container style="height:100vh;width:100vw;">
+    <el-container>
       <el-aside width="132px" class="nav-aside">
         <el-menu
           class="menu"
@@ -14,7 +14,7 @@
           </el-menu-item>
           <el-menu-item index="material">
             <i class="el-third-icon-gold"></i>
-            <span slot="title">材料</span>
+            <span slot="title">材质</span>
           </el-menu-item>
           <el-menu-item index="method">
             <i class="el-third-icon-experiment"></i>
@@ -33,22 +33,26 @@
       <el-main v-if="activePage === 'condition'" class="condition-pane">
         <el-tabs type="border-card" v-model="activeConditionTab">
           <el-tab-pane label="单选" name="single">
-            <ConditionCardSingle
-              v-for="condition in singleConditionList"
-              :key="condition.id"
-              :data="condition"
-              width="48%"
-            >
-            </ConditionCardSingle>
+            <div class="inner-tabs-list">
+              <ConditionCardSingle
+                v-for="condition in singleConditionList"
+                :key="condition.id"
+                :data="condition"
+                width="48%"
+              >
+              </ConditionCardSingle>
+            </div>
           </el-tab-pane>
           <el-tab-pane label="多选" name="multiple">
-            <ConditionCardSingle
-              v-for="condition in multipleConditionList"
-              :key="condition.id"
-              :data="condition"
-              width="48%"
-            >
-            </ConditionCardSingle>
+            <div class="inner-tabs-list">
+              <ConditionCardSingle
+                v-for="condition in multipleConditionList"
+                :key="condition.id"
+                :data="condition"
+                width="48%"
+              >
+              </ConditionCardSingle>
+            </div>
           </el-tab-pane>
           <el-tab-pane label="数值" name="number">
 
@@ -66,16 +70,48 @@
         </div>
       </el-main>
       <el-main v-if="activePage === 'material'" class="material-pane">
-        <MaterialCard
-          v-for="material in materialList"
-          :key="material.id"
-          :data="material"
-          :materialOptionList="materialOptionList"
-          width="48%"
-        ></MaterialCard>
+        <el-tabs type="border-card" v-model="activeMaterialTab">
+          <el-tab-pane label="材质" name="material">
+            <div class="inner-tabs-list">
+              <MaterialCard
+                v-for="material in materialList"
+                :key="material.id"
+                :data="material"
+                :materialOptionList="materialOptionList"
+                width="48%"
+              ></MaterialCard>
+            </div>
+          </el-tab-pane>
+          <el-tab-pane label="材质条件" name="materialCondition">
+            <div class="inner-tabs-list">
+              <MaterialConditionCard
+                v-for="condition in materialConditionList"
+                :key="condition.id"
+                :data="condition"
+                :materialOptionList="materialOptionList"
+                width="48%"
+              ></MaterialConditionCard>
+            </div>
+          </el-tab-pane>
+        </el-tabs>
         <div class="bottom-function-btn">
           <el-button type="primary" class="bigicon" icon="el-third-icon-plus" circle @click="addMaterial" title="新增"></el-button>
           <el-button type="success" class="bigicon" icon="el-third-icon-save" circle @click="saveMaterial" title="保存"></el-button>
+        </div>
+      </el-main>
+      <el-main v-if="activePage === 'method'" class="method-pane">
+        <div class="inner-tabs-list">
+          <MethodCard
+            v-for="method in methodList"
+            :key="method.id"
+            :data="method"
+            :methodOptionList="{}"
+            width="48%"
+          ></MethodCard>
+        </div>
+        <div class="bottom-function-btn">
+          <el-button type="primary" class="bigicon" icon="el-third-icon-plus" circle @click="addMethod" title="新增"></el-button>
+          <el-button type="success" class="bigicon" icon="el-third-icon-save" circle @click="saveMethod" title="保存"></el-button>
         </div>
       </el-main>
       <el-main v-else-if="activePage === 'testitem'" class="testitem-pane">
@@ -104,10 +140,7 @@
               </NameFormItem>
             </div>
             <div>
-              <overlay-scrollbars
-                :options="{scrollbars: {autoHide: 'scroll'}}"
-                class="regulation-list"
-              >
+              <overlay-scrollbars :options="{scrollbars: {autoHide: 'scroll'}}" class="regulation-list">
                 <li class="list">
                   <ul
                     class="regulation-ul"
@@ -160,6 +193,8 @@
 import BaseHeader from '@/components/BaseHeader.vue'
 import ConditionCardSingle from '@/components/ConditionCardSingle.vue'
 import MaterialCard from '@/components/MaterialCard.vue'
+import MaterialConditionCard from '@/components/MaterialConditionCard.vue'
+import MethodCard from '@/components/MethodCard.vue'
 import NameFormItem from '@/components/NameFormItem.vue'
 
 import {generate as _id } from 'shortid'
@@ -170,15 +205,19 @@ export default {
     BaseHeader,
     ConditionCardSingle,
     MaterialCard,
+    MaterialConditionCard,
+    MethodCard,
     NameFormItem
   },
   data () {
     return {
-      materialList: [],
+      materialObj: {},
       conditionList: {},
-      regulationList:[],
+      methodList: [],
+      regulationList: [],
       activePage: 'condition',
       activeConditionTab: 'single',
+      activeMaterialTab: 'material',
       searchName: undefined,
       searchGroup: undefined,
       pageTable: 1,
@@ -201,6 +240,12 @@ export default {
     displaySlicedRegultionList () {
       return _.chunk(this.displayRegulationList, 100)[this.pageTable-1]
     },
+    materialList () {
+      return this.materialObj.material
+    },
+    materialConditionList () {
+      return this.materialObj.materialCondition
+    },
     materialOptionList () {
       return {
         status: _.chain(this.materialList.map(m=>m.status)).flatten().uniq().sortBy().value(),
@@ -213,7 +258,11 @@ export default {
   mounted () {
     this.$http.get('/data/getMaterialList')
     .then(res=>{
-      this.materialList = res.data.materialList
+      this.materialObj = res.data.materialList
+    })
+    this.$http.get('/data/getMethodList')
+    .then(res=>{
+      this.methodList = res.data.methodList
     })
     this.$http.get('/data/getRegulation')
     .then(res=>{
@@ -247,8 +296,12 @@ export default {
       })
     },
     saveCondition () {
+      let tempConditionList = {}
+      _.forIn(this.conditionList, (group, cat)=>{
+        tempConditionList[cat] = _.filter(group, 'modify')
+      })
       this.$http.post('/data/saveCondition', {
-        conditionList: this.conditionList
+        conditionList: tempConditionList
       })
       .then(res=>{
         if(res.data.success){
@@ -275,11 +328,11 @@ export default {
       })
     },
     addMaterial () {
-      this.$prompt('请输入材质名称', '提示', {
+      this.$prompt('请输入材质/材质条件名称', '提示', {
         confirmButtonText: '确定',
         cancelButtonText: '取消'
       }).then(({ value }) => {
-        this.materialList.push({
+        this.materialObj[this.activeMaterialTab].push({
           name: value,
           id: _id(),
           modify: 'add'
@@ -292,8 +345,12 @@ export default {
       })
     },
     saveMaterial () {
+      let tempMaterialObj = {}
+      _.forIn(this.materialObj, (group, type)=>{
+        tempMaterialObj[type] = _.filter(group, 'modify')
+      })
       this.$http.post('/data/saveMaterialList', {
-        materialList: _.filter(this.materialList, 'modify')
+        materialList: tempMaterialObj
       })
       .then(res=>{
         if(res.data.success){
@@ -303,7 +360,52 @@ export default {
           })
           this.$http.get('/data/getMaterialList')
           .then(res=>{
-            this.materialList = res.data.materialList
+            this.materialObj = res.data.materialList
+          })
+        } else {
+          this.$message({
+            type: 'warning',
+            message: res.data.info
+          })
+        }
+      })
+      .catch(() => {
+        this.$message({
+          type: 'warning',
+          message: '未知错误'
+        })
+      })
+    },
+    addMethod () {
+      this.$prompt('请输入方法名称', '提示', {
+        confirmButtonText: '确定',
+        cancelButtonText: '取消'
+      }).then(({ value }) => {
+        this.methodList.push({
+          name: value,
+          id: _id(),
+          modify: 'add'
+        })
+      }).catch(() => {
+        this.$message({
+          type: 'info',
+          message: '已取消'
+        })
+      })
+    },
+    saveMethod () {
+      this.$http.post('/data/saveMethodList', {
+        methodList: _.filter(this.methodList, 'modify')
+      })
+      .then(res=>{
+        if(res.data.success){
+          this.$message({
+            type: 'success',
+            message: res.data.info
+          })
+          this.$http.get('/data/getMethodList')
+          .then(res=>{
+            this.methodList = res.data.methodList
           })
         } else {
           this.$message({
@@ -374,9 +476,9 @@ export default {
 <style lang="stylus" scoped>
 .nav-aside
   border-right: solid 1px rgb(220, 223, 230)
-.condition-pane, .testitem-pane
+.condition-pane, .testitem-pane, .material-pane
   padding: 0
-.condition-pane .el-tabs, .testitem-pane .el-tabs
+.condition-pane .el-tabs, .material-pane .el-tabs, .testitem-pane .el-tabs
   height: calc(100vh - 2px)
   border-left: none
 .condition-card
@@ -394,6 +496,9 @@ export default {
   right: 2em
 .bigicon
   box-shadow: 0 2px 12px 0 rgba(0,0,0,0.2)
+.inner-tabs-list
+  overflow: auto
+  height: 85vh
 
 .testitem-filter
   height: 12vh

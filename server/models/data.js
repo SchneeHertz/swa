@@ -10,7 +10,7 @@ db._.mixin(LodashId)
 _.mixin(LodashId)
 
 db.defaults({
-  materialList: [],
+  materialList: {},
   methodList: [],
   condition: {},
   regulation: []
@@ -22,18 +22,20 @@ const getMaterialList = () => {
 
 const saveMaterialList = (materialList) => {
   let existMaterialList = db.get('materialList').value()
-  _.forIn(materialList, material=>{
-    switch (material.modify) {
-      case 'add':
-      case 'modify':
-        delete material.modify
-        _.upsert(existMaterialList, material)
-        break
-      case 'delete':
-        delete material.modify
-        _.removeById(existMaterialList, material.id)
-        break
-    }
+  _.forIn(materialList, (group, type)=>{
+    _.forIn(group, material=>{
+      switch (material.modify) {
+        case 'add':
+        case 'modify':
+          delete material.modify
+          _.upsert(existMaterialList[type], material)
+          break
+        case 'delete':
+          delete material.modify
+          _.removeById(existMaterialList[type], material.id)
+          break
+      }
+    })
   })
   db.set('materialList', existMaterialList).write()
 }

@@ -171,7 +171,13 @@ export default {
       this.dialogVisible = false
     },
     deleteMaterial () {
-      this.$set(this.data, 'modify', 'delete')
+      switch (this.data.modify){
+        case 'delete':
+          this.$set(this.data, 'modify', undefined)
+          break
+        default:
+          this.$set(this.data, 'modify', 'delete')
+      }
     }
   }
 }
@@ -204,7 +210,7 @@ export default {
 .card-label span 
   color #2c3e50
 .card-line .el-select
-  width: 31em
+  width: 100%
 </style>
 
 <style lang="stylus">

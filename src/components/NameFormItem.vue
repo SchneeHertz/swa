@@ -43,4 +43,5 @@ export default {
   white-space: nowrap
 .name-select__body
   display: table-cell
+  width: 100%
 </style>

@@ -102,7 +102,13 @@ export default {
       this.dialogVisible = false
     },
     deleteCondition () {
-      this.$set(this.data, 'modify', 'delete')
+      switch (this.data.modify){
+        case 'delete':
+          this.$set(this.data, 'modify', undefined)
+          break
+        default:
+          this.$set(this.data, 'modify', 'delete')
+      }
     }
   }
 }

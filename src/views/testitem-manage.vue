@@ -1,7 +1,7 @@
 <template>
   <el-container>
     <BaseHeader activeIndex="testitem-manage"/>
-    <el-container>
+    <el-container class="testitem-manage">
       <el-aside width="132px" class="nav-aside">
         <el-menu
           class="menu"
@@ -105,7 +105,7 @@
             v-for="method in methodList"
             :key="method.id"
             :data="method"
-            :methodOptionList="{}"
+            :conditionOptionList="conditionOptionList"
             width="48%"
           ></MethodCard>
         </div>
@@ -125,7 +125,7 @@
               >
                 <template #prepend><span class="testitem-filter-prepend">筛选</span></template>
               </el-input>
-              <NameFormItem class="card-line" prependWidth="2em">
+              <NameFormItem class="card-line" prependWidth="32px">
                 <template #prepend>分组</template>
                 <template #default>
                   <el-select
@@ -163,9 +163,48 @@
             </div>
           </el-col>
           <el-col :span="18">
-            <el-tabs type="border-card">
-              <el-tab-pane label="信息" name="info">
-
+            <el-tabs type="border-card" v-model="activeTestitemTab">
+              <el-tab-pane label="信息" name="info" class="regulation-info-pane">
+                <el-input
+                  v-model="selectRegulation.name"
+                  class="card-line"
+                  @change="updateRegulationStatus"
+                >
+                  <template #prepend>名称</template>
+                </el-input>
+                <el-input
+                  v-model="selectRegulation.shortname"
+                  class="card-line"
+                  @change="updateRegulationStatus"
+                >
+                  <template #prepend>缩写</template>
+                </el-input>
+                <el-input 
+                  v-model="selectRegulation.code"
+                  class="card-line"
+                  @change="updateRegulationStatus"
+                >
+                  <template #prepend>OTS 编号</template>
+                </el-input>
+                <NameFormItem class="card-line" prependWidth="60px">
+                  <template #prepend>分组</template>
+                  <template #default>
+                    <el-select
+                      v-model="selectRegulation.group"
+                      allow-create
+                      filterable
+                      multiple
+                      style="width: 100%;"
+                      @change="updateRegulationStatus"
+                    >
+                      <el-option
+                        v-for="op in testitemGroupList"
+                        :key="op"
+                        :value="op"
+                      ></el-option>
+                    </el-select>
+                  </template>
+                </NameFormItem>
               </el-tab-pane>
               <el-tab-pane label="方法" name="method">
 
@@ -221,6 +260,7 @@ export default {
       searchName: undefined,
       searchGroup: undefined,
       pageTable: 1,
+      activeTestitemTab: 'info',
       selectRegulation: {}
     }
   },
@@ -248,11 +288,26 @@ export default {
     },
     materialOptionList () {
       return {
-        status: _.chain(this.materialList.map(m=>m.status)).flatten().uniq().sortBy().value(),
-        element: _.chain(this.materialList.map(m=>m.element)).flatten().uniq().sortBy().value(),
-        digestion: _.chain(this.materialList.map(m=>m.digestion)).flatten().uniq().sortBy().value(),
-        other: _.chain(this.materialList.map(m=>m.other)).flatten().uniq().sortBy().value()
+        status: _.chain(this.materialList.map(m=>m.status)).flatten().uniq().sortBy().map(e=>({value: e})).value(),
+        element: _.chain(this.materialList.map(m=>m.element)).flatten().uniq().sortBy().map(e=>({value: e})).value(),
+        digestion: _.chain(this.materialList.map(m=>m.digestion)).flatten().uniq().sortBy().map(e=>({value: e})).value(),
+        other: _.chain(this.materialList.map(m=>m.other)).flatten().uniq().sortBy().map(e=>({value: e})).value()
       }
+    },
+    conditionOptionList () {
+      let tempArr = {}
+      _.forIn(this.conditionList, group=>{
+        group.map(e=>{
+          tempArr[e.id] = _.cloneDeep(e)
+        })
+      })
+      this.materialConditionList.map(e=>{
+        tempArr[e.id] = _.assign({cat: 'material', list: this.materialOptionList[e.property]},e)
+      })
+      return tempArr
+    },
+    testitemGroupList () {
+      return _.chain(this.regulationList).map(t=>t.group).flatten().compact().uniq().sortBy().value()
     }
   },
   mounted () {
@@ -384,7 +439,8 @@ export default {
         this.methodList.push({
           name: value,
           id: _id(),
-          modify: 'add'
+          modify: 'add',
+          condition: []
         })
       }).catch(() => {
         this.$message({
@@ -467,8 +523,11 @@ export default {
       })
     },
     handleSelectRegulation (id) {
-      this.selectRegulation = _.cloneDeep(_.find(this.regulationList, {id: id}))
-    }
+      this.selectRegulation = _.find(this.regulationList, {id: id})
+    },
+    updateRegulationStatus () {
+      this.$set(this.selectRegulation, 'modify', 'modify')
+    },
   }
 }
 </script>
@@ -481,11 +540,6 @@ export default {
 .condition-pane .el-tabs, .material-pane .el-tabs, .testitem-pane .el-tabs
   height: calc(100vh - 2px)
   border-left: none
-.condition-card
-  vertical-align: top
-  width: 39vw
-  margin: 0.4vh 0.4vw
-  display: inline-block
 .card-line:first-child
   margin: 6px 0
 .card-line:not(:first-child)
@@ -527,4 +581,9 @@ export default {
   text-align: center
   font-size: 18px
   vertical-align: middle
+.testitem-manage .component-card
+  vertical-align: top
+.regulation-info-pane .el-input-group__prepend
+  text-align: center
+  width: 60px
 </style>

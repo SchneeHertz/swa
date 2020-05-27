@@ -1,5 +1,5 @@
 <template>
-  <div class="point-card" 
+  <div class="point-card component-card" 
     :class="[shadow ? 'is-' + shadow + '-shadow' : 'is-always-shadow', {'select-point-card': isSelected}]"
     :style="{width: width}"
   >
@@ -113,10 +113,4 @@ export default {
   padding: 8px 16px
 .point-card__body .point-description, .point-card__body .point-option
   margin: 2px 0
-</style>
-
-<style lang="stylus">
-.point-card__body .el-select .el-input__inner
-  border-top-left-radius: 0
-  border-bottom-left-radius: 0
 </style>

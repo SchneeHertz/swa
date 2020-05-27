@@ -1,5 +1,5 @@
 <template>
-  <div class="condition-card" :class="shadow ? 'is-' + shadow + '-shadow' : 'is-always-shadow'" :style="{width: width}">
+  <div class="condition-card component-card" :class="shadow ? 'is-' + shadow + '-shadow' : 'is-always-shadow'" :style="{width: width}">
     <div class="condition-card__header">
       <span>{{data.name}}</span>
       <slot name="header"></slot>
@@ -16,8 +16,8 @@
       <div class="card-line">
         <label class="card-label">排序: <span>{{data.rank}}</span></label>
       </div>
-      <div class="card-line" v-for="(answer, i) in materialOptionList[data.property]" :key="answer">
-        <label class="card-label">选项{{i+1}}: <span>{{answer}}</span></label>
+      <div class="card-line" v-for="(answer, i) in materialOptionList[data.property]" :key="answer.value">
+        <label class="card-label">选项{{i+1}}: <span>{{answer.value}}</span></label>
       </div>
       <slot></slot>
     </div>
@@ -39,7 +39,7 @@
       >
         <template #prepend>描述</template>
       </el-input>
-      <NameFormItem class="card-line" prependWidth="50px">
+      <NameFormItem class="card-line" prependWidth="60px">
         <template #prepend>排序</template>
         <template #default>
           <el-input-number v-model="dialogData.rank" />
@@ -130,12 +130,10 @@ export default {
   color: grey
 .card-label span 
   color #2c3e50
-.edit-dialog .card-line .el-input
-  width: 28vw
 </style>
 
 <style lang="stylus">
 .condition-card .card-line .el-input-group__prepend
   text-align: center
-  min-width: 50px
+  min-width: 60px
 </style>

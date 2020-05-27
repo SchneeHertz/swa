@@ -1,5 +1,5 @@
 <template>
-  <div class="material-card" 
+  <div class="material-card component-card" 
     :class="[shadow ? 'is-' + shadow + '-shadow' : 'is-always-shadow']"
     :style="{width: width}"
   >
@@ -59,9 +59,9 @@
           >
             <el-option
               v-for="op in materialOptionList.status"
-              :key="op"
-              :value="op"
-              :label="op"
+              :key="op.value"
+              :value="op.value"
+              :label="op.value"
             />
           </el-select>
         </template>
@@ -77,9 +77,9 @@
           >
             <el-option
               v-for="op in materialOptionList.element"
-              :key="op"
-              :value="op"
-              :label="op"
+              :key="op.value"
+              :value="op.value"
+              :label="op.value"
             />
           </el-select>
         </template>
@@ -95,9 +95,9 @@
           >
             <el-option
               v-for="op in materialOptionList.digestion"
-              :key="op"
-              :value="op"
-              :label="op"
+              :key="op.value"
+              :value="op.value"
+              :label="op.value"
             />
           </el-select>
         </template>
@@ -113,9 +113,9 @@
           >
             <el-option
               v-for="op in materialOptionList.other"
-              :key="op"
-              :value="op"
-              :label="op"
+              :key="op.value"
+              :value="op.value"
+              :label="op.value"
             />
           </el-select>
         </template>

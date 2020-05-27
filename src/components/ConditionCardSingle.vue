@@ -1,5 +1,5 @@
 <template>
-  <div class="condition-card" :class="shadow ? 'is-' + shadow + '-shadow' : 'is-always-shadow'" :style="{width: width}">
+  <div class="condition-card component-card" :class="shadow ? 'is-' + shadow + '-shadow' : 'is-always-shadow'" :style="{width: width}">
     <div class="condition-card__header">
       <span>{{data.name}}</span>
       <slot name="header"></slot>

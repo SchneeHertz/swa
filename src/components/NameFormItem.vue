@@ -1,5 +1,5 @@
 <template>
-  <div :style="initStyle">
+  <div :style="initStyle" class="name-form-item">
     <div 
       class="name-select__prepend"
       v-if="$slots.prepend"
@@ -27,6 +27,8 @@ export default {
 </script>
 
 <style lang="stylus" scoped>
+.name-form-item
+  font-size: 14px
 .name-select__prepend
   background-color: #F5F7FA
   color: #909399
@@ -44,4 +46,10 @@ export default {
 .name-select__body
   display: table-cell
   width: 100%
+</style>
+
+<style lang="stylus">
+.name-select__body .el-input__inner
+  border-bottom-left-radius: 0
+  border-top-left-radius: 0
 </style>

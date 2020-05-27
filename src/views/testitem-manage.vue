@@ -133,8 +133,11 @@
                     multiple
                     clearable
                   >
-                    <el-option value="Total">Total</el-option>
-                    <el-option value="Soluble">Soluble</el-option>
+                    <el-option
+                      v-for="op in testitemGroupList"
+                      :key="op"
+                      :value="op"
+                    ></el-option>
                   </el-select>
                 </template>
               </NameFormItem>
@@ -194,7 +197,7 @@
                       allow-create
                       filterable
                       multiple
-                      style="width: 100%;"
+                      class="one-line-select"
                       @change="updateRegulationStatus"
                     >
                       <el-option
@@ -210,13 +213,43 @@
 
               </el-tab-pane>
               <el-tab-pane label="条件" name="condition">
-
+                <InnerConditionCard
+                  v-for="(condition, index) in selectRegulation.condition"
+                  :key="condition.id"
+                  width="48%"
+                  :data="condition"
+                  :option="conditionOptionList[condition.id]"
+                  @select-change="updateRegulationStatus"
+                  @delete-point="removeInnerCondition(index)"
+                ></InnerConditionCard>
               </el-tab-pane>
             </el-tabs>
           </el-col>
         </el-row>
+        <el-dialog
+          title="添加条件"
+          :visible.sync="dialogConditionVisible"
+          width="30%"
+        >
+          <el-select
+            v-model="dialogConditionId"
+            class="one-line-select"            
+          >
+            <el-option
+              v-for="condition in conditionOptionList"
+              :key="condition.id"
+              :label="`${condition.name} (${condition.cat})`"
+              :value="condition.id"
+            ></el-option>
+          </el-select>
+          <span slot="footer" class="dialog-footer">
+            <el-button type="info" @click="dialogConditionVisible = false">取消</el-button>
+            <el-button type="primary" @click="confirmAddInnerCondition">确定</el-button>
+          </span>
+        </el-dialog>
         <div class="bottom-function-btn">
           <el-button type="primary" class="bigicon" icon="el-third-icon-plus" circle @click="addRegulation" title="新增"></el-button>
+          <el-button type="primary" class="bigicon" icon="el-third-icon-edit" circle @click="addInnerCard" title="添加方法或条件"></el-button>
           <el-button type="success" class="bigicon" icon="el-third-icon-save" circle @click="saveRegulation" title="保存"></el-button>
         </div>
       </el-main>
@@ -235,6 +268,7 @@ import MaterialCard from '@/components/MaterialCard.vue'
 import MaterialConditionCard from '@/components/MaterialConditionCard.vue'
 import MethodCard from '@/components/MethodCard.vue'
 import NameFormItem from '@/components/NameFormItem.vue'
+import InnerConditionCard from '@/components/InnerConditionCard.vue'
 
 import {generate as _id } from 'shortid'
 
@@ -246,7 +280,8 @@ export default {
     MaterialCard,
     MaterialConditionCard,
     MethodCard,
-    NameFormItem
+    NameFormItem,
+    InnerConditionCard
   },
   data () {
     return {
@@ -258,10 +293,12 @@ export default {
       activeConditionTab: 'single',
       activeMaterialTab: 'material',
       searchName: undefined,
-      searchGroup: undefined,
+      searchGroup: [],
       pageTable: 1,
       activeTestitemTab: 'info',
-      selectRegulation: {}
+      selectRegulation: {},
+      dialogConditionVisible: false,
+      dialogConditionId: undefined
     }
   },
   computed: {
@@ -272,7 +309,9 @@ export default {
       return this.conditionList['multiple']
     },
     displayRegulationList () {
-      return this.regulationList.filter(data => !this.searchName || data.name.toLowerCase().includes(this.searchName.toLowerCase()))
+      return this.regulationList
+        .filter(data => !this.searchName || data.name.toLowerCase().includes(this.searchName.toLowerCase()))
+        .filter(data => _.isEmpty(this.searchGroup) || _.isEmpty(_.difference(this.searchGroup, data.group)))
     },
     displayRegulationCount () {
       return this.displayRegulationList.length
@@ -528,6 +567,24 @@ export default {
     updateRegulationStatus () {
       this.$set(this.selectRegulation, 'modify', 'modify')
     },
+    addInnerCard () {
+      if (this.activeTestitemTab == 'condition') {
+        if (!_.isArray(this.selectRegulation.condition)) this.selectRegulation.condition = []
+        this.dialogConditionVisible = true
+      } else if (this.activeTestitemTab == 'method') {
+        if (!_.isArray(this.selectRegulation.method)) this.selectRegulation.method = []
+      }
+    },
+    confirmAddInnerCondition () {
+      this.selectRegulation.condition.push({
+        id: this.dialogConditionId,
+        value: []
+      })
+      this.dialogConditionVisible = false
+    },
+    removeInnerCondition (index) {
+      this.selectRegulation.condition.splice(index, 1)
+    }
   }
 }
 </script>
@@ -555,12 +612,12 @@ export default {
   height: 85vh
 
 .testitem-filter
-  height: 12vh
+  height: 13vh
 .testitem-filter-prepend
   padding: 0 2px
 .regulation-list
   border: solid 1px rgb(220, 223, 230)
-  height: calc(88vh - 36px)
+  height: calc(87vh - 35px)
 .regulation-list .list
   display: block
 .regulation-list .regulation-ul
@@ -570,6 +627,8 @@ export default {
   border-bottom: solid 1px lightgrey
 .regulation-ul.active-regulation
   background-color: #FFCC66
+.one-line-select
+  width: 100%
 </style>
 
 <style lang="stylus">

@@ -25,10 +25,13 @@
         class="method-condition-display"
       >
         <div class="card-line">
+          <label class="card-label">条件判断: <span>{{condition.logic}}</span></label>
+        </div>
+        <div class="card-line">
           <label class="card-label">条件名: <span>{{conditionOptionList[condition.id].name}}</span></label>
         </div>
         <div class="card-line">
-          <label class="card-label">逻辑关系: <span>{{condition.logic}}</span></label>
+          <label class="card-label">逻辑关系: <span>{{condition.valueLogic}}</span></label>
         </div>
         <div class="card-line">
           <label class="card-label">值: <span>{{condition.value.join(', ')}}</span></label>
@@ -63,11 +66,12 @@
       </el-input>
       <div class="method-condition">
         <InnerConditionCard
-          v-for="condition in dialogData.condition"
+          v-for="(condition, index) in dialogData.condition"
           :key="condition.id"
           width="48%"
           :data="condition"
           :option="conditionOptionList[condition.id]"
+          @delete-point="removeCondition(index)"
         ></InnerConditionCard>
       </div>
       <span slot="footer" class="dialog-footer">
@@ -152,6 +156,9 @@ export default {
         value: []
       })
       this.dialogConditionVisible = false
+    },
+    removeCondition (index) {
+      this.dialogData.condition.splice(index, 1)
     },
     confirmEdit () {
       _.assign(this.data, this.dialogData, {modify: 'modify'})

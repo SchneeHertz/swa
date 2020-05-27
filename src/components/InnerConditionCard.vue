@@ -10,12 +10,24 @@
     </div>
     <div class="inner-condition-card__body">
       <NameFormItem class="card-line" prependWidth="60px">
+        <template #prepend>条件判断</template>
+        <template #default>
+          <el-select v-model="data.logic"
+            @change="$emit('select-change')"
+          >
+            <el-option value="yes" label="yes"></el-option>
+            <el-option value="no" label="no"></el-option>
+          </el-select>
+        </template>
+      </NameFormItem>
+      <NameFormItem class="card-line" prependWidth="60px">
         <template #prepend>逻辑关系</template>
         <template #default>
-          <el-select v-model="data.logic">
-            <el-option value="and" label="与"></el-option>
-            <el-option value="or" label="或"></el-option>
-            <el-option value="not" label="非"></el-option>
+          <el-select v-model="data.valueLogic"
+            @change="$emit('select-change')"
+          >
+            <el-option value="and" label="and"></el-option>
+            <el-option value="or" label="or"></el-option>
           </el-select>
         </template>
       </NameFormItem>
@@ -25,6 +37,7 @@
           <el-select 
             v-model="data.value"
             multiple
+            @change="$emit('select-change')"
           >
             <el-option
               v-for="op in option.list"
@@ -71,7 +84,6 @@ export default {
   margin: 4px
   border-radius: 4px
   border: 1px solid #EBEEF5
-  background-color: #fff
   overflow: hidden
   color: #303133
   transition: 0.3s

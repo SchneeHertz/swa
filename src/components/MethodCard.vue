@@ -176,7 +176,6 @@ export default {
   margin: 4px
   border-radius: 4px
   border: 1px solid #EBEEF5
-  background-color: #fff
   overflow: hidden
   color: #303133
   transition: 0.3s

@@ -39,7 +39,7 @@
       >
         <template #prepend>描述</template>
       </el-input>
-      <NameFormItem class="card-line" prependWidth="50px">
+      <NameFormItem class="card-line" prependWidth="60px">
         <template #prepend>排序</template>
         <template #default>
           <el-input-number v-model="dialogData.rank" />
@@ -120,7 +120,6 @@ export default {
   margin: 4px
   border-radius: 4px
   border: 1px solid #EBEEF5
-  background-color: #fff
   overflow: hidden
   color: #303133
   transition: 0.3s

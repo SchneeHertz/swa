@@ -1,5 +1,5 @@
 <template>
-  <div class="method-card" 
+  <div class="method-card component-card" 
     :class="[shadow ? 'is-' + shadow + '-shadow' : 'is-always-shadow']"
     :style="{width: width}"
   >
@@ -16,24 +16,31 @@
       <div class="card-line">
         <label class="card-label">描述: <span>{{data.description}}</span></label>
       </div>
-      <!-- <div class="card-line">
-        <label class="card-label">状态: <span>{{displayLine('status')}}</span></label>
-      </div>
       <div class="card-line">
-        <label class="card-label">含有物质: <span>{{displayLine('element')}}</span></label>
+        <label class="card-label">OTS编号: <span>{{data.code}}</span></label>
       </div>
-      <div class="card-line">
-        <label class="card-label">消解液: <span>{{displayLine('digestion')}}</span></label>
+      <div
+        v-for="condition in data.condition"
+        :key="condition.id"
+        class="method-condition-display"
+      >
+        <div class="card-line">
+          <label class="card-label">条件名: <span>{{conditionOptionList[condition.id].name}}</span></label>
+        </div>
+        <div class="card-line">
+          <label class="card-label">逻辑关系: <span>{{condition.logic}}</span></label>
+        </div>
+        <div class="card-line">
+          <label class="card-label">值: <span>{{condition.value.join(', ')}}</span></label>
+        </div>
       </div>
-      <div class="card-line">
-        <label class="card-label">其他: <span>{{displayLine('other')}}</span></label>
-      </div> -->
       <slot></slot>
     </div>
     <el-dialog
-      title="编辑材质"
+      title="编辑方法"
       :visible.sync="dialogVisible"
-      width="45%"
+      width="75%"
+      top="10vh"
       class="edit-dialog"
     >
       <el-input
@@ -48,81 +55,46 @@
       >
         <template #prepend>描述</template>
       </el-input>
-      <!-- <NameFormItem class="card-line" prependWidth="60px">
-        <template #prepend>状态</template>
-        <template #default>
-          <el-select
-            v-model="dialogData.status"
-            multiple
-            allow-create
-            filterable
-          >
-            <el-option
-              v-for="op in methodOptionList.status"
-              :key="op"
-              :value="op"
-              :label="op"
-            />
-          </el-select>
-        </template>
-      </NameFormItem>
-      <NameFormItem class="card-line" prependWidth="60px">
-        <template #prepend>含有物质</template>
-        <template #default>
-          <el-select
-            v-model="dialogData.element"
-            multiple
-            allow-create
-            filterable
-          >
-            <el-option
-              v-for="op in methodOptionList.element"
-              :key="op"
-              :value="op"
-              :label="op"
-            />
-          </el-select>
-        </template>
-      </NameFormItem>
-      <NameFormItem class="card-line" prependWidth="60px">
-        <template #prepend>消解液</template>
-        <template #default>
-          <el-select
-            v-model="dialogData.digestion"
-            multiple
-            allow-create
-            filterable
-          >
-            <el-option
-              v-for="op in methodOptionList.digestion"
-              :key="op"
-              :value="op"
-              :label="op"
-            />
-          </el-select>
-        </template>
-      </NameFormItem>
-      <NameFormItem class="card-line" prependWidth="60px">
-        <template #prepend>其他</template>
-        <template #default>
-          <el-select
-            v-model="dialogData.other"
-            multiple
-            allow-create
-            filterable
-          >
-            <el-option
-              v-for="op in methodOptionList.other"
-              :key="op"
-              :value="op"
-              :label="op"
-            />
-          </el-select>
-        </template>
-      </NameFormItem> -->
+      <el-input
+        v-model="dialogData.code"
+        class="card-line"
+      >
+        <template #prepend>OTS编号</template>
+      </el-input>
+      <div class="method-condition">
+        <InnerConditionCard
+          v-for="condition in dialogData.condition"
+          :key="condition.id"
+          width="48%"
+          :data="condition"
+          :option="conditionOptionList[condition.id]"
+        ></InnerConditionCard>
+      </div>
       <span slot="footer" class="dialog-footer">
+        <el-button type="success" @click="addCondition">添加条件</el-button>
         <el-button type="info" @click="dialogVisible = false">取消</el-button>
         <el-button type="primary" @click="confirmEdit">确定</el-button>
+      </span>
+    </el-dialog>
+    <el-dialog
+      title="添加条件"
+      :visible.sync="dialogConditionVisible"
+      width="30%"
+    >
+      <el-select
+        v-model="dialogConditionId"
+        class="dialog-add-condition"
+      >
+        <el-option
+          v-for="condition in conditionOptionList"
+          :key="condition.id"
+          :label="`${condition.name} (${condition.cat})`"
+          :value="condition.id"
+        ></el-option>
+      </el-select>
+      <span slot="footer" class="dialog-footer">
+        <el-button type="info" @click="dialogConditionVisible = false">取消</el-button>
+        <el-button type="primary" @click="confirmAddCondition">确定</el-button>
       </span>
     </el-dialog>
   </div>
@@ -130,11 +102,13 @@
 
 <script>
 import NameFormItem from '@/components/NameFormItem.vue'
+import InnerConditionCard from '@/components/InnerConditionCard.vue'
 
 export default {
   name: 'MethodCard',
   components: {
-    NameFormItem
+    NameFormItem,
+    InnerConditionCard
   },
   props: {
     shadow: String,
@@ -146,12 +120,14 @@ export default {
       type: Object,
       default: ()=>{return {}}
     },
-    methodOptionList: Object
+    conditionOptionList: Object
   },
   data () {
     return {
       dialogVisible: false,
-      dialogData: {}
+      dialogData: {},
+      dialogConditionVisible: false,
+      dialogConditionId: undefined
     }
   },
   methods: {
@@ -165,6 +141,17 @@ export default {
     modifyMethod () {
       this.dialogData = _.cloneDeep(this.data)
       this.dialogVisible = true
+    },
+    addCondition () {
+      this.dialogConditionId = undefined
+      this.dialogConditionVisible = true
+    },
+    confirmAddCondition () {
+      this.dialogData.condition.push({
+        id: this.dialogConditionId,
+        value: []
+      })
+      this.dialogConditionVisible = false
     },
     confirmEdit () {
       _.assign(this.data, this.dialogData, {modify: 'modify'})
@@ -209,8 +196,20 @@ export default {
   color: grey
 .card-label span 
   color #2c3e50
-.card-line .el-select
+.method-condition-display
+  border: solid 1px #DCDFE6
+  border-radius: 4px
+  padding: 2px 8px
+  margin: 2px 0
+.method-condition
   width: 100%
+  min-height: 20vh
+  max-height: 45vh
+  overflow: auto
+  border: solid 1px #DCDFE6
+  border-radius: 4px
+.dialog-add-condition
+  width:100%
 </style>
 
 <style lang="stylus">

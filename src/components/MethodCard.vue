@@ -1,5 +1,6 @@
 <template>
-  <div class="method-card component-card" 
+  <div 
+    class="method-card component-card" 
     :class="[shadow ? 'is-' + shadow + '-shadow' : 'is-always-shadow']"
     :style="{width: width}"
   >
@@ -22,7 +23,7 @@
       <div
         v-for="condition in data.condition"
         :key="condition.id"
-        class="method-condition-display"
+        class="frame-condition-display"
       >
         <div class="card-line">
           <label class="card-label">条件判断: <span>{{condition.logic}}</span></label>
@@ -64,7 +65,7 @@
       >
         <template #prepend>OTS编号</template>
       </el-input>
-      <div class="method-condition">
+      <div class="frame-condition">
         <InnerConditionCard
           v-for="(condition, index) in dialogData.condition"
           :key="condition.id"
@@ -202,12 +203,12 @@ export default {
   color: grey
 .card-label span 
   color #2c3e50
-.method-condition-display
+.frame-condition-display
   border: solid 1px #DCDFE6
   border-radius: 4px
   padding: 2px 8px
   margin: 2px 0
-.method-condition
+.frame-condition
   width: 100%
   min-height: 20vh
   max-height: 45vh

@@ -47,10 +47,10 @@
       </NameFormItem>
       <div class="card-line" v-for="(op, i) in dialogData.list" :key="i">
         <el-input v-model="op.value" placeholder="选项值">
-          <template v-slot:prepend>选项{{i+1}}:</template>
+          <template v-slot:prepend>选项{{i+1}}:</template>i
         </el-input>
         <el-input v-model="op.remark" placeholder="选项说明"/>
-        <el-button type="danger" @click="removeOption(op.value)">删除</el-button>
+        <el-button type="danger" @click="removeOption(i)">删除</el-button>
       </div>
       <div class="card-line">
         <el-button type="primary" size="mini" @click="addOption">增加一个选项</el-button>
@@ -94,8 +94,8 @@ export default {
       !_.isArray(this.dialogData.list) ? this.$set(this.dialogData, 'list', []) : ''
       this.dialogData.list.push({})
     },
-    removeOption (value) {
-      this.$set(this.dialogData, 'list', _.filter(this.dialogData.list, o=>o.value != value))
+    removeOption (i) {
+      this.dialogData.list.splice(i, 1)
     },
     confirmEdit () {
       _.assign(this.data, this.dialogData, {modify: 'modify'})

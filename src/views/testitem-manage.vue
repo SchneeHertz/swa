@@ -54,14 +54,32 @@
               </ConditionCardSingle>
             </div>
           </el-tab-pane>
-          <el-tab-pane label="数值" name="number">
-
-          </el-tab-pane>
           <el-tab-pane label="文本" name="text">
 
           </el-tab-pane>
+          <el-tab-pane label="测试项目" name="testitem">
+            <div class="inner-tabs-list">
+              <ConditionCardTestitem
+                v-for="condition in testitemConditionList"
+                :key="condition.id"
+                :data="condition"
+                width="48%"
+                :regulationOptionList="regulationList"
+              >
+              </ConditionCardTestitem>
+            </div>
+          </el-tab-pane>
           <el-tab-pane label="附加" name="afterward">
-
+            <div class="inner-tabs-list">
+              <ConditionCardAfterward
+                v-for="condition in afterwardConditionList"
+                :key="condition.id"
+                :data="condition"
+                width="48%"
+                :conditionOptionList="conditionOptionList"
+              >
+              </ConditionCardAfterward>
+            </div>
           </el-tab-pane>
         </el-tabs>
         <div class="bottom-function-btn">
@@ -168,60 +186,64 @@
           <el-col :span="18">
             <el-tabs type="border-card" v-model="activeTestitemTab">
               <el-tab-pane label="信息" name="info" class="regulation-info-pane">
-                <el-input
-                  v-model="selectRegulation.name"
-                  class="card-line"
-                  @change="updateRegulationStatus"
-                >
-                  <template #prepend>名称</template>
-                </el-input>
-                <el-input
-                  v-model="selectRegulation.shortname"
-                  class="card-line"
-                  @change="updateRegulationStatus"
-                >
-                  <template #prepend>缩写</template>
-                </el-input>
-                <el-input 
-                  v-model="selectRegulation.code"
-                  class="card-line"
-                  @change="updateRegulationStatus"
-                >
-                  <template #prepend>OTS 编号</template>
-                </el-input>
-                <NameFormItem class="card-line" prependWidth="60px">
-                  <template #prepend>分组</template>
-                  <template #default>
-                    <el-select
-                      v-model="selectRegulation.group"
-                      allow-create
-                      filterable
-                      multiple
-                      class="one-line-select"
-                      @change="updateRegulationStatus"
-                    >
-                      <el-option
-                        v-for="op in testitemGroupList"
-                        :key="op"
-                        :value="op"
-                      ></el-option>
-                    </el-select>
-                  </template>
-                </NameFormItem>
+                <div class="inner-tabs-list">
+                  <el-input
+                    v-model="selectRegulation.name"
+                    class="card-line"
+                    @change="updateRegulationStatus"
+                  >
+                    <template #prepend>名称</template>
+                  </el-input>
+                  <el-input
+                    v-model="selectRegulation.shortname"
+                    class="card-line"
+                    @change="updateRegulationStatus"
+                  >
+                    <template #prepend>缩写</template>
+                  </el-input>
+                  <el-input 
+                    v-model="selectRegulation.code"
+                    class="card-line"
+                    @change="updateRegulationStatus"
+                  >
+                    <template #prepend>OTS 编号</template>
+                  </el-input>
+                  <NameFormItem class="card-line" prependWidth="60px">
+                    <template #prepend>分组</template>
+                    <template #default>
+                      <el-select
+                        v-model="selectRegulation.group"
+                        allow-create
+                        filterable
+                        multiple
+                        class="one-line-select"
+                        @change="updateRegulationStatus"
+                      >
+                        <el-option
+                          v-for="op in testitemGroupList"
+                          :key="op"
+                          :value="op"
+                        ></el-option>
+                      </el-select>
+                    </template>
+                  </NameFormItem>
+                </div>
               </el-tab-pane>
               <el-tab-pane label="方法" name="method">
 
               </el-tab-pane>
               <el-tab-pane label="条件" name="condition">
-                <InnerConditionCard
-                  v-for="(condition, index) in selectRegulation.condition"
-                  :key="condition.id"
-                  width="48%"
-                  :data="condition"
-                  :option="conditionOptionList[condition.id]"
-                  @select-change="updateRegulationStatus"
-                  @delete-point="removeInnerCondition(index)"
-                ></InnerConditionCard>
+                <div class="inner-tabs-list">
+                  <InnerConditionCard
+                    v-for="(condition, index) in selectRegulation.condition"
+                    :key="condition.id"
+                    width="48%"
+                    :data="condition"
+                    :option="conditionOptionList[condition.id]"
+                    @select-change="updateRegulationStatus"
+                    @delete-point="removeInnerCondition(index)"
+                  ></InnerConditionCard>
+                </div>
               </el-tab-pane>
             </el-tabs>
           </el-col>
@@ -264,19 +286,23 @@
 
 import BaseHeader from '@/components/BaseHeader.vue'
 import ConditionCardSingle from '@/components/ConditionCardSingle.vue'
+import ConditionCardTestitem from '@/components/ConditionCardTestitem.vue'
+import ConditionCardAfterward from '@/components/ConditionCardAfterward.vue'
 import MaterialCard from '@/components/MaterialCard.vue'
 import MaterialConditionCard from '@/components/MaterialConditionCard.vue'
 import MethodCard from '@/components/MethodCard.vue'
 import NameFormItem from '@/components/NameFormItem.vue'
 import InnerConditionCard from '@/components/InnerConditionCard.vue'
 
-import {generate as _id } from 'shortid'
+import { generate as _id } from 'shortid'
 
 export default {
   name: 'TestitemManage',
   components: {
     BaseHeader,
     ConditionCardSingle,
+    ConditionCardTestitem,
+    ConditionCardAfterward,
     MaterialCard,
     MaterialConditionCard,
     MethodCard,
@@ -307,6 +333,12 @@ export default {
     },
     multipleConditionList () {
       return this.conditionList['multiple']
+    },
+    testitemConditionList () {
+      return this.conditionList['testitem']
+    },
+    afterwardConditionList () {
+      return this.conditionList['afterward']
     },
     displayRegulationList () {
       return this.regulationList
@@ -340,7 +372,7 @@ export default {
           tempArr[e.id] = _.cloneDeep(e)
         })
       })
-      this.materialConditionList.map(e=>{
+      _.forIn(this.materialConditionList, e=>{
         tempArr[e.id] = _.assign({cat: 'material', list: this.materialOptionList[e.property]},e)
       })
       return tempArr
@@ -627,8 +659,6 @@ export default {
   border-bottom: solid 1px lightgrey
 .regulation-ul.active-regulation
   background-color: #FFCC66
-.one-line-select
-  width: 100%
 </style>
 
 <style lang="stylus">
@@ -645,4 +675,6 @@ export default {
 .regulation-info-pane .el-input-group__prepend
   text-align: center
   width: 60px
+.one-line-select
+  width: 100%
 </style>

@@ -10,9 +10,9 @@ db._.mixin(LodashId)
 _.mixin(LodashId)
 
 db.defaults({
-  materialList: {},
+  materialList: {"material": [], "materialCondition": []},
   methodList: [],
-  condition: {},
+  condition: {"single": [], "multiple": [], "text": [], "testitem": [], "afterward": []},
   regulation: []
 }).write()
 

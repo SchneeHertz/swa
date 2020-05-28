@@ -1,0 +1,15 @@
+{
+  "materialList": {
+    "material": [],
+    "materialCondition": []
+  },
+  "condition": {
+    "single": [],
+    "multiple": [],
+    "text": [],
+    "testitem": [],
+    "afterward": []
+  },
+  "regulation": [],
+  "methodList": []
+}

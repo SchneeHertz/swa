@@ -1,0 +1,12 @@
+{
+  "accounts": [
+    {
+      "name": "admin",
+      "password": "admin",
+      "email": "test@test.com",
+      "authority": "admin",
+      "id": "c1fae768-2fe6-4fc0-b6ff-b2d4d70c1536",
+      "pwUpdate": 1585788857927
+    }
+  ]
+}

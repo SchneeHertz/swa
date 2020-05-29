@@ -171,6 +171,9 @@
                     @click="handleSelectRegulation(regulation.id)"
                   >
                     ({{regulation.code}}) {{regulation.name}}
+                    <span class="modify-remark" v-if="regulation.modify === 'add'">(新增)</span>
+                    <span class="modify-remark" v-if="regulation.modify === 'modify'">(已修改)</span>
+                    <span class="modify-remark" v-if="regulation.modify === 'delete'">(将要删除)</span>
                   </ul>
                 </li>
               </overlay-scrollbars>
@@ -270,8 +273,9 @@
           </span>
         </el-dialog>
         <div class="bottom-function-btn">
-          <el-button type="primary" class="bigicon" icon="el-third-icon-plus" circle @click="addRegulation" title="新增"></el-button>
+          <el-button type="primary" class="bigicon" icon="el-third-icon-plus" circle @click="addRegulation" title="新增项目"></el-button>
           <el-button type="primary" class="bigicon" icon="el-third-icon-edit" circle @click="addInnerCard" title="添加方法或条件"></el-button>
+          <el-button type="danger" class="bigicon" icon="el-third-icon-delete" circle @click="deleteRegulation" title="删除项目"></el-button>
           <el-button type="success" class="bigicon" icon="el-third-icon-save" circle @click="saveRegulation" title="保存"></el-button>
         </div>
       </el-main>
@@ -342,7 +346,7 @@ export default {
     },
     displayRegulationList () {
       return this.regulationList
-        .filter(data => !this.searchName || data.name.toLowerCase().includes(this.searchName.toLowerCase()))
+        .filter(data => !this.searchName || (data.code + data.name).toLowerCase().includes(this.searchName.toLowerCase()))
         .filter(data => _.isEmpty(this.searchGroup) || _.isEmpty(_.difference(this.searchGroup, data.group)))
     },
     displayRegulationCount () {
@@ -409,8 +413,8 @@ export default {
     loadRegulationList () {
       this.$http.get('/data/getRegulation')
       .then(res=>{
-        this.regulationList = _.sortBy(res.data.regulationList, (e)=>e['code'] + e['name'])
-    })
+        this.regulationList = _.sortBy(res.data.regulationList, e=>+e['code'])
+      })
     },
     handleMenuSelect (index) {
       this.activePage = index
@@ -531,6 +535,15 @@ export default {
         this.$message({type: 'info', message: '已取消'})
       })
     },
+    deleteRegulation () {
+      switch (this.selectRegulation.modify){
+        case 'delete':
+          this.$set(this.selectRegulation, 'modify', undefined)
+          break
+        default:
+          this.$set(this.selectRegulation, 'modify', 'delete')
+      }
+    },
     saveRegulation () {
       this.$http.post('/data/saveRegulation', {
         regulationList: _.filter(this.regulationList, 'modify')
@@ -616,6 +629,8 @@ export default {
   border-bottom: solid 1px lightgrey
 .regulation-ul.active-regulation
   background-color: #FFCC66
+.modify-remark
+  color: red
 </style>
 
 <style lang="stylus">

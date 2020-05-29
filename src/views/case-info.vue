@@ -16,14 +16,11 @@ export default {
   },
   data () {
     return {
-      materialList: []
+      
     }
   },
   mounted () {
-    this.$http.get('/data/getMaterialList')
-    .then(res=>{
-      this.materialList = res.data.materialList
-    })
+
   }
 }
 </script>

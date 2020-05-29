@@ -170,7 +170,7 @@
                     :key="regulation.id"
                     @click="handleSelectRegulation(regulation.id)"
                   >
-                    {{regulation.name}}
+                    ({{regulation.code}}) {{regulation.name}}
                   </ul>
                 </li>
               </overlay-scrollbars>
@@ -236,7 +236,7 @@
                 <div class="inner-tabs-list">
                   <InnerConditionCard
                     v-for="(condition, index) in selectRegulation.condition"
-                    :key="condition.id"
+                    :key="condition.id + index"
                     width="48%"
                     :data="condition"
                     :option="conditionOptionList[condition.id]"
@@ -382,24 +382,36 @@ export default {
     }
   },
   mounted () {
-    this.$http.get('/data/getMaterialList')
-    .then(res=>{
-      this.materialObj = res.data.materialList
-    })
-    this.$http.get('/data/getMethodList')
-    .then(res=>{
-      this.methodList = res.data.methodList
-    })
-    this.$http.get('/data/getRegulation')
-    .then(res=>{
-      this.regulationList = res.data.regulationList
-    })
-    this.$http.get('/data/getCondition')
-    .then(res=>{
-      this.conditionList = res.data.conditionList
-    })
+    this.loadMaterialList()
+    this.loadMethodList()
+    this.loadRegulationList()
+    this.loadConditionList()
   },
   methods: {
+    loadConditionList () {
+      this.$http.get('/data/getCondition')
+      .then(res=>{
+        this.conditionList = res.data.conditionList
+      })
+    },
+    loadMaterialList () {
+      this.$http.get('/data/getMaterialList')
+      .then(res=>{
+        this.materialObj = res.data.materialList
+      })
+    },
+    loadMethodList () {
+      this.$http.get('/data/getMethodList')
+      .then(res=>{
+        this.methodList = res.data.methodList
+      })
+    },
+    loadRegulationList () {
+      this.$http.get('/data/getRegulation')
+      .then(res=>{
+        this.regulationList = _.sortBy(res.data.regulationList, (e)=>e['code'] + e['name'])
+    })
+    },
     handleMenuSelect (index) {
       this.activePage = index
     },
@@ -415,10 +427,7 @@ export default {
           name: value
         })
       }).catch(() => {
-        this.$message({
-          type: 'info',
-          message: '已取消'
-        })
+        this.$message({type: 'info', message: '已取消'})
       })
     },
     saveCondition () {
@@ -431,26 +440,14 @@ export default {
       })
       .then(res=>{
         if(res.data.success){
-          this.$message({
-            type: 'success',
-            message: res.data.info
-          })
-          this.$http.get('/data/getCondition')
-          .then(res=>{
-            this.conditionList = res.data.conditionList
-          })
+          this.$message({type: 'success', message: res.data.info})
+          this.loadConditionList()
         } else {
-          this.$message({
-            type: 'warning',
-            message: res.data.info
-          })
+          this.$message({type: 'warning', message: res.data.info})
         }
       })
       .catch(() => {
-        this.$message({
-          type: 'warning',
-          message: '未知错误'
-        })
+        this.$message({type: 'warning', message: '未知错误'})
       })
     },
     addMaterial () {
@@ -464,10 +461,7 @@ export default {
           modify: 'add'
         })
       }).catch(() => {
-        this.$message({
-          type: 'info',
-          message: '已取消'
-        })
+        this.$message({type: 'info', message: '已取消'})
       })
     },
     saveMaterial () {
@@ -480,26 +474,14 @@ export default {
       })
       .then(res=>{
         if(res.data.success){
-          this.$message({
-            type: 'success',
-            message: res.data.info
-          })
-          this.$http.get('/data/getMaterialList')
-          .then(res=>{
-            this.materialObj = res.data.materialList
-          })
+          this.$message({type: 'success', message: res.data.info})
+          this.loadMaterialList()
         } else {
-          this.$message({
-            type: 'warning',
-            message: res.data.info
-          })
+          this.$message({type: 'warning', message: res.data.info})
         }
       })
       .catch(() => {
-        this.$message({
-          type: 'warning',
-          message: '未知错误'
-        })
+        this.$message({type: 'warning', message: '未知错误'})
       })
     },
     addMethod () {
@@ -514,10 +496,7 @@ export default {
           condition: []
         })
       }).catch(() => {
-        this.$message({
-          type: 'info',
-          message: '已取消'
-        })
+        this.$message({type: 'info', message: '已取消'})
       })
     },
     saveMethod () {
@@ -526,26 +505,14 @@ export default {
       })
       .then(res=>{
         if(res.data.success){
-          this.$message({
-            type: 'success',
-            message: res.data.info
-          })
-          this.$http.get('/data/getMethodList')
-          .then(res=>{
-            this.methodList = res.data.methodList
-          })
+          this.$message({type: 'success', message: res.data.info})
+          this.loadMethodList()
         } else {
-          this.$message({
-            type: 'warning',
-            message: res.data.info
-          })
+          this.$message({type: 'warning', message: res.data.info})
         }
       })
       .catch(() => {
-        this.$message({
-          type: 'warning',
-          message: '未知错误'
-        })
+        this.$message({type: 'warning', message: '未知错误'})
       })
     },
     addRegulation () {
@@ -553,16 +520,15 @@ export default {
         confirmButtonText: '确定',
         cancelButtonText: '取消'
       }).then(({ value }) => {
-        this.regulationList.push({
+        let geneId = _id()
+        this.regulationList.unshift({
           name: value,
-          id: _id(),
+          id: geneId,
           modify: 'add'
         })
+        this.handleSelectRegulation(geneId)
       }).catch(() => {
-        this.$message({
-          type: 'info',
-          message: '已取消'
-        })
+        this.$message({type: 'info', message: '已取消'})
       })
     },
     saveRegulation () {
@@ -575,22 +541,13 @@ export default {
             type: 'success',
             message: res.data.info
           })
-          this.$http.get('/data/getRegulation')
-          .then(res=>{
-            this.regulationList = res.data.regulationList
-          })
+          this.loadRegulationList()
         } else {
-          this.$message({
-            type: 'warning',
-            message: res.data.info
-          })
+          this.$message({type: 'warning', message: res.data.info})
         }
       })
       .catch(() => {
-        this.$message({
-          type: 'warning',
-          message: '未知错误'
-        })
+        this.$message({type: 'warning', message: '未知错误'})
       })
     },
     handleSelectRegulation (id) {

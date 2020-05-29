@@ -9,35 +9,35 @@
       <el-button type="danger" class="mini-circle-btn" icon="el-third-icon-close" circle @click="handleDeleteButton"></el-button>
     </div>
     <div class="inner-condition-card__body">
-      <NameFormItem class="card-line" prependWidth="60px">
+      <NameFormItem class="card-line" prependWidth="60px" :key="randomId[0]">
         <template #prepend>条件判断</template>
         <template #default>
           <el-select v-model="data.logic"
-            @change="$emit('select-change')"
+            @change="handleSelectChange(0)"
           >
             <el-option value="yes" label="yes"></el-option>
             <el-option value="no" label="no"></el-option>
           </el-select>
         </template>
       </NameFormItem>
-      <NameFormItem class="card-line" prependWidth="60px">
+      <NameFormItem class="card-line" prependWidth="60px" :key="randomId[1]">
         <template #prepend>逻辑关系</template>
         <template #default>
           <el-select v-model="data.valueLogic"
-            @change="$emit('select-change')"
+            @change="handleSelectChange(1)"
           >
             <el-option value="and" label="and"></el-option>
             <el-option value="or" label="or"></el-option>
           </el-select>
         </template>
       </NameFormItem>
-      <NameFormItem class="card-line" prependWidth="60px">
+      <NameFormItem class="card-line" prependWidth="60px" :key="randomId[2]">
         <template #prepend>值</template>
         <template #default>
           <el-select 
             v-model="data.value"
             multiple
-            @change="$emit('select-change')"
+            @change="handleSelectChange(2)"
           >
             <el-option
               v-for="op in option.list"
@@ -70,9 +70,18 @@ export default {
     },
     option: Object
   },
+  data () {
+    return {
+      randomId: [Math.random(), Math.random(), Math.random()]
+    }
+  },
   methods:{
     handleDeleteButton () {
       this.$emit('delete-point')
+    },
+    handleSelectChange (index) {
+      this.$emit('select-change')
+      this.$set(this.randomId, index, Math.random())
     }
   }
 }

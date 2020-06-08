@@ -571,15 +571,17 @@ export default {
     },
     addInnerCard () {
       if (this.activeTestitemTab == 'condition') {
-        if (!_.isArray(this.selectRegulation.condition)) this.selectRegulation.condition = []
+        if (!_.isArray(this.selectRegulation.condition)) this.$set(this.selectRegulation, 'condition', [])
         this.dialogConditionVisible = true
       } else if (this.activeTestitemTab == 'method') {
-        if (!_.isArray(this.selectRegulation.method)) this.selectRegulation.method = []
+        if (!_.isArray(this.selectRegulation.method)) this.$set(this.selectRegulation, 'method', [])
       }
     },
     confirmAddInnerCondition () {
       this.selectRegulation.condition.push({
         id: this.dialogConditionId,
+        logic: 'yes',
+        valueLogic: 'or',
         value: []
       })
       this.dialogConditionVisible = false

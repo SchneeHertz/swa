@@ -154,6 +154,8 @@ export default {
     confirmAddCondition () {
       this.dialogData.condition.push({
         id: this.dialogConditionId,
+        logic: 'yes',
+        valueLogic: 'or',
         value: []
       })
       this.dialogConditionVisible = false

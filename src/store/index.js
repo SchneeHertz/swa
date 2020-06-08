@@ -11,7 +11,9 @@ export default new Vuex.Store({
     konvaGroupList: [],
     valueList: [],
     shapeList: [],
-    konvaRelation: []
+    konvaRelation: [],
+    caseNumber: undefined,
+    caseTestitemList: []
   },
   mutations: {
     updateValue (state, payload) {

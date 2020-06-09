@@ -233,7 +233,34 @@
                 </div>
               </el-tab-pane>
               <el-tab-pane label="方法" name="method">
-
+                <div class="inner-tabs-list">
+                  <MethodCard
+                    v-for="(method, index) in selectRegulation.method"
+                    :key="method.id + index"
+                    :data="method"
+                    :conditionOptionList="conditionOptionList"
+                    width="48%"
+                    @delete-method="removeInnerMethod(index)"
+                  >
+                    <NameFormItem class="card-line" prependWidth="60px">
+                      <template #prepend>分组</template>
+                      <template #default>
+                        <el-select 
+                          v-model="method.group"
+                          class="one-line-select"
+                          @change="updateRegulationStatus"
+                        >
+                          <el-option
+                            v-for="op in methodGroup"
+                            :key="op"
+                            :value="op"
+                            :label="op"
+                          ></el-option>
+                        </el-select>
+                      </template>
+                    </NameFormItem>
+                  </MethodCard>
+                </div>
               </el-tab-pane>
               <el-tab-pane label="条件" name="condition">
                 <div class="inner-tabs-list">
@@ -251,6 +278,27 @@
             </el-tabs>
           </el-col>
         </el-row>
+        <el-dialog
+          title="添加方法"
+          :visible.sync="dialogMethodVisible"
+          width="30%"
+        >
+          <el-select
+            v-model="dialogMethodId"
+            class="one-line-select"            
+          >
+            <el-option
+              v-for="method in methodList"
+              :key="method.id"
+              :label="`(${method.code}) ${method.name}`"
+              :value="method.id"
+            ></el-option>
+          </el-select>
+          <span slot="footer" class="dialog-footer">
+            <el-button type="info" @click="dialogMethodVisible = false">取消</el-button>
+            <el-button type="primary" @click="confirmAddInnerMethod">确定</el-button>
+          </span>
+        </el-dialog>
         <el-dialog
           title="添加条件"
           :visible.sync="dialogConditionVisible"
@@ -328,7 +376,10 @@ export default {
       activeTestitemTab: 'info',
       selectRegulation: {},
       dialogConditionVisible: false,
-      dialogConditionId: undefined
+      dialogConditionId: undefined,
+      dialogMethodVisible: false,
+      dialogMethodId: undefined,
+      methodGroup: [1,2,3,4,5,6,7,8,9]
     }
   },
   computed: {
@@ -575,19 +626,39 @@ export default {
         this.dialogConditionVisible = true
       } else if (this.activeTestitemTab == 'method') {
         if (!_.isArray(this.selectRegulation.method)) this.$set(this.selectRegulation, 'method', [])
+        this.dialogMethodVisible = true
       }
     },
+    confirmAddInnerMethod () {
+      if (this.dialogMethodId) {
+        this.selectRegulation.method.push(
+          _.merge(_.cloneDeep(this.methodList.find(e=>e.id == this.dialogMethodId)), {group: 1})
+        )
+        this.updateRegulationStatus()
+        this.dialogMethodId = undefined
+        this.dialogMethodVisible = false
+      }
+    },
+    removeInnerMethod (index) {
+      this.selectRegulation.method.splice(index, 1)
+      this.updateRegulationStatus()
+    },
     confirmAddInnerCondition () {
-      this.selectRegulation.condition.push({
-        id: this.dialogConditionId,
-        logic: 'yes',
-        valueLogic: 'or',
-        value: []
-      })
-      this.dialogConditionVisible = false
+      if (this.dialogConditionId) {
+        this.selectRegulation.condition.push({
+          id: this.dialogConditionId,
+          logic: 'yes',
+          valueLogic: 'or',
+          value: []
+        })
+        this.updateRegulationStatus()
+        this.dialogConditionId = undefined
+        this.dialogConditionVisible = false
+      }
     },
     removeInnerCondition (index) {
       this.selectRegulation.condition.splice(index, 1)
+      this.updateRegulationStatus()
     }
   }
 }

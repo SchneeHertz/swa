@@ -3,23 +3,27 @@
     <BaseHeader activeIndex="case-info"/>
     <div style="width:100vw;">
       <el-row>
-        <el-col :span="8" style="border-right: solid 1px lightgrey;height:100vh;">
+        <el-col :span="8" style="border-right: solid 1px lightgrey;">
           <el-input v-model="caseNumber" class="form-line">
             <template #prepend>Case No.</template>
             <template #append>
               <el-button type="primary" @click="loadCaseTestitem" :loading="loadButtonLoading">载入</el-button>
             </template>
           </el-input>
-          <div class="case-testitem">
+          <overlay-scrollbars
+            :options="{scrollbars: {autoHide: 'scroll'}}"
+            class="case-testitem"
+          >
             <el-card
               v-for="testitem in caseTestitemList"
               :key="testitem.CaseTestItemID"
-              shadow="hover"
               class="testitem-card"
             >
-              <el-checkbox v-model="testitem.selected">{{testitem.TestItemDescription}}</el-checkbox>
+              <template #header>({{testitem.TestItemID}}) {{testitem.TestItemDescription}}</template>
+              <el-checkbox v-model="testitem.selected">Lab in</el-checkbox>
+              <el-checkbox v-model="testitem.isIndTest">Ind test</el-checkbox>
             </el-card>
-          </div>
+          </overlay-scrollbars>
         </el-col>
         <el-col :span="16"></el-col>
       </el-row>
@@ -68,6 +72,7 @@ export default {
           this.caseTestitemList = JSON.parse($(res).find('string').html())
           _.forIn(this.caseTestitemList, testitem=>{
             this.$set(testitem, 'selected', true)
+            this.$set(testitem, 'isIndTest', false)
         })
       })
       .always(()=>{
@@ -82,6 +87,16 @@ export default {
 .form-line
   margin: 2px 1px
   width: -webkit-fill-available
+.case-testitem
+  height: calc(100vh - 44px)
 .testitem-card
-  margin: 2px 0
+  margin: 10px 4px
+  
+</style>
+
+<style lang="stylus">
+.testitem-card .el-card__header
+  padding: 10px
+.testitem-card .el-card__body
+  padding: 10px
 </style>

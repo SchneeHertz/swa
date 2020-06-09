@@ -12,7 +12,10 @@
       <NameFormItem class="card-line" prependWidth="60px">
         <template #prepend>条件判断</template>
         <template #default>
-          <el-select v-model="data.logic">
+          <el-select 
+            v-model="data.logic"
+            @change="$emit('select-change')"
+          >
             <el-option value="yes" label="yes"></el-option>
             <el-option value="no" label="no"></el-option>
           </el-select>
@@ -21,7 +24,10 @@
       <NameFormItem class="card-line" prependWidth="60px">
         <template #prepend>逻辑关系</template>
         <template #default>
-          <el-select v-model="data.valueLogic">
+          <el-select 
+            v-model="data.valueLogic"
+            @change="$emit('select-change')"
+          >
             <el-option value="and" label="and"></el-option>
             <el-option value="or" label="or"></el-option>
           </el-select>
@@ -33,6 +39,7 @@
           <el-select 
             v-model="data.value"
             multiple
+            @change="$emit('select-change')"
           >
             <el-option
               v-for="op in option.list"

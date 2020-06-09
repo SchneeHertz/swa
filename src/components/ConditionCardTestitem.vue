@@ -63,12 +63,13 @@
             v-model="dialogData.testitem"
             class="one-line-select"
             multiple
+            filterable
           >
             <el-option
               v-for="op in regulationOptionList"
               :key="op.id"
               :value="op.id"
-              :label="op.name"
+              :label="`(${op.code}) ${op.name}`"
             ></el-option>
           </el-select>
         </template>
@@ -104,7 +105,7 @@
 import NameFormItem from '@/components/NameFormItem.vue'
 
 export default {
-  name: 'ConditionCardAfterward',
+  name: 'ConditionCardTestitem',
   components: {
     NameFormItem
   },

@@ -20,6 +20,7 @@
       <div class="card-line">
         <label class="card-label">OTS编号: <span>{{data.code}}</span></label>
       </div>
+      <slot></slot>
       <div
         v-for="condition in data.condition"
         :key="condition.id"
@@ -38,7 +39,6 @@
           <label class="card-label">值: <span>{{condition.value.join(', ')}}</span></label>
         </div>
       </div>
-      <slot></slot>
     </div>
     <el-dialog
       title="编辑方法"
@@ -174,6 +174,7 @@ export default {
           break
         default:
           this.$set(this.data, 'modify', 'delete')
+          this.$emit('delete-method')
       }
     }
   }

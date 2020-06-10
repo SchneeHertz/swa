@@ -9,8 +9,10 @@
       <span class="modify-remark" v-if="data.modify === 'add'">(新增)</span>
       <span class="modify-remark" v-if="data.modify === 'modify'">(已修改)</span>
       <span class="modify-remark" v-if="data.modify === 'delete'">(将要删除)</span>
-      <el-button style="float: right; margin: -4px 0px" type="danger" size="mini" @click="deleteMaterial">删除</el-button>
-      <el-button style="float: right; margin: -4px 18px" type="primary" size="mini" @click="modifyMaterial">编辑</el-button>
+      <el-button-group class="header-button-group">
+        <el-button type="primary" size="mini" icon="el-icon-edit" @click="modifyMaterial"></el-button>
+        <el-button type="danger" size="mini" icon="el-icon-delete" @click="deleteMaterial"></el-button>
+      </el-button-group>
     </div>
     <div class="material-card__body">
       <div class="card-line">
@@ -198,6 +200,9 @@ export default {
   padding: 12px 16px
   border-bottom: 1px solid #EBEEF5
   box-sizing: border-box
+.header-button-group
+  float: right
+  margin: -4px 0
 .modify-remark
   color: red
 .material-card__body

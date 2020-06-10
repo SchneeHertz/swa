@@ -241,6 +241,7 @@
                     :conditionOptionList="conditionOptionList"
                     width="48%"
                     @delete-method="removeInnerMethod(index)"
+                    @method-change="updateRegulationStatus"
                   >
                     <NameFormItem class="card-line" prependWidth="60px">
                       <template #prepend>分组</template>
@@ -375,6 +376,7 @@ export default {
       pageTable: 1,
       activeTestitemTab: 'info',
       selectRegulation: {},
+      selectRegulationId: undefined,
       dialogConditionVisible: false,
       dialogConditionId: undefined,
       dialogMethodVisible: false,
@@ -444,25 +446,25 @@ export default {
   },
   methods: {
     loadConditionList () {
-      this.$http.get('/data/getCondition')
+      return this.$http.get('/data/getCondition')
       .then(res=>{
         this.conditionList = res.data.conditionList
       })
     },
     loadMaterialList () {
-      this.$http.get('/data/getMaterialList')
+      return this.$http.get('/data/getMaterialList')
       .then(res=>{
         this.materialObj = res.data.materialList
       })
     },
     loadMethodList () {
-      this.$http.get('/data/getMethodList')
+      return this.$http.get('/data/getMethodList')
       .then(res=>{
         this.methodList = res.data.methodList
       })
     },
     loadRegulationList () {
-      this.$http.get('/data/getRegulation')
+      return this.$http.get('/data/getRegulation')
       .then(res=>{
         this.regulationList = _.sortBy(res.data.regulationList, e=>+e['code'])
       })
@@ -606,6 +608,9 @@ export default {
             message: res.data.info
           })
           this.loadRegulationList()
+          .then(()=>{
+            this.handleSelectRegulation(this.selectRegulationId)
+          })
         } else {
           this.$message({type: 'warning', message: res.data.info})
         }
@@ -616,6 +621,7 @@ export default {
     },
     handleSelectRegulation (id) {
       this.selectRegulation = _.find(this.regulationList, {id: id})
+      this.selectRegulationId = id
     },
     updateRegulationStatus () {
       this.$set(this.selectRegulation, 'modify', 'modify')
@@ -698,7 +704,6 @@ export default {
 .regulation-list .regulation-ul
   margin: 0
   padding: 10px 8px
-  border-top: solid 1px lightgrey 
   border-bottom: solid 1px lightgrey
 .regulation-ul.active-regulation
   background-color: #FFCC66

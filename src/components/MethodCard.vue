@@ -5,13 +5,17 @@
     :style="{width: width}"
   >
     <div class="method-card__header">
+      <div class="header-title">
       <span>{{data.name}}</span>
-      <slot name="header"></slot>
-      <span class="modify-remark" v-if="data.modify === 'add'">(新增)</span>
-      <span class="modify-remark" v-if="data.modify === 'modify'">(已修改)</span>
-      <span class="modify-remark" v-if="data.modify === 'delete'">(将要删除)</span>
-      <el-button style="float: right; margin: -4px 0px" type="danger" size="mini" @click="deleteMethod">删除</el-button>
-      <el-button style="float: right; margin: -4px 18px" type="primary" size="mini" @click="modifyMethod">编辑</el-button>
+        <slot name="header"></slot>
+        <span class="modify-remark" v-if="data.modify === 'add'">(新增)</span>
+        <span class="modify-remark" v-if="data.modify === 'modify'">(已修改)</span>
+        <span class="modify-remark" v-if="data.modify === 'delete'">(将要删除)</span>
+      </div>
+      <el-button-group class="header-button-group">
+        <el-button type="primary" size="mini" icon="el-icon-edit" @click="modifyMethod"></el-button>
+        <el-button type="danger" size="mini" icon="el-icon-delete" @click="deleteMethod"></el-button>
+      </el-button-group>
     </div>
     <div class="method-card__body">
       <div class="card-line">
@@ -165,6 +169,7 @@ export default {
     },
     confirmEdit () {
       _.assign(this.data, this.dialogData, {modify: 'modify'})
+      this.$emit('method-change')
       this.dialogVisible = false
     },
     deleteMethod () {
@@ -196,6 +201,12 @@ export default {
   padding: 12px 16px
   border-bottom: 1px solid #EBEEF5
   box-sizing: border-box
+.header-button-group
+  float: right
+  margin: -4px 0
+.method-card__header .header-title
+  width: 67%
+  display: inline-block
 .modify-remark
   color: red
 .method-card__body

@@ -4,6 +4,10 @@ import VueRouter from 'vue-router'
 Vue.use(VueRouter)
 
 const routes = [
+  { 
+    path: '/', 
+    redirect: '/case-info' 
+  },
   {
     path: '/case-info',
     name: 'CaseInfo',

@@ -24,7 +24,7 @@
       <div class="card-line">
         <label class="card-label">OTS编号: <span>{{data.code}}</span></label>
       </div>
-      <slot></slot>
+      <slot :data="data"></slot>
       <div
         v-for="condition in data.condition"
         :key="condition.id"
@@ -69,6 +69,7 @@
       >
         <template #prepend>OTS编号</template>
       </el-input>
+      <slot name="edit-area" :dialogData="dialogData"></slot>
       <div class="frame-condition">
         <InnerConditionCard
           v-for="(condition, index) in dialogData.condition"

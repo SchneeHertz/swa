@@ -12,7 +12,7 @@ _.mixin(LodashId)
 db.defaults({
   materialList: {"material": [], "materialCondition": []},
   methodList: [],
-  condition: {"single": [], "multiple": [], "text": [], "testitem": [], "afterward": []},
+  condition: {"single": [], "multiple": [], "text": [], "testitem": [], "afterward": [], "special": {}},
   regulation: []
 }).write()
 

@@ -46,6 +46,14 @@
           <el-tab-pane label="多选" name="multiple">
             <div class="inner-tabs-list">
               <ConditionCardSingle
+                :data="specialMaterialCondition"
+                width="48%"
+              >
+                <template #header>
+                  <el-button class="special-refresh-button" type="primary" size="mini" icon="el-icon-refresh" @click="refreshSpecialMaterialConditionOption"></el-button>
+                </template>
+              </ConditionCardSingle>
+              <ConditionCardSingle
                 v-for="condition in multipleConditionList"
                 :key="condition.id"
                 :data="condition"
@@ -243,23 +251,35 @@
                     @delete-method="removeInnerMethod(index)"
                     @method-change="updateRegulationStatus"
                   >
-                    <NameFormItem class="card-line" prependWidth="60px">
-                      <template #prepend>分组</template>
-                      <template #default>
-                        <el-select 
-                          v-model="method.group"
-                          class="one-line-select"
-                          @change="updateRegulationStatus"
-                        >
-                          <el-option
-                            v-for="op in methodGroup"
-                            :key="op"
-                            :value="op"
-                            :label="op"
-                          ></el-option>
-                        </el-select>
-                      </template>
-                    </NameFormItem>
+                    <template #default>
+                      <div class="card-line">
+                        <label class="card-label">Mix数: <span>{{method.maxMix}}</span></label>
+                      </div>
+                      <div class="card-line">
+                        <label class="card-label">分组: <span>{{method.group}}</span></label>
+                      </div>
+                    </template>
+                    <template #edit-area="scopeProp">
+                      <NameFormItem class="card-line" prependWidth="60px">
+                        <template #prepend>Mix数</template>
+                        <template #default>
+                          <el-input-number v-model="scopeProp.dialogData.maxMix" :precision="0" :step="1" :max="20" :min="1"/>
+                        </template>
+                      </NameFormItem>
+                      <NameFormItem class="card-line" prependWidth="60px">
+                        <template #prepend>分组</template>
+                        <template #default>
+                          <el-select v-model="scopeProp.dialogData.group">
+                            <el-option
+                              v-for="op in methodGroup"
+                              :key="op"
+                              :value="op"
+                              :label="op"
+                            ></el-option>
+                          </el-select>
+                        </template>
+                      </NameFormItem>
+                    </template>
                   </MethodCard>
                 </div>
               </el-tab-pane>
@@ -275,6 +295,9 @@
                     @delete-point="removeInnerCondition(index)"
                   ></InnerConditionCard>
                 </div>
+              </el-tab-pane>
+              <el-tab-pane label="Sub Clause" name="subclause">
+
               </el-tab-pane>
             </el-tabs>
           </el-col>
@@ -397,6 +420,9 @@ export default {
     afterwardConditionList () {
       return this.conditionList['afterward']
     },
+    specialMaterialCondition () {
+      return _.find(this.conditionList['special'], {id: 'material'})
+    },
     displayRegulationList () {
       return this.regulationList
         .filter(data => !this.searchName || (data.code + data.name).toLowerCase().includes(this.searchName.toLowerCase()))
@@ -486,6 +512,19 @@ export default {
       }).catch(() => {
         this.$message({type: 'info', message: '已取消'})
       })
+    },
+    refreshSpecialMaterialConditionOption () {
+      this.$set(
+        this.specialMaterialCondition,
+        'list',
+        this.materialList.map(m=>{
+          return {
+            value: m.name,
+            remark: m.description
+          }
+        })
+      )
+      this.$set(this.specialMaterialCondition, 'modify', 'modify')
     },
     saveCondition () {
       let tempConditionList = {}
@@ -598,8 +637,14 @@ export default {
       }
     },
     saveRegulation () {
+      let tempList = _.filter(this.regulationList, 'modify')
+      _.forIn(tempList, regulation=>{
+        _.forIn(regulation.method, m=>{
+          m.modify = undefined
+        })
+      })
       this.$http.post('/data/saveRegulation', {
-        regulationList: _.filter(this.regulationList, 'modify')
+        regulationList: tempList
       })
       .then(res=>{
         if(res.data.success){
@@ -709,6 +754,10 @@ export default {
   background-color: #FFCC66
 .modify-remark
   color: red
+
+.special-refresh-button
+  float: right;
+  margin: -4px 4px 0 0
 </style>
 
 <style lang="stylus">

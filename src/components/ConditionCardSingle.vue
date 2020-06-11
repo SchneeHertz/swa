@@ -2,7 +2,6 @@
   <div class="condition-card component-card" :class="shadow ? 'is-' + shadow + '-shadow' : 'is-always-shadow'" :style="{width: width}">
     <div class="condition-card__header">
       <span>{{data.name}}</span>
-      <slot name="header"></slot>
       <span class="modify-remark" v-if="data.modify === 'add'">(新增)</span>
       <span class="modify-remark" v-if="data.modify === 'modify'">(已修改)</span>
       <span class="modify-remark" v-if="data.modify === 'delete'">(将要删除)</span>
@@ -10,6 +9,7 @@
         <el-button type="primary" size="mini" icon="el-icon-edit" @click="modifyCondition"></el-button>
         <el-button type="danger" size="mini" icon="el-icon-delete" @click="deleteCondition"></el-button>
       </el-button-group>
+      <slot name="header"></slot>
     </div>
     <div class="condition-card__body">
       <div class="card-line">
@@ -145,7 +145,7 @@ export default {
 .card-label span 
   color #2c3e50
 .edit-dialog .card-line .el-input
-  width: 28vw
+  width: 27vw
 </style>
 
 <style lang="stylus">

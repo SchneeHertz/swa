@@ -1,4 +1,4 @@
-const db = require('../models/data')
+const db = require('../models/generalData')
 const ur = require('../models/user')
 const _ = require('lodash')
 const jwt = require('jsonwebtoken')

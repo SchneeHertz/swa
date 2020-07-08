@@ -25,7 +25,69 @@
             </el-card>
           </overlay-scrollbars>
         </el-col>
-        <el-col :span="16"></el-col>
+        <el-col :span="16">
+          <overlay-scrollbars
+            class="case-condition"
+          >
+            <el-card
+              v-for="condition in simpleCaseConditionList"
+              :key="condition.id"
+              class="condition-card"
+            >
+              <template #header>{{condition.name}}</template>
+              <div v-if="condition.cat === 'single'">
+                <el-radio 
+                  v-for="op in condition.list" 
+                  :key="op.value" 
+                  v-model="condition.value" 
+                  :label="op.value"
+                  border
+                >{{op.value}}{{op.remark ? ` (${op.remark})` : ''}}</el-radio>
+              </div>
+              <div v-else-if="condition.cat === 'multiple'">
+                <el-checkbox-group v-model="condition.value">
+                  <el-checkbox
+                    v-for="op in condition.list"
+                    :key="op.value"
+                    :label="op.value"
+                    border
+                  >{{op.value}}{{op.remark ? ` (${op.remark})` : ''}}</el-checkbox>
+                </el-checkbox-group>
+              </div>
+            </el-card>
+            <el-card
+              v-for="condition in afterwardCaseConditionList"
+              :key="condition.id"
+              class="condition-card"
+              v-show="condition.visible"
+            >
+              <template #header>{{condition.name}}</template>
+              <div v-if="condition.aftercat === 'single'">
+                <el-radio 
+                  v-for="op in condition.list" 
+                  :key="op.value" 
+                  v-model="condition.value" 
+                  :label="op.value"
+                  border
+                >{{op.value}}{{op.remark ? ` (${op.remark})` : ''}}</el-radio>
+              </div>
+              <div v-else-if="condition.aftercat === 'multiple'">
+                <el-checkbox-group v-model="condition.value">
+                  <el-checkbox
+                    v-for="op in condition.list"
+                    :key="op.value"
+                    :label="op.value"
+                    border
+                  >{{op.value}}{{op.remark ? ` (${op.remark})` : ''}}</el-checkbox>
+                </el-checkbox-group>
+              </div>
+            </el-card>
+          </overlay-scrollbars>
+          <div class="bottom-function-btn">
+            <el-button type="success" class="bigicon" icon="el-third-icon-save" circle title="保存" @click="saveCaseInfo"></el-button>
+            <el-button type="primary" class="bigicon" icon="el-third-icon-right" circle title="下一步"></el-button>
+          </div>
+        </el-col>
       </el-row>
     </div>
   </el-container>
@@ -50,35 +112,105 @@ export default {
   data () {
     return {
       loadButtonLoading: false,
-      selectedTestitemList: {}
+      selectedTestitemList: {},
+      conditionList: {}
     }
   },
   computed: {
     caseNumber: geneVuexValue('caseNumber'),
-    caseTestitemList: geneVuexValue('caseTestitemList')
+    caseTestitemList: geneVuexValue('caseTestitemList'),
+    simpleCaseConditionList () {
+      return _.chain(this.conditionList).pick(['single', 'multiple', 'special']).values().flatten().filter('caseRank').sortBy('rank').value()
+    },
+    afterwardCaseConditionList () {
+      let tempList = _.chain(this.conditionList['afterward']).filter('caseRank').value()
+      _.forIn(tempList, condition=>{
+        this.$set(
+          condition,
+          'visible',
+          _.every(condition.condition, innerCd=>{
+            let foundMap = _.find(this.simpleCaseConditionList.concat(tempList), {id: innerCd.id})
+            if (foundMap) {
+              if (foundMap.cat == 'single' || (foundMap.cat == 'afterward' && foundMap.aftercat == 'single') ){
+                if (innerCd.logic == 'yes') {
+                  // console.log('single,yes', _.some(innerCd.value, e=>foundMap.value == e))
+                  return _.some(innerCd.value, e=>foundMap.value == e)
+                } else if (innerCd.logic == 'no') {
+                  // console.log('single,no', !_.some(innerCd.value, e=>foundMap.value == e))
+                  return !_.some(innerCd.value, e=>foundMap.value == e)
+                }
+              } else if (foundMap.cat == 'multiple' || (foundMap.cat == 'afterward' && foundMap.aftercat == 'multiple') ) {
+                if (innerCd.logic == 'yes') {
+                  if (innerCd.valueLogic == 'and') {
+                    // console.log('multiple,yes,and', _.difference(innerCd.value, foundMap.value).length == 0)
+                    return _.difference(innerCd.value, foundMap.value).length == 0
+                  } else if (innerCd.valueLogic == 'or') {
+                    // console.log('multiple,yes,or', _.uniq(innerCd.value.concat(foundMap.value)).length < innerCd.value.length + foundMap.value.length)
+                    return _.uniq(innerCd.value.concat(foundMap.value)).length < innerCd.value.length + foundMap.value.length
+                  }
+                } else if (innerCd.logic == 'no') {
+                  if (innerCd.valueLogic == 'and') {
+                    // console.log('multiple,no,and', _.difference(innerCd.value, foundMap.value).length > 0)
+                    return _.difference(innerCd.value, foundMap.value).length > 0
+                  } else if (innerCd.valueLogic == 'or') {
+                    // console.log('multiple,no,or', !(_.difference(innerCd.value, foundMap.value).length == 0))
+                    return !(_.difference(innerCd.value, foundMap.value).length == 0)
+                  }
+                }
+              }
+            } else {
+              return false
+            }
+          })
+        )
+      })
+      return _.sortBy(tempList, 'rank')
+    }
   },
   mounted () {
-
+    this.loadConditionList()
   },
   methods: {
     loadCaseTestitem () {
       this.loadButtonLoading = true
       $.ajax({
-        type:'POST',
-        url:'http://10.168.128.44/OTS_UAT/Services/CaseService.asmx/GetTestItemListByCaseNumber',
-        data:{CaseNumber: this.caseNumber}
+        type: 'POST',
+        url: 'http://10.168.128.44/OTS_UAT/Services/CaseService.asmx/GetTestItemListByCaseNumber',
+        data: {CaseNumber: this.caseNumber}
       })
       .done(res=>{
-          this.caseTestitemList = JSON.parse($(res).find('string').html())
-          _.forIn(this.caseTestitemList, testitem=>{
-            this.$set(testitem, 'selected', true)
-            this.$set(testitem, 'isIndTest', false)
+        this.caseTestitemList = JSON.parse($(res).find('string').html())
+        _.forIn(this.caseTestitemList, testitem=>{
+          this.$set(testitem, 'selected', true)
+          this.$set(testitem, 'isIndTest', false)
         })
+        this.caseTestitemList = _.sortBy(this.caseTestitemList, 'JobNumber')
       })
       .always(()=>{
         this.loadButtonLoading = false
       })
-    }
+    },
+    loadConditionList () {
+      return this.$http.get('/data/getCondition')
+      .then(res=>{
+        this.conditionList = res.data.conditionList
+      })
+    },
+    saveCaseInfo () {
+      this.$http.post('/data/saveCaseData', {
+        caseNumber: this.caseNumber,
+        data: {
+          caseTestitem: this.caseTestitemList,
+          caseCondition: {
+            simpleCaseConditionList: _.filter(this.simpleCaseConditionList, 'caseRank').map(e=>_.pick(e, ['id', 'value'])),
+            afterwardCaseConditionList: _.filter(this.afterwardCaseConditionList, 'visible').map(e=>_.pick(e, ['id', 'value']))
+          }
+        }
+      })
+      .then(res=>{
+        console.log(res)
+      })
+    },
   }
 }
 </script>
@@ -89,14 +221,23 @@ export default {
   width: -webkit-fill-available
 .case-testitem
   height: calc(100vh - 44px)
-.testitem-card
+.case-condition
+  height: calc(100vh - 5em)
+.testitem-card, .condition-card
   margin: 10px 4px
-  
+.bottom-function-btn
+  position: absolute
+  bottom: 1em
+  right: 1.5em
 </style>
 
 <style lang="stylus">
-.testitem-card .el-card__header
-  padding: 10px
-.testitem-card .el-card__body
-  padding: 10px
+.testitem-card, .condition-card
+  .el-card__header
+    padding: 10px
+.testitem-card, .condition-card
+  .el-card__body
+    padding: 10px
+.bottom-function-btn .bigicon [class^="el-third-icon"]
+  font-size: 25px
 </style>

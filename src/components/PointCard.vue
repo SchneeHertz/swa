@@ -26,7 +26,7 @@
         placeholder="中文描述"
         class="point-description"
         v-model="data['chineseDescription']"
-        :autosize="{ minRows: 2, maxRows: 4}"
+        :autosize="{minRows: 2, maxRows: 4}"
         @focus="$emit('focus-point')"
         @blur="$emit('blur-point')"
       ></el-input>

@@ -729,10 +729,8 @@ export default {
   margin-bottom: 6px
 .bottom-function-btn
   position: absolute
-  bottom: 2em
-  right: 2em
-.bigicon
-  box-shadow: 0 2px 12px 0 rgba(0,0,0,0.2)
+  bottom: 1em
+  right: 1.5em
 .inner-tabs-list
   overflow: auto
   height: 85vh
@@ -761,8 +759,6 @@ export default {
 </style>
 
 <style lang="stylus">
-.bottom-function-btn .bigicon [class^="el-third-icon"]
-  font-size: 25px
 .el-menu-item [class^="el-third-icon"]
   margin: 0 8px 0 3px
   width: 24px

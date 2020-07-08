@@ -18,6 +18,9 @@
       <div class="card-line">
         <label class="card-label">排序: <span>{{data.rank}}</span></label>
       </div>
+      <div class="card-line">
+        <label class="card-label">case级别: <span>{{data.caseRank ? '是' : '否'}}</span></label>
+      </div>
       <div class="card-line" v-for="(answer, i) in data.list" :key="answer.value">
         <label class="card-label">选项{{i+1}}: <span>{{answer.value}}({{answer.remark}})</span></label>
       </div>
@@ -45,6 +48,15 @@
         <template #prepend>排序</template>
         <template #default>
           <el-input-number v-model="dialogData.rank" />
+        </template>
+      </NameFormItem>
+      <NameFormItem class="card-line" prependWidth="60px">
+        <template #prepend>case级别</template>
+        <template #default>
+          <el-select v-model="dialogData.caseRank">
+            <el-option label="是" :value="true"></el-option>
+            <el-option label="否" :value="false"></el-option>
+          </el-select>
         </template>
       </NameFormItem>
       <div class="card-line" v-for="(op, i) in dialogData.list" :key="i">
@@ -101,6 +113,11 @@ export default {
     },
     confirmEdit () {
       _.assign(this.data, this.dialogData, {modify: 'modify'})
+      if (this.data.cat == 'multiple') {
+        this.$set(this.data, 'value', [])
+      } else {
+        this.$set(this.data, 'value', undefined)
+      }
       this.dialogVisible = false
     },
     deleteCondition () {

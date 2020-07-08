@@ -20,4 +20,11 @@ body {
 textarea {
   font-family: Arial, Helvetica, sans-serif;
 }
+
+.bigicon {
+  box-shadow: 0 2px 12px 0 rgba(0,0,0,0.2);
+}
+.bigicon [class^="el-third-icon"] {
+  font-size: 25px;
+}
 </style>

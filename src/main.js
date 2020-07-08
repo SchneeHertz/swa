@@ -15,7 +15,6 @@ import 'overlayscrollbars/css/OverlayScrollbars.css'
 Vue.use(OverlayScrollbarsPlugin)
 
 Vue.prototype.$http = axios
-Vue.config.productionTip = false
 Vue.use(ElementUI)
 Vue.use(VueKonva)
 window._ = _

@@ -44,7 +44,7 @@
             <el-option
               v-for="op in option.list"
               :key="op.value"
-              :label="op.value"
+              :label="op.label ? op.label : op.value"
               :value="op.value"
             ></el-option>
           </el-select>

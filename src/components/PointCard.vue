@@ -8,8 +8,10 @@
       @click="handlePointCard($event)"
     >
       <slot name="header"></slot>
-      <el-button type="danger" class="mini-circle-btn" icon="el-third-icon-close" circle @click="handleDeleteButton"></el-button>
-      <el-button type="success" class="mini-circle-btn" icon="el-third-icon-file-copy" circle></el-button>
+      <div class="mini-circle-btn">
+        <el-button type="success" icon="el-third-icon-file-copy" circle plain></el-button>
+        <el-button type="danger" icon="el-third-icon-close" circle @click="handleDeleteButton" plain></el-button>
+      </div>
     </div>
     <div class="point-card__body">
       <el-input
@@ -20,6 +22,7 @@
         :autosize="{ minRows: 2, maxRows: 4}"
         @focus="$emit('focus-point')"
         @blur="$emit('blur-point')"
+        :id="`input-${data.id}`"
       ></el-input>
       <el-input
         type="textarea"
@@ -31,21 +34,48 @@
         @blur="$emit('blur-point')"
       ></el-input>
       <NameFormItem class="point-option"
-        v-for="indForm in formList"
-        :key="indForm.key"
+        v-for="indForm in simpleConditionList"
+        :key="indForm.id"
       >
-        <template #prepend>{{indForm.description}}</template>
+        <template #prepend>{{indForm.name}}</template>
         <template #default>
           <el-select
-            v-model="data[indForm.key]"
+            v-model="data.condition[indForm.id]"
             filterable
+            default-first-option
             @focus="$emit('focus-point')"
             @blur="$emit('blur-point')"
+            size="mini"
+            :multiple="indForm.cat == 'multiple'"
           >
             <el-option
-              v-for="op in indForm.optionList"
+              v-for="op in indForm.list"
               :key="op.value"
-              :label="op.label"
+              :label="op.value"
+              :value="op.value"
+            ></el-option>
+          </el-select>
+        </template>
+      </NameFormItem>
+      <NameFormItem class="point-option"
+        v-for="indForm in displayAfterwardConditionList"
+        :key="indForm.id"
+      >
+        <template #prepend>{{indForm.name}}</template>
+        <template #default>
+          <el-select
+            v-model="data.condition[indForm.id]"
+            filterable
+            default-first-option
+            @focus="$emit('focus-point')"
+            @blur="$emit('blur-point')"
+            size="mini"
+            :multiple="indForm.cat == 'multiple'"
+          >
+            <el-option
+              v-for="op in indForm.list"
+              :key="op.value"
+              :label="op.value"
               :value="op.value"
             ></el-option>
           </el-select>
@@ -67,12 +97,81 @@ export default {
   props: {
     shadow: String,
     width: String,
-    formList: Array,
+    simpleConditionList: Array,
+    afterwardConditionList: Array,
+    testitemIdList: Array,
+    focusId: String,
     data: {
       type: Object,
-      default: ()=>{return {}}
+      default: ()=>({})
     },
     isSelected: Boolean
+  },
+  data () {
+    return {
+      conditionVisible: {}
+    }
+  },
+  computed: {
+    displayAfterwardConditionList () {
+      let tempList = []
+      let sourceList = this.simpleConditionList.concat(_.cloneDeep(this.afterwardConditionList))
+      _.forIn(this.afterwardConditionList, condition=>{
+        let isCheck = _.every(condition.condition, innerCd=>{
+          switch(innerCd.id){
+            case 'ictestitem':
+              if (innerCd.logic == 'yes') {
+                if (innerCd.valueLogic == 'and') {
+                  return _.difference(innerCd.value, this.testitemIdList).length == 0
+                } else if (innerCd.valueLogic == 'or') {
+                  return _.uniq(innerCd.value.concat(this.testitemIdList)).length < innerCd.value.concat(this.testitemIdList).length
+                }
+              } else if (innerCd.logic == 'no') {
+                if (innerCd.valueLogic == 'and') {
+                  return _.difference(innerCd.value, this.testitemIdList).length > 0
+                } else if (innerCd.valueLogic == 'or') {
+                  return !(_.difference(innerCd.value, this.testitemIdList).length == 0)
+                }
+              }
+              break
+            default:
+              let foundMap = _.find(sourceList, {id: innerCd.id})
+              if (foundMap) {
+                if (foundMap.cat == 'single' || (foundMap.cat == 'afterward' && foundMap.aftercat == 'single') ){
+                  if (innerCd.logic == 'yes') {
+                    return _.some(innerCd.value, e=>this.data.condition[foundMap.id] == e)
+                  } else if (innerCd.logic == 'no') {
+                    return !_.some(innerCd.value, e=>this.data.condition[foundMap.id] == e)
+                  }
+                } else if (foundMap.cat == 'multiple' || (foundMap.cat == 'afterward' && foundMap.aftercat == 'multiple') ) {
+                  if (innerCd.logic == 'yes') {
+                    if (innerCd.valueLogic == 'and') {
+                      return _.difference(innerCd.value, this.data.condition[foundMap.id]).length == 0
+                    } else if (innerCd.valueLogic == 'or') {
+                      return _.uniq(innerCd.value.concat(this.data.condition[foundMap.id])).length < innerCd.value.concat(this.data.condition[foundMap.id]).length
+                    }
+                  } else if (innerCd.logic == 'no') {
+                    if (innerCd.valueLogic == 'and') {
+                      return _.difference(innerCd.value, this.data.condition[foundMap.id]).length > 0
+                    } else if (innerCd.valueLogic == 'or') {
+                      return !(_.difference(innerCd.value, this.data.condition[foundMap.id]).length == 0)
+                    }
+                  }
+                }
+              } else {
+                return false
+              }
+              break
+            }
+        })
+        if (isCheck) {
+          tempList.push(condition)
+        } else {
+          if (this.data.condition[condition.id]) this.$set(this.data.condition, condition.id, undefined)
+        }
+      })
+      return tempList
+    }
   },
   methods:{
     handleDeleteButton () {
@@ -105,11 +204,17 @@ export default {
   border-bottom: 1px solid #EBEEF5
   box-sizing: border-box
 .mini-circle-btn
-  padding: 0
   float: right
-  margin: 0 2px
+  .el-button
+    padding: 1px
+    margin: 0 1px
 .point-card__body
   padding: 8px 16px
 .point-card__body .point-description, .point-card__body .point-option
   margin: 2px 0
+</style>
+
+<style lang="stylus">
+.point-option .el-select--mini
+  width: 100%
 </style>

@@ -6,14 +6,7 @@
         <el-col :span="14">
           <div style="height: 4vh; text-align: right;">
             <el-button-group style="margin: 5px;">
-            <el-button size="mini" >超小按钮</el-button>
-            <el-button size="mini" >超小按钮</el-button>
-            <el-button size="mini" >超小按钮</el-button>
-            <el-button size="mini" >超小按钮</el-button>
-            <el-button size="mini" >超小按钮</el-button>
-            <el-button size="mini" >超小按钮</el-button>
-            <el-button size="mini" >超小按钮</el-button>
-            <el-button size="mini" >超小按钮</el-button>
+              <el-button size="mini" >超小按钮</el-button>
             </el-button-group>
           </div>
           <overlay-scrollbars
@@ -23,7 +16,9 @@
             <PointCard
               v-for="valueObj in valueList"
               :key="valueObj.id"
-              :formList="formList"
+              :simpleConditionList="simpleConditionList"
+              :afterwardConditionList="afterwardConditionList"
+              :testitemIdList="testitemIdList"
               :data.sync="valueObj"
               width="48%"
               :isSelected="valueObj.isSelected"
@@ -36,6 +31,10 @@
                 {{valueObj.index}}
               </template>
             </PointCard>
+            <el-card class="add-point-card">
+              <el-button type="success" class="bigicon add-button" icon="el-third-icon-plus" circle title="新增" @click="addPoint(1)"></el-button>
+              <el-button type="success" class="bigicon add-button" icon="el-third-icon-rocket" circle title="新增10个" @click="addPoint(10)"></el-button>
+            </el-card>
           </overlay-scrollbars>
         </el-col>
         <el-col :span="10">
@@ -84,6 +83,13 @@ import PointCard from '@/components/PointCard.vue'
 
 import {generate as _id } from 'shortid'
 
+function geneVuexValue (property) {
+  return {
+    get () { return this.$store.state[property] },
+    set (newVal) { this.$store.commit('updateValue', {key: property, value: newVal}) }
+  }
+}
+
 export default {
   name: 'PointList',
   components: {
@@ -96,8 +102,9 @@ export default {
       dragItemId: null,
       configKonva: {
         width: window.innerWidth*0.4,
-        height: window.innerHeight
+        height: window.innerHeight - 80
       },
+      conditionList: {},
       formList: [{
         id: _id(),
         key: 'material',
@@ -109,113 +116,54 @@ export default {
           label: 'Metal',
           value: 'Metal'
         }]
-      }, {
-        id: _id(),
-        key: 'mouthable',
-        description: '可入口',
-        optionList: [{
-          label: 'mouthable',
-          value: 'mouthable'
-        }, {
-          label: 'unmouthable',
-          value: 'unmouthable'
-        }]
-      }, {
-        id: _id(),
-        key: 'weightType',
-        description: '足量',
-        optionList: [{
-          label: '足重',
-          value: 'mainPart'
-        }, {
-          label: '不足重',
-          value: 'tinyPart'
-        }]
       }]
     }
   },
   computed: {
-    konvaGroupList:{
-      get () {
-        return this.$store.state.konvaGroupList
-      },
-      set (newVal) {
-        this.$store.commit('updateValue', {
-          key: 'konvaGroupList',
-          value: newVal
-        })
-      }
+    konvaGroupList: geneVuexValue('konvaGroupList'),
+    valueList: geneVuexValue('valueList'),
+    shapeList: geneVuexValue('shapeList'),
+    konvaRelation: geneVuexValue('konvaRelation'),
+    caseNumber: geneVuexValue('caseNumber'),
+    caseTestitemList: geneVuexValue('caseTestitemList'),
+    simpleConditionList () {
+      return _.chain(this.conditionList).pick(['single', 'multiple', 'special']).values().flatten().filter(e=>!e.caseRank).sortBy('rank').value()
     },
-    valueList: {
-      get () {
-        return this.$store.state.valueList
-      },
-      set (newVal) {
-        this.$store.commit('updateValue', {
-          key: 'valueList',
-          value: newVal
-        })
-      }
+    testitemIdList () {
+      return this.caseTestitemList.filter(e=>e.selected).map(e=>e.regulation.id)
     },
-    shapeList: {
-      get () {
-        return this.$store.state.shapeList
-      },
-      set (newVal) {
-        this.$store.commit('updateValue', {
-          key: 'shapeList',
-          value: newVal
-        })
-      }
+    afterwardConditionList () {
+      return _.chain(this.conditionList).get('afterward').value()
     },
-    konvaRelation: {
-      get () {
-        return this.$store.state.konvaRelation
-      },
-      set (newVal) {
-        this.$store.commit('updateValue', {
-          key: 'konvaRelation',
-          value: newVal
-        })
-      }
-    }
+    // testitemConditionList () {
+    //   return _.chain(this.conditionList).get('testitem')
+    //     .filter(e=>_.uniq(e.testitem.concat(this.testitemIdList)).length < e.testitem.length + this.testitemIdList.length)
+    //     .sortBy('rank').value()
+    // },
   },
   mounted () {
-    if (_.isEmpty(this.valueList)){
-      const INIT_ID = _id()
-      this.valueList.push({
-        id: INIT_ID,
-        index: '1'
-      }),
-      this.konvaRelation.push({
-        id: INIT_ID,
-        label: '1'
-      })
-      this.shapeList.push(this.createShape(INIT_ID, 0, 0, 40, 30, '1'))
-    }
+    // if (_.isEmpty(this.valueList)){
+    //   const INIT_ID = _id()
+    //   this.valueList.push({
+    //     id: INIT_ID,
+    //     index: '1',
+    //     condition: {}
+    //   }),
+    //   this.konvaRelation.push({
+    //     id: INIT_ID,
+    //     label: '1'
+    //   })
+    //   this.shapeList.push(this.createShape(INIT_ID, 0, 0, 40, 30, '1'))
+    // }
+    this.loadConditionList()
   },
   beforeDestroy () {
-    this.valueList = this.valueList
-    this.shapeList = this.shapeList
-    this.konvaGroupList = this.konvaGroupList
-    this.konvaRelation = this.konvaRelation
+    // this.valueList = this.valueList
+    // this.shapeList = this.shapeList
+    // this.konvaGroupList = this.konvaGroupList
+    // this.konvaRelation = this.konvaRelation
   },
   watch: {
-    valueList (newVal, oldVal) {
-      if ((_.last(newVal) && _.last(newVal).englishDescription) || _.isEmpty(newVal)) {
-        let id = _id()
-        let index = this.findMinIndex(newVal.map(e=>e.index)) + ''
-        let x = 40 * ((+index - 1) % Math.floor(this.configKonva.width / 40))
-        let y = 30 * Math.floor((+index - 1) / Math.floor(this.configKonva.width / 40))
-        newVal.push({id: id, index: index})
-        this.konvaRelation.push({id: id, label: index})
-        this.shapeList.unshift(this.createShape(id, x, y, 40, 30, index))
-      }
-      this.$store.commit('updateValue', {
-        key: 'valueList',
-        value: newVal
-      })
-    },
     shapeList (newVal) {
       this.$store.commit('updateValue', {
         key: 'shapeList',
@@ -236,6 +184,28 @@ export default {
     }
   },
   methods: {
+    loadConditionList () {
+      return this.$http.get('/data/getCondition')
+      .then(res=>{
+        this.conditionList = res.data.conditionList
+      })
+    },
+    addPoint (count = 1, assign = {}) {
+      for (let i = 0; i < count; i++) {
+        let id = _id()
+        let index = this.findMinIndex(this.valueList.map(e=>e.index)) + ''
+        let x = 40 * ((+index - 1) % Math.floor(this.configKonva.width / 40))
+        let y = 30 * Math.floor((+index - 1) / Math.floor(this.configKonva.width / 40))
+        this.valueList.push(_.assign({id: id, index: index, condition: {}}, assign))
+        this.konvaRelation.push({id: id, label: index})
+        this.shapeList.unshift(this.createShape(id, x, y, 40, 30, index))
+      }
+      if (count == 1) {
+        this.$nextTick(()=>{
+          $(`#input-${_.last(this.valueList).id}`).focus()
+        })
+      }
+    },
     createShape (id, x, y, width, height, name) {
       return {
         id: id,
@@ -302,12 +272,13 @@ export default {
         let findRect = this.findRect(this.shapeList, e.target)
         findRect.fill = 'rgba(0, 255, 0, 0.6)'
         let findData = _.find(this.valueList, {id: e.target.attrs.id})
-        switch (findData.weightType) {
-          case 'mainPart':
+        switch (findData.condition['weightType']) {
+          case '够重':
             findRect.width = 80
             findRect.height = 50
             break
-          case 'tinyPart':
+          case '不够重':
+          case '<10mg':
             findRect.width = 60
             findRect.height = 30
             break
@@ -475,9 +446,21 @@ export default {
   padding: 0
 .point-card-list
   height: 96vh
+.add-point-card
+  width: 48%
+  height: 10em
+  display: inline-block
+  margin: 4px
+  text-align: center
+.add-point-card .add-button
+  position: relative
+  top: 2.2em
 .konva-list
   border-left: 1px solid rgb(220, 223, 230)
+  border-bottom: 1px solid rgb(220, 223, 230)
 </style>
 
 <style lang="stylus">
+.point-card-list .component-card
+  vertical-align: top
 </style>

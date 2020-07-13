@@ -56,6 +56,14 @@ const getRegulation = async (ctx) => {
   }
 }
 
+const getSomeRegulation = async (ctx) => {
+  let idList = ctx.request.body.idList
+  ctx.body = {
+    success: true,
+    regulationList: db.getSomeRegulation(idList)
+  }
+}
+
 const saveRegulation = async (ctx) => {
   if (isAdmin(ctx)) {
     const regulationList = ctx.request.body.regulationList
@@ -164,6 +172,7 @@ module.exports = {
   getMethodList,
   saveMethodList,
   getRegulation,
+  getSomeRegulation,
   saveRegulation,
   getCondition,
   saveCondition,

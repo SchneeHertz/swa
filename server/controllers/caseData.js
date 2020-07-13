@@ -9,7 +9,7 @@ const getCaseData = async (ctx) => {
     let result = db.getCaseData(caseNumber, list)
     ctx.body = {
       success: true,
-      data: result
+      result: result
     }
   } else {
     ctx.body = {

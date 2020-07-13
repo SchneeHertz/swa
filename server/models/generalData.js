@@ -66,6 +66,10 @@ const getRegulation = () => {
   return db.get('regulation').value()
 }
 
+const getSomeRegulation = (idList) => {
+  return db.get('regulation').filter(e=>idList.includes(e.code)).value()
+}
+
 const saveRegulation = (regulationList) => {
   let existRegulationList = db.get('regulation').value()
   _.forIn(regulationList, regulation=>{
@@ -122,6 +126,7 @@ module.exports = {
   getMethodList,
   saveMethodList,
   getRegulation,
+  getSomeRegulation,
   saveRegulation,
   getCondition,
   saveCondition,

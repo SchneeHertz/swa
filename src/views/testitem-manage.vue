@@ -458,6 +458,20 @@ export default {
       _.forIn(this.materialConditionList, e=>{
         tempArr[e.id] = _.assign({cat: 'material', list: this.materialOptionList[e.property]},e)
       })
+      tempArr['ictestitem'] = {
+        caseRank: false,
+        cat: 'testitem',
+        description: '测试项目列表',
+        id:'ictestitem',
+        list: this.regulationList.map(e=>{
+          return {
+            value: e.id,
+            label: `(${e.code}) ${e.name}`
+          }
+        }),
+        name: '测试项目',
+        rank: 1
+      }
       return tempArr
     },
     testitemGroupList () {

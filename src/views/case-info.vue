@@ -4,12 +4,15 @@
     <div style="width:100vw;">
       <el-row>
         <el-col :span="8" style="border-right: solid 1px lightgrey;">
-          <el-input v-model="caseNumber" class="form-line">
+          <el-input v-model="caseNumber" class="form-line" size="small">
             <template #prepend>Case No.</template>
             <template #append>
-              <el-button type="primary" @click="loadCaseTestitem" :loading="loadButtonLoading">载入</el-button>
+              <el-button type="primary" @click="loadExistCaseData" :loading="loadExistCaseDataLoading">载入已有数据</el-button>
             </template>
           </el-input>
+          <div  class="testitem-import-button">
+            <el-button size="mini" type="primary"  @click="loadCaseTestitem" :loading="loadOTSTestitemLoading">从OTS导入测试项目</el-button>
+          </div>
           <overlay-scrollbars
             :options="{scrollbars: {autoHide: 'scroll'}}"
             class="case-testitem"
@@ -85,7 +88,7 @@
           </overlay-scrollbars>
           <div class="bottom-function-btn">
             <el-button type="success" class="bigicon" icon="el-third-icon-save" circle title="保存" @click="saveCaseInfo"></el-button>
-            <el-button type="primary" class="bigicon" icon="el-third-icon-right" circle title="下一步"></el-button>
+            <el-button type="primary" class="bigicon" icon="el-third-icon-right" circle title="下一步" @click="toNextPage"></el-button>
           </div>
         </el-col>
       </el-row>
@@ -111,7 +114,8 @@ export default {
   },
   data () {
     return {
-      loadButtonLoading: false,
+      loadExistCaseDataLoading: false,
+      loadOTSTestitemLoading: false,
       selectedTestitemList: {},
       conditionList: {}
     }
@@ -146,7 +150,7 @@ export default {
                     return _.difference(innerCd.value, foundMap.value).length == 0
                   } else if (innerCd.valueLogic == 'or') {
                     // console.log('multiple,yes,or', _.uniq(innerCd.value.concat(foundMap.value)).length < innerCd.value.length + foundMap.value.length)
-                    return _.uniq(innerCd.value.concat(foundMap.value)).length < innerCd.value.length + foundMap.value.length
+                    return _.uniq(innerCd.value.concat(foundMap.value)).length < innerCd.value.concat(foundMap.value).length
                   }
                 } else if (innerCd.logic == 'no') {
                   if (innerCd.valueLogic == 'and') {
@@ -171,8 +175,29 @@ export default {
     this.loadConditionList()
   },
   methods: {
+    loadExistCaseData () {
+      this.loadExistCaseDataLoading = true
+      return this.$http.post('/data/getCaseData', {
+        caseNumber: this.caseNumber,
+        list: ['caseCondition', 'caseTestitem']
+      })
+      .then(({data: {result}})=>{
+        if (_.isArray(result.caseTestitem) && !_.isEmpty(result.caseTestitem)) {
+          this.caseTestitemList = result.caseTestitem
+        }
+        _.forIn(result.caseCondition['simpleCaseConditionList'], condition=>{
+          this.$set(_.find(this.simpleCaseConditionList, {id: condition.id}), 'value', condition.value)
+        })
+        _.forIn(result.caseCondition['afterwardCaseConditionList'], condition=>{
+          this.$set(_.find(this.afterwardCaseConditionList, {id: condition.id}), 'value', condition.value)
+        })
+      })
+      .finally(()=>{
+        this.loadExistCaseDataLoading = false
+      })
+    },
     loadCaseTestitem () {
-      this.loadButtonLoading = true
+      this.loadOTSTestitemLoading = true
       $.ajax({
         type: 'POST',
         url: 'http://10.168.128.44/OTS_UAT/Services/CaseService.asmx/GetTestItemListByCaseNumber',
@@ -185,9 +210,22 @@ export default {
           this.$set(testitem, 'isIndTest', false)
         })
         this.caseTestitemList = _.sortBy(this.caseTestitemList, 'JobNumber')
+        this.$http.post('/data/getRegulation', {
+          idList: this.caseTestitemList.map(e=>e.TestItemID.toString())
+        })
+        .then(({data})=>{
+          _.forIn(this.caseTestitemList, testitem=>{
+            let foundRegulation = _.find(data.regulationList, {code: testitem.TestItemID.toString()})
+            if (foundRegulation) {
+              this.$set(testitem, 'regulation', foundRegulation)
+            } else {
+              this.$set(testitem, 'selected', false)
+            }
+          })
+        })
       })
       .always(()=>{
-        this.loadButtonLoading = false
+        this.loadOTSTestitemLoading = false
       })
     },
     loadConditionList () {
@@ -208,8 +246,11 @@ export default {
         }
       })
       .then(res=>{
-        console.log(res)
+        this.$message({type: 'success', message: '保存成功'})
       })
+    },
+    toNextPage () {
+      this.$router.push('/point-list')
     },
   }
 }
@@ -220,11 +261,14 @@ export default {
   margin: 2px 1px
   width: -webkit-fill-available
 .case-testitem
-  height: calc(100vh - 44px)
+  height: calc(100vh - 4em)
+.testitem-import-button
+  text-align: right
+  margin-right: 2px
 .case-condition
   height: calc(100vh - 5em)
 .testitem-card, .condition-card
-  margin: 10px 4px
+  margin: 6px 4px
 .bottom-function-btn
   position: absolute
   bottom: 1em

@@ -7,7 +7,6 @@
     "build": "vue-cli-service build --modern"
   },
   "dependencies": {
-    "jquery": "^3.5.1",
     "koa": "^2.11.0",
     "koa-bodyparser": "^4.3.0",
     "koa-jwt": "^3.6.0",
@@ -15,7 +14,7 @@
     "koa-router": "^8.0.8",
     "koa-static": "^5.0.0",
     "koa2-cors": "^2.0.6",
-    "lodash": "^4.17.15",
+    "lodash": "^4.17.19",
     "lodash-id": "^0.14.0",
     "lowdb": "^1.0.0"
   },
@@ -27,6 +26,7 @@
     "axios": "^0.19.2",
     "core-js": "^3.6.4",
     "element-ui": "^2.13.2",
+    "jquery": "^3.5.1",
     "konva": "^4.2.2",
     "overlayscrollbars": "^1.12.0",
     "overlayscrollbars-vue": "^0.2.2",
@@ -37,6 +37,7 @@
     "vue-konva": "^2.1.1",
     "vue-router": "^3.1.6",
     "vue-template-compiler": "^2.6.11",
+    "vuedraggable": "^2.24.0",
     "vuex": "^3.1.3"
   }
 }

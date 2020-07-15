@@ -731,12 +731,14 @@ export default {
 
 <style lang="stylus" scoped>
 .nav-aside
-  border-right: solid 1px rgb(220, 223, 230)
+  border-right: solid 1px rgba(0,0,0,0.125)
+  .el-menu
+    border-right-width: 0
 .condition-pane, .testitem-pane, .material-pane
   padding: 0
 .condition-pane .el-tabs, .material-pane .el-tabs, .testitem-pane .el-tabs
-  height: calc(100vh - 2px)
-  border-left: none
+  height: 100vh
+  border: none
 .card-line:first-child
   margin: 6px 0
 .card-line:not(:first-child)
@@ -754,14 +756,13 @@ export default {
 .testitem-filter-prepend
   padding: 0 2px
 .regulation-list
-  border: solid 1px rgb(220, 223, 230)
   height: calc(87vh - 35px)
 .regulation-list .list
   display: block
 .regulation-list .regulation-ul
   margin: 0
   padding: 10px 8px
-  border-bottom: solid 1px lightgrey
+  border-bottom: solid 1px rgba(0,0,0,0.125)
 .regulation-ul.active-regulation
   background-color: #FFCC66
 .modify-remark

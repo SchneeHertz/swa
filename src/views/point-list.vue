@@ -4,8 +4,11 @@
     <el-main>
       <el-row>
         <el-col :span="14">
-          <div style="height: 4vh; text-align: right;">
-            <el-button-group style="margin: 5px;">
+          <div class="point-list-header">
+            <el-input v-model="caseNumber" class="case-number" size="small">
+              <template #prepend>Case:</template>
+            </el-input>
+            <el-button-group class="function-button">
               <el-button size="mini" >超小按钮</el-button>
             </el-button-group>
           </div>
@@ -70,6 +73,11 @@
               </v-layer>
             </v-stage>
           </overlay-scrollbars>
+          <div class="bottom-function-btn">
+            <el-button type="primary" class="bigicon" icon="el-third-icon-cloud-download" circle title="加载" @click="loadPointList"></el-button>
+            <el-button type="success" class="bigicon" icon="el-third-icon-save" circle title="保存" @click="savePointList"></el-button>
+            <el-button type="primary" class="bigicon" icon="el-third-icon-right" circle title="下一步" @click="toNextPage"></el-button>
+          </div>
         </el-col>
       </el-row>
     </el-main>
@@ -98,25 +106,13 @@ export default {
   },
   data () {
     return {
-      materialList: [],
       dragItemId: null,
       configKonva: {
         width: window.innerWidth*0.4,
         height: window.innerHeight - 80
       },
       conditionList: {},
-      formList: [{
-        id: _id(),
-        key: 'material',
-        description: '材质',
-        optionList: [{
-          label: 'Wood',
-          value: 'Wood'
-        }, {
-          label: 'Metal',
-          value: 'Metal'
-        }]
-      }]
+      loadPointListLoading: false
     }
   },
   computed: {
@@ -436,7 +432,73 @@ export default {
     handleSelectPoint(id) {
       let findPoint =  _.find(this.valueList, {id: id})
       this.$set(findPoint, 'isSelected', !findPoint.isSelected)
-    }
+    },
+    loadPointList () {
+      this.loadPointListLoading = true
+      let sceneFunc = (context, shape)=>{
+        context.beginPath()
+        context.rect(0, 0, shape.width(), shape.height())
+        context.font = '1em Arial'
+        context.textAlign = 'center'
+        context.fillText(shape.name(), shape.width()*0.5, shape.height()*0.65)
+        context.closePath()
+        context.fillStrokeShape(shape)
+      }
+      return this.$http.post('/data/getCaseData', {
+        caseNumber: this.caseNumber,
+        list: ['konvaGroupList', 'valueList', 'shapeList', 'konvaRelation']
+      })
+      .then(({data: {result}})=>{
+        if (_.isArray(result.konvaGroupList) && !_.isEmpty(result.konvaGroupList)) {
+          this.konvaGroupList = result.konvaGroupList.map(i=>{i.list.map(e=>{e.sceneFunc = sceneFunc; return e}); return i})
+        }
+        if (_.isArray(result.valueList) && !_.isEmpty(result.valueList)) {
+          this.valueList = result.valueList
+        }
+        if (_.isArray(result.shapeList) && !_.isEmpty(result.shapeList)) {
+          this.shapeList = result.shapeList.map(e=>{e.sceneFunc = sceneFunc; return e})
+        }
+        if (_.isArray(result.konvaRelation) && !_.isEmpty(result.konvaRelation)) {
+          this.konvaRelation = result.konvaRelation
+        }
+      })
+      .finally(()=>{
+        this.loadPointListLoading = false
+      })
+    },
+    savePointList () {
+      this.confirmDialog(
+        ()=>{
+          this.$http.post('/data/saveCaseData', {
+            caseNumber: this.caseNumber,
+            data: {
+              konvaGroupList: _.cloneDeep(this.konvaGroupList).map(i=>{i.list.map(e=>{e.sceneFunc = undefined; return e}); return i}),
+              valueList: this.valueList,
+              shapeList: _.cloneDeep(this.shapeList).map(e=>{e.sceneFunc = undefined; return e}),
+              konvaRelation: this.konvaRelation
+            }
+          })
+          .then(res=>{
+            this.$message({type: 'success', message: '保存成功'})
+          })
+        },
+        {question: '确认保存?', success: '操作完成', cancel: '已取消'}
+      )
+    },
+    toNextPage () {
+      this.$router.push('/test-arrange')
+    },
+    confirmDialog(callback, message = {question: '继续?', success: '操作完成', cancel: '已取消'}, failCallback = new Function) {
+      this.$confirm(message.question, '提示', {confirmButtonText: '确定', cancelButtonText: '取消', type: 'warning'})
+      .then(() => {
+        callback()
+        this.$message({type: 'success', message: message.success})
+      })
+      .catch(() => {
+        failCallback()
+        this.$message({type: 'info', message: message.cancel})
+      })
+    },
   }
 }
 </script>
@@ -445,7 +507,13 @@ export default {
 .el-main
   padding: 0
 .point-card-list
-  height: 96vh
+  height: calc(100vh - 2em)
+.point-list-header
+  .case-number
+    width: 17em
+  .function-button
+    float: right
+    margin: 2px 2px
 .add-point-card
   width: 48%
   height: 10em
@@ -458,6 +526,10 @@ export default {
 .konva-list
   border-left: 1px solid rgb(220, 223, 230)
   border-bottom: 1px solid rgb(220, 223, 230)
+.bottom-function-btn
+  position: absolute
+  bottom: 1em
+  right: 1.5em
 </style>
 
 <style lang="stylus">

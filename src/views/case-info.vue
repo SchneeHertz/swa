@@ -1,16 +1,13 @@
 <template>
   <el-container>
     <BaseHeader activeIndex="case-info"/>
-    <div style="width:100vw;">
-      <el-row>
-        <el-col :span="8" style="border-right: solid 1px lightgrey;">
-          <el-input v-model="caseNumber" class="form-line" size="small">
-            <template #prepend>Case No.</template>
-            <template #append>
-              <el-button type="primary" @click="loadExistCaseData" :loading="loadExistCaseDataLoading">载入已有数据</el-button>
-            </template>
-          </el-input>
-          <div  class="testitem-import-button">
+    <el-main>
+      <el-row style="height: 100vh;">
+        <el-col :span="10" class="case-testitem-list">
+          <div class="case-testitem-header">
+            <el-input v-model="caseNumber" class="case-number" size="small">
+              <template #prepend>Case:</template>
+            </el-input>
             <el-button size="mini" type="primary"  @click="loadCaseTestitem" :loading="loadOTSTestitemLoading">从OTS导入测试项目</el-button>
           </div>
           <overlay-scrollbars
@@ -28,7 +25,7 @@
             </el-card>
           </overlay-scrollbars>
         </el-col>
-        <el-col :span="16">
+        <el-col :span="14">
           <overlay-scrollbars
             class="case-condition"
           >
@@ -87,12 +84,15 @@
             </el-card>
           </overlay-scrollbars>
           <div class="bottom-function-btn">
-            <el-button type="success" class="bigicon" icon="el-third-icon-save" circle title="保存" @click="saveCaseInfo"></el-button>
+            <el-button type="primary" class="bigicon" icon="el-third-icon-cloud-sync" circle title="载入所有数据"></el-button>
+            <el-button type="primary" class="bigicon" icon="el-third-icon-cloud-download" circle title="载入Case信息"
+              @click="loadExistCaseData" :loading="loadExistCaseDataLoading"></el-button>
+            <el-button type="success" class="bigicon" icon="el-third-icon-save" circle title="保存Case信息" @click="saveCaseInfo"></el-button>
             <el-button type="primary" class="bigicon" icon="el-third-icon-right" circle title="下一步" @click="toNextPage"></el-button>
           </div>
         </el-col>
       </el-row>
-    </div>
+    </el-main>
   </el-container>
 </template>
 
@@ -257,18 +257,26 @@ export default {
 </script>
 
 <style lang="stylus" scoped>
-.form-line
-  margin: 2px 1px
-  width: -webkit-fill-available
+.el-main
+  padding: 0
+.case-testitem-list
+  border-right: solid 1px rgba(0,0,0,0.125)
+.case-testitem-header
+  .case-number
+    width: 17em
+    margin: 2px 1px
+  .el-button
+    margin: 4px 2px
+
 .case-testitem
-  height: calc(100vh - 4em)
-.testitem-import-button
-  text-align: right
-  margin-right: 2px
+  height: calc(100vh - 3em)
+
 .case-condition
   height: calc(100vh - 5em)
+
 .testitem-card, .condition-card
   margin: 6px 4px
+
 .bottom-function-btn
   position: absolute
   bottom: 1em
@@ -282,6 +290,4 @@ export default {
 .testitem-card, .condition-card
   .el-card__body
     padding: 10px
-.bottom-function-btn .bigicon [class^="el-third-icon"]
-  font-size: 25px
 </style>

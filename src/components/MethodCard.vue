@@ -128,7 +128,7 @@ export default {
     },
     data: {
       type: Object,
-      default: ()=>{return {}}
+      default: ()=>({})
     },
     conditionOptionList: Object
   },

@@ -85,6 +85,7 @@
                 :data="condition"
                 width="48%"
                 :conditionOptionList="conditionOptionList"
+                :method_regulationMap="method_regulationMap"
               >
               </ConditionCardAfterward>
             </div>
@@ -126,7 +127,7 @@
         </div>
       </el-main>
       <el-main v-if="activePage === 'method'" class="method-pane">
-        <div class="inner-tabs-list">
+        <div class="inner-tabs-list inner-tabs-list-method">
           <MethodCard
             v-for="method in methodList"
             :key="method.id"
@@ -158,6 +159,7 @@
                     v-model="searchGroup"
                     multiple
                     clearable
+                    class="testitem-filter-select"
                   >
                     <el-option
                       v-for="op in testitemGroupList"
@@ -258,6 +260,9 @@
                       <div class="card-line">
                         <label class="card-label">分组: <span>{{method.group}}</span></label>
                       </div>
+                      <div class="card-line">
+                        <label class="card-label">默认测试: <span>{{method.defaultTest ? '是' : '否'}}</span></label>
+                      </div>
                     </template>
                     <template #edit-area="scopeProp">
                       <NameFormItem class="card-line" prependWidth="60px">
@@ -279,6 +284,15 @@
                           </el-select>
                         </template>
                       </NameFormItem>
+                      <NameFormItem class="card-line" prependWidth="60px">
+                        <template #prepend>默认测试</template>
+                        <template #default>
+                          <el-select v-model="scopeProp.dialogData.defaultTest">
+                            <el-option :value="true" label="是"></el-option>
+                            <el-option :value="false" label="否"></el-option>
+                          </el-select>
+                        </template>
+                      </NameFormItem>
                     </template>
                   </MethodCard>
                 </div>
@@ -297,7 +311,19 @@
                 </div>
               </el-tab-pane>
               <el-tab-pane label="Sub Clause" name="subclause">
-
+                <div class="inner-tabs-list">
+                  <SubClauseCard
+                    v-for="(subclause, index) in selectRegulation.subclause"
+                    :key="subclause.id + index"
+                    :data="subclause"
+                    :conditionOptionList="conditionOptionList"
+                    :method_regulationMap="method_regulationMap"
+                    width="48%"
+                    @delete-subclause="removeInnerSubClause(index)"
+                    @subclause-change="updateRegulationStatus"
+                  >
+                  </SubClauseCard>
+                </div>
               </el-tab-pane>
             </el-tabs>
           </el-col>
@@ -367,6 +393,7 @@ import ConditionCardAfterward from '@/components/ConditionCardAfterward.vue'
 import MaterialCard from '@/components/MaterialCard.vue'
 import MaterialConditionCard from '@/components/MaterialConditionCard.vue'
 import MethodCard from '@/components/MethodCard.vue'
+import SubClauseCard from '@/components/SubClauseCard.vue'
 import NameFormItem from '@/components/NameFormItem.vue'
 import InnerConditionCard from '@/components/InnerConditionCard.vue'
 
@@ -382,6 +409,7 @@ export default {
     MaterialCard,
     MaterialConditionCard,
     MethodCard,
+    SubClauseCard,
     NameFormItem,
     InnerConditionCard
   },
@@ -435,7 +463,7 @@ export default {
       return _.chunk(this.displayRegulationList, 100)[this.pageTable-1]
     },
     materialList () {
-      return this.materialObj.material
+      return _.sortBy(this.materialObj.material, 'name')
     },
     materialConditionList () {
       return this.materialObj.materialCondition
@@ -472,10 +500,27 @@ export default {
         name: '测试项目',
         rank: 1
       }
+      tempArr['icmethod'] = {
+        caseRank: false,
+        cat: 'method',
+        description: '测试方法列表',
+        id:'icmethod',
+        list: this.methodList.map(e=>{
+          return {
+            value: e.id,
+            label: `(${e.code}) ${e.name}`
+          }
+        }),
+        name: '测试方法',
+        rank: 1
+      }
       return tempArr
     },
     testitemGroupList () {
       return _.chain(this.regulationList).map(t=>t.group).flatten().compact().uniq().sortBy().value()
+    },
+    method_regulationMap () {
+      return _.fromPairs(this.methodList.concat(this.regulationList).map(e=>[e.id, e.name]))
     }
   },
   mounted () {
@@ -500,7 +545,7 @@ export default {
     loadMethodList () {
       return this.$http.get('/data/getMethodList')
       .then(res=>{
-        this.methodList = res.data.methodList
+        this.methodList = _.sortBy(res.data.methodList, 'name')
       })
     },
     loadRegulationList () {
@@ -656,6 +701,9 @@ export default {
         _.forIn(regulation.method, m=>{
           m.modify = undefined
         })
+        _.forIn(regulation.subclause, m=>{
+          m.modify = undefined
+        })
       })
       this.$http.post('/data/saveRegulation', {
         regulationList: tempList
@@ -692,6 +740,13 @@ export default {
       } else if (this.activeTestitemTab == 'method') {
         if (!_.isArray(this.selectRegulation.method)) this.$set(this.selectRegulation, 'method', [])
         this.dialogMethodVisible = true
+      } else if (this.activeTestitemTab == 'subclause') {
+        if (!_.isArray(this.selectRegulation.subclause)) this.$set(this.selectRegulation, 'subclause', [])
+        this.selectRegulation.subclause.push({
+          id: _id(),
+          condition: []
+        })
+        this.updateRegulationStatus()
       }
     },
     confirmAddInnerMethod () {
@@ -706,6 +761,10 @@ export default {
     },
     removeInnerMethod (index) {
       this.selectRegulation.method.splice(index, 1)
+      this.updateRegulationStatus()
+    },
+    removeInnerSubClause (index) {
+      this.selectRegulation.subclause.splice(index, 1)
       this.updateRegulationStatus()
     },
     confirmAddInnerCondition () {
@@ -750,11 +809,14 @@ export default {
 .inner-tabs-list
   overflow: auto
   height: 85vh
-
+.inner-tabs-list-method
+  height: 90vh
 .testitem-filter
   height: 13vh
-.testitem-filter-prepend
-  padding: 0 2px
+  .testitem-filter-prepend
+    padding: 0 2px
+  .testitem-filter-select
+    width:100%
 .regulation-list
   height: calc(87vh - 35px)
 .regulation-list .list

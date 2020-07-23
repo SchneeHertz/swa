@@ -244,57 +244,17 @@
               </el-tab-pane>
               <el-tab-pane label="方法" name="method">
                 <div class="inner-tabs-list">
-                  <MethodCard
+                  <InnerMethodCard
                     v-for="(method, index) in selectRegulation.method"
                     :key="method.id + index"
                     :data="method"
+                    :methodList="methodList"
                     :conditionOptionList="conditionOptionList"
                     width="48%"
                     @delete-method="removeInnerMethod(index)"
                     @method-change="updateRegulationStatus"
                   >
-                    <template #default>
-                      <div class="card-line">
-                        <label class="card-label">Mix数: <span>{{method.maxMix}}</span></label>
-                      </div>
-                      <div class="card-line">
-                        <label class="card-label">分组: <span>{{method.group}}</span></label>
-                      </div>
-                      <div class="card-line">
-                        <label class="card-label">默认测试: <span>{{method.defaultTest ? '是' : '否'}}</span></label>
-                      </div>
-                    </template>
-                    <template #edit-area="scopeProp">
-                      <NameFormItem class="card-line" prependWidth="60px">
-                        <template #prepend>Mix数</template>
-                        <template #default>
-                          <el-input-number v-model="scopeProp.dialogData.maxMix" :precision="0" :step="1" :max="20" :min="1"/>
-                        </template>
-                      </NameFormItem>
-                      <NameFormItem class="card-line" prependWidth="60px">
-                        <template #prepend>分组</template>
-                        <template #default>
-                          <el-select v-model="scopeProp.dialogData.group">
-                            <el-option
-                              v-for="op in methodGroup"
-                              :key="op"
-                              :value="op"
-                              :label="op"
-                            ></el-option>
-                          </el-select>
-                        </template>
-                      </NameFormItem>
-                      <NameFormItem class="card-line" prependWidth="60px">
-                        <template #prepend>默认测试</template>
-                        <template #default>
-                          <el-select v-model="scopeProp.dialogData.defaultTest">
-                            <el-option :value="true" label="是"></el-option>
-                            <el-option :value="false" label="否"></el-option>
-                          </el-select>
-                        </template>
-                      </NameFormItem>
-                    </template>
-                  </MethodCard>
+                  </InnerMethodCard>
                 </div>
               </el-tab-pane>
               <el-tab-pane label="条件" name="condition">
@@ -396,6 +356,7 @@ import MethodCard from '@/components/MethodCard.vue'
 import SubClauseCard from '@/components/SubClauseCard.vue'
 import NameFormItem from '@/components/NameFormItem.vue'
 import InnerConditionCard from '@/components/InnerConditionCard.vue'
+import InnerMethodCard from '@/components/InnerMethodCard.vue'
 
 import { generate as _id } from 'shortid'
 
@@ -411,7 +372,8 @@ export default {
     MethodCard,
     SubClauseCard,
     NameFormItem,
-    InnerConditionCard
+    InnerConditionCard,
+    InnerMethodCard
   },
   data () {
     return {
@@ -432,7 +394,6 @@ export default {
       dialogConditionId: undefined,
       dialogMethodVisible: false,
       dialogMethodId: undefined,
-      methodGroup: [1,2,3,4,5,6,7,8,9]
     }
   },
   computed: {
@@ -569,7 +530,7 @@ export default {
           name: value
         })
       }).catch(() => {
-        this.$message({type: 'info', message: '已取消'})
+        this.$message({type: 'info', message: '已取消', showClose: true})
       })
     },
     refreshSpecialMaterialConditionOption () {
@@ -595,14 +556,14 @@ export default {
       })
       .then(res=>{
         if(res.data.success){
-          this.$message({type: 'success', message: res.data.info})
+          this.$message({type: 'success', message: res.data.info, showClose: true})
           this.loadConditionList()
         } else {
-          this.$message({type: 'warning', message: res.data.info})
+          this.$message({type: 'warning', message: res.data.info, showClose: true})
         }
       })
       .catch(() => {
-        this.$message({type: 'warning', message: '未知错误'})
+        this.$message({type: 'warning', message: '未知错误', showClose: true})
       })
     },
     addMaterial () {
@@ -616,7 +577,7 @@ export default {
           modify: 'add'
         })
       }).catch(() => {
-        this.$message({type: 'info', message: '已取消'})
+        this.$message({type: 'info', message: '已取消', showClose: true})
       })
     },
     saveMaterial () {
@@ -629,14 +590,14 @@ export default {
       })
       .then(res=>{
         if(res.data.success){
-          this.$message({type: 'success', message: res.data.info})
+          this.$message({type: 'success', message: res.data.info, showClose: true})
           this.loadMaterialList()
         } else {
-          this.$message({type: 'warning', message: res.data.info})
+          this.$message({type: 'warning', message: res.data.info, showClose: true})
         }
       })
       .catch(() => {
-        this.$message({type: 'warning', message: '未知错误'})
+        this.$message({type: 'warning', message: '未知错误', showClose: true})
       })
     },
     addMethod () {
@@ -651,7 +612,7 @@ export default {
           condition: []
         })
       }).catch(() => {
-        this.$message({type: 'info', message: '已取消'})
+        this.$message({type: 'info', message: '已取消', showClose: true})
       })
     },
     saveMethod () {
@@ -660,14 +621,14 @@ export default {
       })
       .then(res=>{
         if(res.data.success){
-          this.$message({type: 'success', message: res.data.info})
+          this.$message({type: 'success', message: res.data.info, showClose: true})
           this.loadMethodList()
         } else {
-          this.$message({type: 'warning', message: res.data.info})
+          this.$message({type: 'warning', message: res.data.info, showClose: true})
         }
       })
       .catch(() => {
-        this.$message({type: 'warning', message: '未知错误'})
+        this.$message({type: 'warning', message: '未知错误', showClose: true})
       })
     },
     addRegulation () {
@@ -683,7 +644,7 @@ export default {
         })
         this.handleSelectRegulation(geneId)
       }).catch(() => {
-        this.$message({type: 'info', message: '已取消'})
+        this.$message({type: 'info', message: '已取消', showClose: true})
       })
     },
     deleteRegulation () {
@@ -712,18 +673,19 @@ export default {
         if(res.data.success){
           this.$message({
             type: 'success',
-            message: res.data.info
+            message: res.data.info,
+            showClose: true
           })
           this.loadRegulationList()
           .then(()=>{
             this.handleSelectRegulation(this.selectRegulationId)
           })
         } else {
-          this.$message({type: 'warning', message: res.data.info})
+          this.$message({type: 'warning', message: res.data.info, showClose: true})
         }
       })
       .catch(() => {
-        this.$message({type: 'warning', message: '未知错误'})
+        this.$message({type: 'warning', message: '未知错误', showClose: true})
       })
     },
     handleSelectRegulation (id) {
@@ -751,9 +713,7 @@ export default {
     },
     confirmAddInnerMethod () {
       if (this.dialogMethodId) {
-        this.selectRegulation.method.push(
-          _.merge(_.cloneDeep(this.methodList.find(e=>e.id == this.dialogMethodId)), {group: 1})
-        )
+        this.selectRegulation.method.push({id: this.dialogMethodId, modify: 'add', group: 1}) //为Regulation添加Method
         this.updateRegulationStatus()
         this.dialogMethodId = undefined
         this.dialogMethodVisible = false

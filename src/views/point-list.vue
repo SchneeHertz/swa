@@ -410,7 +410,8 @@ export default {
       } else {
         this.$message({
           message: '未知错误',
-          type: 'warning'
+          type: 'warning',
+          showClose: true
         })
         console.log(findRect, findInSL)
       }
@@ -479,7 +480,7 @@ export default {
             }
           })
           .then(res=>{
-            this.$message({type: 'success', message: '保存成功'})
+            this.$message({type: 'success', message: '保存成功', showClose: true})
           })
         },
         {question: '确认保存?', success: '操作完成', cancel: '已取消'}
@@ -492,11 +493,11 @@ export default {
       this.$confirm(message.question, '提示', {confirmButtonText: '确定', cancelButtonText: '取消', type: 'warning'})
       .then(() => {
         callback()
-        this.$message({type: 'success', message: message.success})
+        this.$message({type: 'success', message: message.success, showClose: true})
       })
       .catch(() => {
         failCallback()
-        this.$message({type: 'info', message: message.cancel})
+        this.$message({type: 'info', message: message.cancel, showClose: true})
       })
     },
   }

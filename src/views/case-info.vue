@@ -246,7 +246,7 @@ export default {
         }
       })
       .then(res=>{
-        this.$message({type: 'success', message: '保存成功'})
+        this.$message({type: 'success', message: '保存成功', showClose: true})
       })
     },
     toNextPage () {

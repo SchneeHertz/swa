@@ -65,18 +65,6 @@
           <el-tab-pane label="文本" name="text">
 
           </el-tab-pane>
-          <el-tab-pane label="测试项目" name="testitem">
-            <div class="inner-tabs-list">
-              <ConditionCardTestitem
-                v-for="condition in testitemConditionList"
-                :key="condition.id"
-                :data="condition"
-                width="48%"
-                :regulationOptionList="regulationList"
-              >
-              </ConditionCardTestitem>
-            </div>
-          </el-tab-pane>
           <el-tab-pane label="附加" name="afterward">
             <div class="inner-tabs-list">
               <ConditionCardAfterward
@@ -348,7 +336,6 @@
 
 import BaseHeader from '@/components/BaseHeader.vue'
 import ConditionCardSingle from '@/components/ConditionCardSingle.vue'
-import ConditionCardTestitem from '@/components/ConditionCardTestitem.vue'
 import ConditionCardAfterward from '@/components/ConditionCardAfterward.vue'
 import MaterialCard from '@/components/MaterialCard.vue'
 import MaterialConditionCard from '@/components/MaterialConditionCard.vue'
@@ -365,7 +352,6 @@ export default {
   components: {
     BaseHeader,
     ConditionCardSingle,
-    ConditionCardTestitem,
     ConditionCardAfterward,
     MaterialCard,
     MaterialConditionCard,
@@ -402,9 +388,6 @@ export default {
     },
     multipleConditionList () {
       return this.conditionList['multiple']
-    },
-    testitemConditionList () {
-      return this.conditionList['testitem']
     },
     afterwardConditionList () {
       return this.conditionList['afterward']
@@ -473,6 +456,24 @@ export default {
           }
         }),
         name: '测试方法',
+        rank: 1
+      }
+      tempArr['icenglish'] = {
+        caseRank: false,
+        cat: 'description',
+        description: '英文描述',
+        id:'icenglish',
+        list: [],
+        name: '英文描述',
+        rank: 1
+      }
+      tempArr['icchinese'] = {
+        caseRank: false,
+        cat: 'description',
+        description: '中文描述',
+        id:'icchinese',
+        list: [],
+        name: '中文描述',
         rank: 1
       }
       return tempArr

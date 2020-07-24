@@ -124,7 +124,7 @@ export default {
                 if (innerCd.valueLogic == 'and') {
                   return _.difference(innerCd.value, this.testitemIdList).length == 0
                 } else if (innerCd.valueLogic == 'or') {
-                  return _.uniq(innerCd.value.concat(this.testitemIdList)).length < innerCd.value.concat(this.testitemIdList).length
+                  return _.uniq(innerCd.value.concat(this.testitemIdList)).length < _.uniq(innerCd.value).concat(_.uniq(this.testitemIdList)).length
                 }
               } else if (innerCd.logic == 'no') {
                 if (innerCd.valueLogic == 'and') {
@@ -148,7 +148,7 @@ export default {
                     if (innerCd.valueLogic == 'and') {
                       return _.difference(innerCd.value, this.data.condition[foundMap.id]).length == 0
                     } else if (innerCd.valueLogic == 'or') {
-                      return _.uniq(innerCd.value.concat(this.data.condition[foundMap.id])).length < innerCd.value.concat(this.data.condition[foundMap.id]).length
+                      return _.uniq(innerCd.value.concat(this.data.condition[foundMap.id])).length < _.uniq(innerCd.value).concat(_.uniq(this.data.condition[foundMap.id])).length
                     }
                   } else if (innerCd.logic == 'no') {
                     if (innerCd.valueLogic == 'and') {

@@ -40,6 +40,8 @@
             v-model="data.value"
             multiple
             @change="$emit('select-change')"
+            :allow-create="data.id == 'icenglish' || data.id == 'icchinese'"
+            :filterable="data.id == 'icenglish' || data.id == 'icchinese'"
           >
             <el-option
               v-for="op in option.list"

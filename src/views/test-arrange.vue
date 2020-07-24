@@ -278,7 +278,7 @@ export default {
           methodObj.list.push({
             id: _id(),
             index: this.findMinIndex(methodObj.list.map(e=>+e.index)),
-            list: [point]
+            list: [_.merge({elements: []}, point)]
           })
         })
       })
@@ -286,7 +286,6 @@ export default {
     resolvePointList (pointList) {
       let tempList = []
       _.forIn(_.cloneDeep(pointList), point=>{
-        let materialVal = {}
         let materialValArray = []
         _.forIn(_.get(point, 'condition.material', []), material=>{
           let materialData = _.find(this.materialObj.material, {name: material})
@@ -299,12 +298,11 @@ export default {
           })
           materialValArray.push(mtempObj)
         })
-        _.mergeWith(materialVal, ...materialValArray, (obj,src)=>{
+        _.mergeWith(point.condition, ...materialValArray, (obj,src)=>{
           if (_.isArray(obj)) {
             return _.uniq(_.compact(obj.concat(src)))
           }
         })
-        _.assign(point.condition, materialVal)
         tempList.push(point)
       })
       return tempList
@@ -313,19 +311,53 @@ export default {
       let tempList = []
       _.forIn(pointList, point=>{
         let passConditions = _.every(conditionList, condition=>{
-          let pointValue = _.flatten([_.get(point, `condition[${condition.id}]`, [])])
-          if (condition.logic == 'yes') {
-            if (condition.valueLogic == 'and') {
-              return _.difference(condition.value, pointValue).length == 0
-            } else if (condition.valueLogic == 'or') {
-              return _.uniq(condition.value.concat(pointValue)).length < condition.value.concat(pointValue).length
-            }
-          } else if (condition.logic == 'no') {
-            if (condition.valueLogic == 'and') {
-              return _.difference(condition.value, pointValue).length > 0
-            } else if (condition.valueLogic == 'or') {
-              return !(_.difference(condition.value, pointValue).length == 0)
-            }
+          switch (condition.id) {
+            case 'icenglish':
+              if (condition.logic == 'yes') {
+                if (condition.valueLogic == 'and') {
+                  return _.every(condition.value, (word)=>{ return (point.englishDescription + '').includes(word) })
+                } else if (condition.valueLogic == 'or') {
+                  return _.some(condition.value, (word)=>{ return (point.englishDescription + '').includes(word) })
+                }
+              } else if (condition.logic == 'no') {
+                if (condition.valueLogic == 'and') {
+                  return !_.every(condition.value, (word)=>{ return (point.englishDescription + '').includes(word) })
+                } else if (condition.valueLogic == 'or') {
+                  return !_.some(condition.value, (word)=>{ return (point.englishDescription + '').includes(word) })
+                }
+              }
+              break
+            case 'icchinese':
+              if (condition.logic == 'yes') {
+                if (condition.valueLogic == 'and') {
+                  return _.every(condition.value, (word)=>{ return (point.chineseDescription + '').includes(word) })
+                } else if (condition.valueLogic == 'or') {
+                  return _.some(condition.value, (word)=>{ return (point.chineseDescription + '').includes(word) })
+                }
+              } else if (condition.logic == 'no') {
+                if (condition.valueLogic == 'and') {
+                  return !_.every(condition.value, (word)=>{ return (point.chineseDescription + '').includes(word) })
+                } else if (condition.valueLogic == 'or') {
+                  return !_.some(condition.value, (word)=>{ return (point.chineseDescription + '').includes(word) })
+                }
+              }
+              break
+            default:
+              let pointValue = _.flatten([_.get(point, `condition[${condition.id}]`, [])])
+              if (condition.logic == 'yes') {
+                if (condition.valueLogic == 'and') {
+                  return _.difference(condition.value, pointValue).length == 0
+                } else if (condition.valueLogic == 'or') {
+                  return _.uniq(condition.value.concat(pointValue)).length < _.uniq(condition.value).concat(_.uniq(pointValue)).length
+                }
+              } else if (condition.logic == 'no') {
+                if (condition.valueLogic == 'and') {
+                  return _.difference(condition.value, pointValue).length > 0
+                } else if (condition.valueLogic == 'or') {
+                  return !(_.difference(condition.value, pointValue).length == 0)
+                }
+              }
+              break
           }
         })
         passConditions ? tempList.push(point) : ''

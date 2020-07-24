@@ -150,7 +150,7 @@ export default {
                     return _.difference(innerCd.value, foundMap.value).length == 0
                   } else if (innerCd.valueLogic == 'or') {
                     // console.log('multiple,yes,or', _.uniq(innerCd.value.concat(foundMap.value)).length < innerCd.value.length + foundMap.value.length)
-                    return _.uniq(innerCd.value.concat(foundMap.value)).length < innerCd.value.concat(foundMap.value).length
+                    return _.uniq(innerCd.value.concat(foundMap.value)).length < _.uniq(innerCd.value).concat(_.uniq(foundMap.value)).length
                   }
                 } else if (innerCd.logic == 'no') {
                   if (innerCd.valueLogic == 'and') {

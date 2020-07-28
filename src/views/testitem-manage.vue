@@ -62,9 +62,6 @@
               </ConditionCardSingle>
             </div>
           </el-tab-pane>
-          <el-tab-pane label="文本" name="text">
-
-          </el-tab-pane>
           <el-tab-pane label="附加" name="afterward">
             <div class="inner-tabs-list">
               <ConditionCardAfterward
@@ -209,7 +206,7 @@
                   >
                     <template #prepend>OTS 编号</template>
                   </el-input>
-                  <NameFormItem class="card-line" prependWidth="60px">
+                  <NameFormItem class="card-line" prependWidth="80px">
                     <template #prepend>分组</template>
                     <template #default>
                       <el-select
@@ -225,6 +222,19 @@
                           :key="op"
                           :value="op"
                         ></el-option>
+                      </el-select>
+                    </template>
+                  </NameFormItem>
+                  <NameFormItem class="card-line" prependWidth="80px">
+                    <template #prepend><span title="涂层与底材分开测试">按状态分开</span></template>
+                    <template #default>
+                      <el-select
+                        v-model="selectRegulation.splitByStatus"
+                        class="one-line-select"
+                        @change="updateRegulationStatus"
+                      >
+                        <el-option label="是" :value="true"></el-option>
+                        <el-option label="否" :value="false"></el-option>
                       </el-select>
                     </template>
                   </NameFormItem>
@@ -714,7 +724,13 @@ export default {
     },
     confirmAddInnerMethod () {
       if (this.dialogMethodId) {
-        this.selectRegulation.method.push({id: this.dialogMethodId, modify: 'add', group: 1}) //为Regulation添加Method
+        this.selectRegulation.method.push({
+          id: this.dialogMethodId, 
+          modify: 'add', 
+          group: 1, 
+          defaultTest: true, 
+          maxMix: 1
+        })
         this.updateRegulationStatus()
         this.dialogMethodId = undefined
         this.dialogMethodVisible = false
@@ -807,7 +823,7 @@ export default {
   vertical-align: top
 .regulation-info-pane .el-input-group__prepend
   text-align: center
-  width: 60px
+  width: 80px
 .one-line-select
   width: 100%
 </style>

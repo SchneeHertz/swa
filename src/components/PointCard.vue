@@ -53,6 +53,7 @@
               :key="op.value"
               :label="op.value"
               :value="op.value"
+              :title="op.remark"
             ></el-option>
           </el-select>
         </template>
@@ -77,6 +78,7 @@
               :key="op.value"
               :label="op.value"
               :value="op.value"
+              :title="op.remark"
             ></el-option>
           </el-select>
         </template>
@@ -105,7 +107,8 @@ export default {
       type: Object,
       default: ()=>({})
     },
-    isSelected: Boolean
+    isSelected: Boolean,
+    materialObj: Object,
   },
   data () {
     return {
@@ -113,9 +116,27 @@ export default {
     }
   },
   computed: {
+    materialCondition () {
+      let materialValArray = []
+      _.forIn(_.get(this.data, 'condition.material', []), material=>{
+        let materialData = _.find(this.materialObj.material, {name: material})
+        let mtempObj = {}
+        _.forIn(materialData, (valArray, key)=>{
+          let found = _.find(this.materialObj.materialCondition, {property: key})
+          if (found) {
+            mtempObj[found.id] = valArray
+          }
+        })
+        materialValArray.push(mtempObj)
+      })
+      return _.mergeWith({}, ...materialValArray, (obj,src)=>{
+        if (_.isArray(obj)) {
+          return _.uniq(_.compact(obj.concat(src)))
+        }
+      })
+    },
     displayAfterwardConditionList () {
       let tempList = []
-      let sourceList = this.simpleConditionList.concat(_.cloneDeep(this.afterwardConditionList))
       _.forIn(this.afterwardConditionList, condition=>{
         let isCheck = _.every(condition.condition, innerCd=>{
           switch(innerCd.id){
@@ -135,31 +156,19 @@ export default {
               }
               break
             default:
-              let foundMap = _.find(sourceList, {id: innerCd.id})
-              if (foundMap) {
-                if (foundMap.cat == 'single' || (foundMap.cat == 'afterward' && foundMap.aftercat == 'single') ){
-                  if (innerCd.logic == 'yes') {
-                    return _.some(innerCd.value, e=>this.data.condition[foundMap.id] == e)
-                  } else if (innerCd.logic == 'no') {
-                    return !_.some(innerCd.value, e=>this.data.condition[foundMap.id] == e)
-                  }
-                } else if (foundMap.cat == 'multiple' || (foundMap.cat == 'afterward' && foundMap.aftercat == 'multiple') ) {
-                  if (innerCd.logic == 'yes') {
-                    if (innerCd.valueLogic == 'and') {
-                      return _.difference(innerCd.value, this.data.condition[foundMap.id]).length == 0
-                    } else if (innerCd.valueLogic == 'or') {
-                      return _.uniq(innerCd.value.concat(this.data.condition[foundMap.id])).length < _.uniq(innerCd.value).concat(_.uniq(this.data.condition[foundMap.id])).length
-                    }
-                  } else if (innerCd.logic == 'no') {
-                    if (innerCd.valueLogic == 'and') {
-                      return _.difference(innerCd.value, this.data.condition[foundMap.id]).length > 0
-                    } else if (innerCd.valueLogic == 'or') {
-                      return !(_.difference(innerCd.value, this.data.condition[foundMap.id]).length == 0)
-                    }
-                  }
+              let pointValue = _.flatten([this.data.condition[innerCd.id] || this.materialCondition[innerCd.id]])
+              if (innerCd.logic == 'yes') {
+                if (innerCd.valueLogic == 'and') {
+                  return _.difference(innerCd.value, pointValue).length == 0
+                } else if (innerCd.valueLogic == 'or') {
+                  return _.uniq(innerCd.value.concat(pointValue)).length < _.uniq(innerCd.value).concat(_.uniq(pointValue)).length
                 }
-              } else {
-                return false
+              } else if (innerCd.logic == 'no') {
+                if (innerCd.valueLogic == 'and') {
+                  return _.difference(innerCd.value, pointValue).length > 0
+                } else if (innerCd.valueLogic == 'or') {
+                  return !(_.difference(innerCd.value, pointValue).length == 0)
+                }
               }
               break
             }

@@ -46,11 +46,12 @@
                 ></el-input>
                 <el-select
                   size="mini"
-                  v-model="subclauseObj.subclauseVal[group.id]"
+                  v-model="displaySubclauseVal[group.id]"
+                  @change="$forceUpdate()"
                   placeholder="Sub Clause"
                 >
                   <el-option
-                    v-for="subclause in subclauseObj.subclause"
+                    v-for="subclause in displaySubclause"
                     :key="subclause.id"
                     :value="subclause.code"
                     :label="subclause.name"
@@ -78,6 +79,8 @@
               @click="handleSelectMethod(method.id)"
             >
               {{method.name}}
+              <i class="method-icon el-third-icon-container" @click="pasteList"/>
+              <i class="method-icon el-third-icon-file-copy" @click="copyList"/>
             </div>
           </overlay-scrollbars>
           <overlay-scrollbars class="regulation-pane">
@@ -169,11 +172,11 @@ export default {
         this.$set(this.selectMethod, 'list', val)
       }
     },
-    subclauseObj () {
-      return {
-        subclauseVal: this.selectRegulation.subclauseVal || {},
-        subclause: this.selectRegulation.subclause || []
-      }
+    displaySubclauseVal () {
+      return this.selectRegulation.subclauseVal || {}
+    },
+    displaySubclause () {
+      return this.selectRegulation.subclause || []
     }
   },
   mounted () {
@@ -203,18 +206,20 @@ export default {
       let tempList2 = []
       _.forIn(this.caseTestitemList, testitem=>{
         if (testitem.regulation && testitem.selected) {
-          if (_.isArray(testitem.regulation.method)) {
-            _.forIn(testitem.regulation.method, method=>{
-              tempList.push({
-                id: method.id,
-                regulation: _.assign(
-                  {method: _.cloneDeep(method)},
-                  _.omit(_.cloneDeep(testitem.regulation), 'method'),
-                  {caseInfo: _.omit(_.cloneDeep(testitem), 'regulation'), list: [], subclauseVal:{}, shareSolution: true}
-                )
+          _.forIn(testitem.regulation, regulation=>{
+            if (_.isArray(regulation.method)) {
+              _.forIn(regulation.method, method=>{
+                tempList.push({
+                  id: method.id,
+                  regulation: _.assign(
+                    {method: _.cloneDeep(method)},
+                    _.omit(_.cloneDeep(regulation), 'method'),
+                    {caseInfo: _.omit(_.cloneDeep(testitem), 'regulation'), list: [], subclauseVal:{}, shareSolution: true}
+                  )
+                })
               })
-            })
-          }
+            }
+          })
         }
       })
       _.forIn(_.groupBy(tempList, 'id'), (group, id)=>{
@@ -272,16 +277,117 @@ export default {
       }
     },
     autoSolve () {
+      let startTime = new Date()
+      const STATUSCONDITIONID = 'n0l2O8mir'
       let pointList = this.resolvePointList(this.pointList)
       _.forIn(this.methodBaseData, methodObj=>{
-        _.forIn(this.pointFilterByConditionList(pointList, methodObj.condition), point=>{
-          methodObj.list.push({
-            id: _id(),
-            index: this.findMinIndex(methodObj.list.map(e=>+e.index)),
-            list: [_.merge({elements: []}, point)]
+        let filterByMethodList = this.pointFilterByConditionList(pointList, methodObj.condition)
+        let filterByRegulationList = this.pointTagRegulation(filterByMethodList, methodObj.regulationList)
+        let groupedList = _.groupBy(_.filter(filterByRegulationList, point=>{return !_.isEmpty(point.regulation)}), point=>JSON.stringify(point.regulation))
+
+        _.forIn(groupedList, group=>{
+          _.forIn(group, point=>{
+            point.groupBy = []
+            let splitByStatus = false
+            let regulationList = point.regulation.map(e=>_.find(methodObj.regulationList, {id: e}))
+            _.forIn(regulationList, regulation=>{
+              if (regulation.splitByStatus) {
+                splitByStatus = true
+              }
+              _.forIn(regulation.subclause, subclause=>{
+                if (this.checkConditionListPass(point, subclause.condition, methodObj.id)) {
+                  point.groupBy.push({
+                    [regulation.id]: subclause.code
+                  })
+                  point.maxMixArray.push(subclause.maxMix)
+                  return false
+                }
+              })
+            })
+            if (splitByStatus) {
+              point.groupBy.push({
+                status: point.condition[STATUSCONDITIONID]
+              })
+            }
+          })
+        })
+        let groupedList2 = []
+        _.forIn(groupedList, group=>{
+          groupedList2.push(
+            _.groupBy(group, point=>{
+              return JSON.stringify(
+                _.sortBy(point.groupBy, o=>{
+                  return _.keys(o)[0]
+                })
+              )
+            })
+          )
+        })
+        _.forIn(groupedList2, groupR=>{
+          _.forIn(groupR, group=>{
+            let regulationList
+            let subclauseValList = {}
+            let minMix = _.min(group[0].maxMixArray)
+            _.forIn(group, point=>{
+              regulationList = point.regulation
+              if (minMix > 1 && point.condition['weightType'] != '够重') {
+                let parentId = this.findParentId(this.pointRelation, point.id)
+                let foundParent = _.find(group, {id: parentId})
+                if (foundParent) {
+                  point.minorType = 'parentWithed'
+                  foundParent.elements.push(_.cloneDeep(point))
+                } else {
+                  let inwith = false
+                  _.forIn(group, parentPoint=>{
+                    if (parentPoint.condition['weightType'] == '够重' && parentPoint.elements.length < 3) {
+                      parentPoint.elements.push(_.cloneDeep(point))
+                      point.minorType = 'withed'
+                      inwith = true
+                      return false
+                    }
+                  })
+                  if (!inwith) {
+                    point.minorType = 'unWithed'
+                  }
+                }
+              } else {
+                point.minorType = 'main'
+              }
+            })
+            regulationList = regulationList.map(e=>_.find(methodObj.regulationList, {id: e}))
+            let finalMethodGroupList = _.chunk(_.filter(group, point=>point.minorType == 'main' || point.minorType == 'unWithed'), minMix)
+            let startIndex = methodObj.list.length + 1
+            let idList = []
+            _.forIn(finalMethodGroupList, pointGroup=>{
+              let id = _id()
+              methodObj.list.push({
+                id: id,
+                index: startIndex,
+                list: pointGroup
+              })
+              startIndex += 1
+              idList.push(id)
+              _.forIn(pointGroup[0].groupBy, groupObj=>{
+                let key = _.keys(groupObj)[0]
+                let code = _.values(groupObj)[0]
+                if (!subclauseValList[key]) {
+                  subclauseValList[key] = []
+                }
+                if (key != 'status') {
+                  subclauseValList[key].push({[id]: code})
+                }
+              })
+            })
+            _.forIn(regulationList, regulation=>{
+              regulation.list = regulation.list.concat(idList)
+              if (subclauseValList[regulation.id]) {
+                regulation.subclauseVal = _.assign(regulation.subclauseVal, ...subclauseValList[regulation.id])
+              }
+            })
           })
         })
       })
+      console.log(`used time: ${new Date() - startTime}ms`)
     },
     resolvePointList (pointList) {
       let tempList = []
@@ -302,28 +408,26 @@ export default {
           if (_.isArray(obj)) {
             return _.uniq(_.compact(obj.concat(src)))
           }
-        })
+        })        
         tempList.push(point)
       })
       return tempList
     },
-    pointFilterByConditionList(pointList, conditionList) {
-      let tempList = []
-      _.forIn(pointList, point=>{
-        let passConditions = _.every(conditionList, condition=>{
+    checkConditionListPass (point, conditionList, methodId) {
+      return _.every(conditionList, condition=>{
           switch (condition.id) {
             case 'icenglish':
               if (condition.logic == 'yes') {
                 if (condition.valueLogic == 'and') {
-                  return _.every(condition.value, (word)=>{ return (point.englishDescription + '').includes(word) })
+                  return _.every(condition.value, (word)=>{ return (point.englishDescription + '').toLowerCase().includes(word.toLowerCase()) })
                 } else if (condition.valueLogic == 'or') {
-                  return _.some(condition.value, (word)=>{ return (point.englishDescription + '').includes(word) })
+                  return _.some(condition.value, (word)=>{ return (point.englishDescription + '').toLowerCase().includes(word.toLowerCase()) })
                 }
               } else if (condition.logic == 'no') {
                 if (condition.valueLogic == 'and') {
-                  return !_.every(condition.value, (word)=>{ return (point.englishDescription + '').includes(word) })
+                  return !_.every(condition.value, (word)=>{ return (point.englishDescription + '').toLowerCase().includes(word.toLowerCase()) })
                 } else if (condition.valueLogic == 'or') {
-                  return !_.some(condition.value, (word)=>{ return (point.englishDescription + '').includes(word) })
+                  return !_.some(condition.value, (word)=>{ return (point.englishDescription + '').toLowerCase().includes(word.toLowerCase()) })
                 }
               }
               break
@@ -341,6 +445,9 @@ export default {
                   return !_.some(condition.value, (word)=>{ return (point.chineseDescription + '').includes(word) })
                 }
               }
+              break
+            case 'icmethod':
+              return condition.value.includes(methodId)
               break
             default:
               let pointValue = _.flatten([_.get(point, `condition[${condition.id}]`, [])])
@@ -360,9 +467,52 @@ export default {
               break
           }
         })
-        passConditions ? tempList.push(point) : ''
+    },
+    pointFilterByConditionList(pointList, conditionList) {
+      let tempList = []
+      _.forIn(pointList, point=>{
+        if (this.checkConditionListPass(point, conditionList)){
+          tempList.push(point)
+        }
       })
       return tempList
+    },
+    pointTagRegulation (pointList, regulationList) {
+      pointList = _.cloneDeep(pointList)
+      _.forIn(pointList, point=>{
+        point.regulation = []
+        point.maxMixArray = []
+        point.elements = []
+        _.forIn(regulationList, regulation=>{
+          if (regulation.method.defaultTest && this.checkConditionListPass(point, regulation.condition)) {
+            point.regulation.push(regulation.id)
+            point.maxMixArray.push(regulation.method.maxMix)
+          }
+        })
+      })
+      return pointList
+    },
+    findParentId (relationList, id) {
+      let result
+      for (let relation of relationList) {
+        if (result) {
+          break
+        }
+        if (_.some(relation.children, r=>r.id == id)) {
+          result = relation.id
+          break
+        } else {
+          if (_.isArray(relation.children)) {
+            result = this.findParentId(relation.children, id)
+          }
+        }
+      }
+      if (result && !_.some(relationList, r=> r.id == result)) {
+        do {
+          result = this.findParentId(relationList, result)
+        } while (result && !_.some(relationList, r=> r.id == result))
+      }
+      return result
     },
     loadTasklist () {
       return this.$http.post('/data/getCaseData', {
@@ -414,6 +564,12 @@ export default {
         this.$message({type: 'info', message: message.cancel, showClose: true})
       })
     },
+    copyList () {
+      console.log('copyList')
+    },
+    pasteList () {
+      console.log('pasteList')
+    }
   }
 }
 </script>
@@ -438,6 +594,9 @@ export default {
 .method-list-item
   padding: 8px 6px
   cursor: pointer
+.method-icon
+  float: right
+  margin: 0 4px
 .add-group-card
   width: 21em
   height: 6em

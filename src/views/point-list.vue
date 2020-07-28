@@ -22,6 +22,7 @@
               :simpleConditionList="simpleConditionList"
               :afterwardConditionList="afterwardConditionList"
               :testitemIdList="testitemIdList"
+              :materialObj="materialObj"
               :data.sync="valueObj"
               width="48%"
               :isSelected="valueObj.isSelected"
@@ -112,7 +113,8 @@ export default {
         height: window.innerHeight - 80
       },
       conditionList: {},
-      loadPointListLoading: false
+      loadPointListLoading: false,
+      materialObj: {}
     }
   },
   computed: {
@@ -126,10 +128,10 @@ export default {
       return _.chain(this.conditionList).pick(['single', 'multiple', 'special']).values().flatten().filter(e=>!e.caseRank).sortBy('rank').value()
     },
     testitemIdList () {
-      return this.caseTestitemList.filter(e=>e.selected).map(e=>e.regulation.id)
+      return _.flatten(this.caseTestitemList.filter(e=>e.selected).map(e=>e.regulation)).map(e=>e.id)
     },
     afterwardConditionList () {
-      return _.chain(this.conditionList).get('afterward').value()
+      return _.chain(this.conditionList).get('afterward').filter(e=>!e.caseRank).value()
     },
     // testitemConditionList () {
     //   return _.chain(this.conditionList).get('testitem')
@@ -138,20 +140,8 @@ export default {
     // },
   },
   mounted () {
-    // if (_.isEmpty(this.valueList)){
-    //   const INIT_ID = _id()
-    //   this.valueList.push({
-    //     id: INIT_ID,
-    //     index: '1',
-    //     condition: {}
-    //   }),
-    //   this.konvaRelation.push({
-    //     id: INIT_ID,
-    //     label: '1'
-    //   })
-    //   this.shapeList.push(this.createShape(INIT_ID, 0, 0, 40, 30, '1'))
-    // }
     this.loadConditionList()
+    this.loadMaterialList()
   },
   beforeDestroy () {
     // this.valueList = this.valueList
@@ -184,6 +174,12 @@ export default {
       return this.$http.get('/data/getCondition')
       .then(res=>{
         this.conditionList = res.data.conditionList
+      })
+    },
+    loadMaterialList () {
+      return this.$http.get('/data/getMaterialList')
+      .then(res=>{
+        this.materialObj = res.data.materialList
       })
     },
     addPoint (count = 1, assign = {}) {

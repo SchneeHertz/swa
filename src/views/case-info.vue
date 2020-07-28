@@ -117,62 +117,53 @@ export default {
       loadExistCaseDataLoading: false,
       loadOTSTestitemLoading: false,
       selectedTestitemList: {},
-      conditionList: {}
     }
   },
   computed: {
     caseNumber: geneVuexValue('caseNumber'),
     caseTestitemList: geneVuexValue('caseTestitemList'),
+    conditionList: geneVuexValue('conditionList'),
     simpleCaseConditionList () {
       return _.chain(this.conditionList).pick(['single', 'multiple', 'special']).values().flatten().filter('caseRank').sortBy('rank').value()
     },
     afterwardCaseConditionList () {
       let tempList = _.chain(this.conditionList['afterward']).filter('caseRank').value()
       _.forIn(tempList, condition=>{
-        this.$set(
-          condition,
-          'visible',
-          _.every(condition.condition, innerCd=>{
-            let foundMap = _.find(this.simpleCaseConditionList.concat(tempList), {id: innerCd.id})
-            if (foundMap) {
-              if (foundMap.cat == 'single' || (foundMap.cat == 'afterward' && foundMap.aftercat == 'single') ){
-                if (innerCd.logic == 'yes') {
-                  // console.log('single,yes', _.some(innerCd.value, e=>foundMap.value == e))
-                  return _.some(innerCd.value, e=>foundMap.value == e)
-                } else if (innerCd.logic == 'no') {
-                  // console.log('single,no', !_.some(innerCd.value, e=>foundMap.value == e))
-                  return !_.some(innerCd.value, e=>foundMap.value == e)
-                }
-              } else if (foundMap.cat == 'multiple' || (foundMap.cat == 'afterward' && foundMap.aftercat == 'multiple') ) {
-                if (innerCd.logic == 'yes') {
-                  if (innerCd.valueLogic == 'and') {
-                    // console.log('multiple,yes,and', _.difference(innerCd.value, foundMap.value).length == 0)
-                    return _.difference(innerCd.value, foundMap.value).length == 0
-                  } else if (innerCd.valueLogic == 'or') {
-                    // console.log('multiple,yes,or', _.uniq(innerCd.value.concat(foundMap.value)).length < innerCd.value.length + foundMap.value.length)
-                    return _.uniq(innerCd.value.concat(foundMap.value)).length < _.uniq(innerCd.value).concat(_.uniq(foundMap.value)).length
-                  }
-                } else if (innerCd.logic == 'no') {
-                  if (innerCd.valueLogic == 'and') {
-                    // console.log('multiple,no,and', _.difference(innerCd.value, foundMap.value).length > 0)
-                    return _.difference(innerCd.value, foundMap.value).length > 0
-                  } else if (innerCd.valueLogic == 'or') {
-                    // console.log('multiple,no,or', !(_.difference(innerCd.value, foundMap.value).length == 0))
-                    return !(_.difference(innerCd.value, foundMap.value).length == 0)
-                  }
-                }
+        let isCheck = _.every(condition.condition, innerCd=>{
+          let foundMap = _.find(this.simpleCaseConditionList.concat(tempList), {id: innerCd.id})
+          if (foundMap) {
+            let foundMapValue = _.flatten([foundMap.value])
+            if (innerCd.logic == 'yes') {
+              if (innerCd.valueLogic == 'and') {
+                return _.difference(innerCd.value, foundMapValue).length == 0
+              } else if (innerCd.valueLogic == 'or') {
+                return _.uniq(innerCd.value.concat(foundMapValue)).length < _.uniq(innerCd.value).concat(_.uniq(foundMapValue)).length
               }
-            } else {
-              return false
+            } else if (innerCd.logic == 'no') {
+              if (innerCd.valueLogic == 'and') {
+                return _.difference(innerCd.value, foundMapValue).length > 0
+              } else if (innerCd.valueLogic == 'or') {
+                return !(_.difference(innerCd.value, foundMapValue).length == 0)
+              }
             }
-          })
-        )
+          } else {
+            return false
+          }
+        })
+        if (isCheck) {
+          this.$set(condition, 'visible', true)
+        } else {
+          this.$set(condition, 'visible', false)
+          this.$set(condition, 'value', [])
+        }
       })
       return _.sortBy(tempList, 'rank')
     }
   },
   mounted () {
-    this.loadConditionList()
+    if (_.isEmpty(this.conditionList)) {
+      this.loadConditionList()
+    }
   },
   methods: {
     loadExistCaseData () {
@@ -215,10 +206,9 @@ export default {
         })
         .then(({data})=>{
           _.forIn(this.caseTestitemList, testitem=>{
-            let foundRegulation = _.find(data.regulationList, {code: testitem.TestItemID.toString()})
-            if (foundRegulation) {
-              this.$set(testitem, 'regulation', foundRegulation)
-            } else {
+            let foundRegulation = _.filter(data.regulationList, {code: testitem.TestItemID.toString()})
+            this.$set(testitem, 'regulation', foundRegulation)
+            if (_.isEmpty(foundRegulation)) {
               this.$set(testitem, 'selected', false)
             }
           })

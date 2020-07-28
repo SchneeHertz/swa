@@ -13,7 +13,8 @@ export default new Vuex.Store({
     shapeList: [],
     konvaRelation: [],
     caseNumber: undefined,
-    caseTestitemList: []
+    caseTestitemList: [],
+    conditionList: {}
   },
   mutations: {
     updateValue (state, payload) {

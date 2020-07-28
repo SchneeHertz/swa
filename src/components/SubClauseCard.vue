@@ -24,6 +24,9 @@
       <div class="card-line">
         <label class="card-label">OTS编号: <span>{{data.code}}</span></label>
       </div>
+      <div class="card-line">
+        <label class="card-label">Mix数: <span>{{data.maxMix}}</span></label>
+      </div>
       <slot :data="data"></slot>
       <div
         v-for="condition in data.condition"
@@ -69,6 +72,12 @@
       >
         <template #prepend>OTS编号</template>
       </el-input>
+      <NameFormItem class="card-line" prependWidth="80px">
+        <template #prepend>Mix数</template>
+        <template #default>
+          <el-input-number v-model="dialogData.maxMix" :precision="0" :step="1" :max="20" :min="1"/>
+        </template>
+      </NameFormItem>
       <slot name="edit-area" :dialogData="dialogData"></slot>
       <div class="frame-condition">
         <InnerConditionCard

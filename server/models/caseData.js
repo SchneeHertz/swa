@@ -8,10 +8,7 @@ _.mixin(LodashId)
 
 const prepareCaseData = (caseNumber)=>{
   const db = Lowdb(new FileSync(path.resolve(__dirname, `../../dbs/caseData/${caseNumber}.json`)))
-  db.defaults({
-    caseTestitem: {},
-    caseCondition: {}
-  }).write()
+  db.defaults({}).write()
   db._.mixin(LodashId)
   return db
 }

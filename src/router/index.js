@@ -24,6 +24,11 @@ const routes = [
     component: () => import('../views/test-arrange.vue')
   },
   {
+    path: '/preview',
+    name: 'Preview',
+    component: () => import('../views/preview.vue')
+  },
+  {
     path: '/testitem-manage',
     name: 'TestitemManage',
     component: () => import('../views/testitem-manage.vue')

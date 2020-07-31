@@ -22,6 +22,10 @@
         <i class="el-icon-document-copy"></i>
         <template v-slot:title><span>安排测试</span></template>
       </el-menu-item>
+      <el-menu-item index="preview">
+        <i class="el-icon-finished"></i>
+        <template v-slot:title><span>预览及导出</span></template>
+      </el-menu-item>
       <el-menu-item index="testitem-manage">
         <i class="el-icon-guide"></i>
         <template v-slot:title><span>测试项目管理</span></template>

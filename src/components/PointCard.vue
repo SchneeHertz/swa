@@ -129,11 +129,12 @@ export default {
         })
         materialValArray.push(mtempObj)
       })
-      return _.mergeWith({}, ...materialValArray, (obj,src)=>{
+      let result =  _.mergeWith({}, ...materialValArray, (obj,src)=>{
         if (_.isArray(obj)) {
           return _.uniq(_.compact(obj.concat(src)))
         }
       })
+      return result
     },
     displayAfterwardConditionList () {
       let tempList = []
@@ -176,11 +177,11 @@ export default {
         if (isCheck) {
           tempList.push(condition)
         } else {
-          if (this.data.condition[condition.id]) this.$set(this.data.condition, condition.id, undefined)
+          // if (this.data.condition[condition.id] ) this.$set(this.data.condition, condition.id, undefined)
         }
       })
       return tempList
-    }
+    },
   },
   methods:{
     handleDeleteButton () {

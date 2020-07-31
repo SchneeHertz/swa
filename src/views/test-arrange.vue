@@ -103,7 +103,7 @@
             <el-button type="primary" class="bigicon" icon="el-third-icon-robot" circle @click="autoSolve" title="自动安排"></el-button>
             <el-button type="primary" class="bigicon" icon="el-third-icon-cloud-download" circle @click="loadTasklist" title="载入"></el-button>
             <el-button type="success" class="bigicon" icon="el-third-icon-save" circle @click="saveTasklist" title="保存"></el-button>
-            <el-button type="primary" class="bigicon" icon="el-third-icon-right" circle title="下一步" @click="geneMethodList"></el-button>
+            <el-button type="primary" class="bigicon" icon="el-third-icon-right" circle title="下一步" @click="toNextPage"></el-button>
           </div>
         </el-col>
       </el-row>
@@ -146,16 +146,17 @@ export default {
       test: '',
       methodList: [],
       materialObj: {},
-      methodBaseData: {},
       selectMethod: {},
       selectRegulation: {}
     }
   },
   computed: {
-    pointList: geneVuexValue('valueList'),
-    pointRelation: geneVuexValue('konvaRelation'),
     caseNumber: geneVuexValue('caseNumber'),
     caseTestitemList: geneVuexValue('caseTestitemList'),
+    existCaseInfo: geneVuexValue('existCaseInfo'),
+    pointList: geneVuexValue('valueList'),
+    pointRelation: geneVuexValue('konvaRelation'),
+    methodBaseData: geneVuexValue('methodBaseData'),
     displayRegulation: {
       get () {
         return this.selectMethod.regulationList
@@ -183,7 +184,7 @@ export default {
     this.loadMaterialList()
     this.loadMethodList()
     .then(()=>{
-      if (!_.isEmpty(this.caseTestitemList)) {
+      if (_.isEmpty(this.methodBaseData)) {
         this.geneMethodList()
       }
     })
@@ -199,6 +200,34 @@ export default {
       return this.$http.get('/data/getMethodList')
       .then(res=>{
         this.methodList = _.sortBy(res.data.methodList, 'name')
+      })
+    },
+    loadTasklist () {
+      return this.$http.post('/data/getCaseData', {
+        caseNumber: this.caseNumber,
+        list: ['methodBaseData', 'valueList', 'konvaRelation', 'caseCondition', 'caseTestitem']
+      })
+      .then(({data: {result}})=>{
+        if (_.isArray(result.methodBaseData) && !_.isEmpty(result.methodBaseData)) {
+          this.methodBaseData = result.methodBaseData
+          if (this.selectMethod.id) {
+            this.handleSelectMethod(this.selectMethod.id)
+          }
+        }
+        if (_.isArray(result.valueList) && !_.isEmpty(result.valueList)) {
+          this.pointList = result.valueList
+        }
+        if (_.isArray(result.konvaRelation) && !_.isEmpty(result.konvaRelation)) {
+          this.pointRelation = result.konvaRelation
+        }
+        if (_.isArray(result.caseTestitem) && !_.isEmpty(result.caseTestitem)) {
+          this.caseTestitemList = result.caseTestitem
+        }
+        _.forIn(result.caseCondition, group=>{
+          _.forIn(group, indCondition=>{
+            this.$set(this.existCaseInfo, indCondition.id, indCondition.value)
+          })
+        })
       })
     },
     geneMethodList () {
@@ -414,6 +443,9 @@ export default {
       return tempList
     },
     checkConditionListPass (point, conditionList, methodId) {
+      if (_.isEmpty(conditionList)) {
+        return false
+      }
       return _.every(conditionList, condition=>{
           switch (condition.id) {
             case 'icenglish':
@@ -450,7 +482,7 @@ export default {
               return condition.value.includes(methodId)
               break
             default:
-              let pointValue = _.flatten([_.get(point, `condition[${condition.id}]`, [])])
+              let pointValue = _.flatten([point.condition[condition.id] || this.existCaseInfo[condition.id]])
               if (condition.logic == 'yes') {
                 if (condition.valueLogic == 'and') {
                   return _.difference(condition.value, pointValue).length == 0
@@ -514,26 +546,6 @@ export default {
       }
       return result
     },
-    loadTasklist () {
-      return this.$http.post('/data/getCaseData', {
-        caseNumber: this.caseNumber,
-        list: ['methodBaseData', 'valueList', 'konvaRelation']
-      })
-      .then(({data: {result}})=>{
-        if (_.isArray(result.methodBaseData) && !_.isEmpty(result.methodBaseData)) {
-          this.methodBaseData = result.methodBaseData
-          if (this.selectMethod.id) {
-            this.handleSelectMethod(this.selectMethod.id)
-          }
-        }
-        if (_.isArray(result.valueList) && !_.isEmpty(result.valueList)) {
-          this.pointList = result.valueList
-        }
-        if (_.isArray(result.konvaRelation) && !_.isEmpty(result.konvaRelation)) {
-          this.pointRelation = result.konvaRelation
-        }
-      })
-    },
     saveTasklist () {
       this.confirmDialog(
         ()=>{
@@ -551,7 +563,7 @@ export default {
       )
     },
     toNextPage () {
-
+      this.$router.push('/preview')
     },
     confirmDialog(callback, message = {question: '继续?', success: '操作完成', cancel: '已取消'}, failCallback = new Function) {
       this.$confirm(message.question, '提示', {confirmButtonText: '确定', cancelButtonText: '取消', type: 'warning'})

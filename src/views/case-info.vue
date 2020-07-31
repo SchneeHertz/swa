@@ -84,9 +84,8 @@
             </el-card>
           </overlay-scrollbars>
           <div class="bottom-function-btn">
-            <el-button type="primary" class="bigicon" icon="el-third-icon-cloud-sync" circle title="载入所有数据"></el-button>
-            <el-button type="primary" class="bigicon" icon="el-third-icon-cloud-download" circle title="载入Case信息"
-              @click="loadExistCaseData" :loading="loadExistCaseDataLoading"></el-button>
+            <el-button type="primary" class="bigicon" icon="el-third-icon-cloud-sync" circle title="载入所有数据" @click="loadAllData"></el-button>
+            <el-button type="primary" class="bigicon" icon="el-third-icon-cloud-download" circle title="载入Case信息" @click="loadExistCaseData"></el-button>
             <el-button type="success" class="bigicon" icon="el-third-icon-save" circle title="保存Case信息" @click="saveCaseInfo"></el-button>
             <el-button type="primary" class="bigicon" icon="el-third-icon-right" circle title="下一步" @click="toNextPage"></el-button>
           </div>
@@ -114,15 +113,20 @@ export default {
   },
   data () {
     return {
-      loadExistCaseDataLoading: false,
       loadOTSTestitemLoading: false,
       selectedTestitemList: {},
+      conditionList: {}
     }
   },
   computed: {
     caseNumber: geneVuexValue('caseNumber'),
     caseTestitemList: geneVuexValue('caseTestitemList'),
-    conditionList: geneVuexValue('conditionList'),
+    existCaseInfo: geneVuexValue('existCaseInfo'),
+    konvaGroupList: geneVuexValue('konvaGroupList'),
+    valueList: geneVuexValue('valueList'),
+    shapeList: geneVuexValue('shapeList'),
+    konvaRelation: geneVuexValue('konvaRelation'),
+    methodBaseData: geneVuexValue('methodBaseData'),
     simpleCaseConditionList () {
       return _.chain(this.conditionList).pick(['single', 'multiple', 'special']).values().flatten().filter('caseRank').sortBy('rank').value()
     },
@@ -167,7 +171,6 @@ export default {
   },
   methods: {
     loadExistCaseData () {
-      this.loadExistCaseDataLoading = true
       return this.$http.post('/data/getCaseData', {
         caseNumber: this.caseNumber,
         list: ['caseCondition', 'caseTestitem']
@@ -183,8 +186,51 @@ export default {
           this.$set(_.find(this.afterwardCaseConditionList, {id: condition.id}), 'value', condition.value)
         })
       })
-      .finally(()=>{
-        this.loadExistCaseDataLoading = false
+    },
+    loadAllData () {
+      let sceneFunc = (context, shape)=>{
+        context.beginPath()
+        context.rect(0, 0, shape.width(), shape.height())
+        context.font = '1em Arial'
+        context.textAlign = 'center'
+        context.fillText(shape.name(), shape.width()*0.5, shape.height()*0.65)
+        context.closePath()
+        context.fillStrokeShape(shape)
+      }
+      return this.$http.post('/data/getCaseData', {
+        caseNumber: this.caseNumber,
+        list: ['caseCondition', 'caseTestitem', 'konvaGroupList', 'valueList', 'shapeList', 'konvaRelation', 'methodBaseData']
+      })
+      .then(({data: {result}})=>{
+        if (_.isArray(result.caseTestitem) && !_.isEmpty(result.caseTestitem)) {
+          this.caseTestitemList = result.caseTestitem
+        }
+        _.forIn(result.caseCondition['simpleCaseConditionList'], condition=>{
+          this.$set(_.find(this.simpleCaseConditionList, {id: condition.id}), 'value', condition.value)
+        })
+        _.forIn(result.caseCondition['afterwardCaseConditionList'], condition=>{
+          this.$set(_.find(this.afterwardCaseConditionList, {id: condition.id}), 'value', condition.value)
+        })
+        _.forIn(result.caseCondition, group=>{
+          _.forIn(group, indCondition=>{
+            this.$set(this.existCaseInfo, indCondition.id, indCondition.value)
+          })
+        })
+        if (_.isArray(result.konvaGroupList) && !_.isEmpty(result.konvaGroupList)) {
+          this.konvaGroupList = result.konvaGroupList.map(i=>{i.list.map(e=>{e.sceneFunc = sceneFunc; return e}); return i})
+        }
+        if (_.isArray(result.valueList) && !_.isEmpty(result.valueList)) {
+          this.valueList = result.valueList
+        }
+        if (_.isArray(result.shapeList) && !_.isEmpty(result.shapeList)) {
+          this.shapeList = result.shapeList.map(e=>{e.sceneFunc = sceneFunc; return e})
+        }
+        if (_.isArray(result.konvaRelation) && !_.isEmpty(result.konvaRelation)) {
+          this.konvaRelation = result.konvaRelation
+        }
+        if (_.isArray(result.methodBaseData) && !_.isEmpty(result.methodBaseData)) {
+          this.methodBaseData = result.methodBaseData
+        }
       })
     },
     loadCaseTestitem () {

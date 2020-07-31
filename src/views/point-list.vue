@@ -118,12 +118,13 @@ export default {
     }
   },
   computed: {
+    caseNumber: geneVuexValue('caseNumber'),
+    caseTestitemList: geneVuexValue('caseTestitemList'),
+    existCaseInfo: geneVuexValue('existCaseInfo'),
     konvaGroupList: geneVuexValue('konvaGroupList'),
     valueList: geneVuexValue('valueList'),
     shapeList: geneVuexValue('shapeList'),
     konvaRelation: geneVuexValue('konvaRelation'),
-    caseNumber: geneVuexValue('caseNumber'),
-    caseTestitemList: geneVuexValue('caseTestitemList'),
     simpleConditionList () {
       return _.chain(this.conditionList).pick(['single', 'multiple', 'special']).values().flatten().filter(e=>!e.caseRank).sortBy('rank').value()
     },
@@ -133,21 +134,10 @@ export default {
     afterwardConditionList () {
       return _.chain(this.conditionList).get('afterward').filter(e=>!e.caseRank).value()
     },
-    // testitemConditionList () {
-    //   return _.chain(this.conditionList).get('testitem')
-    //     .filter(e=>_.uniq(e.testitem.concat(this.testitemIdList)).length < e.testitem.length + this.testitemIdList.length)
-    //     .sortBy('rank').value()
-    // },
   },
   mounted () {
     this.loadConditionList()
     this.loadMaterialList()
-  },
-  beforeDestroy () {
-    // this.valueList = this.valueList
-    // this.shapeList = this.shapeList
-    // this.konvaGroupList = this.konvaGroupList
-    // this.konvaRelation = this.konvaRelation
   },
   watch: {
     shapeList (newVal) {
@@ -180,6 +170,47 @@ export default {
       return this.$http.get('/data/getMaterialList')
       .then(res=>{
         this.materialObj = res.data.materialList
+      })
+    },
+    loadPointList () {
+      this.loadPointListLoading = true
+      let sceneFunc = (context, shape)=>{
+        context.beginPath()
+        context.rect(0, 0, shape.width(), shape.height())
+        context.font = '1em Arial'
+        context.textAlign = 'center'
+        context.fillText(shape.name(), shape.width()*0.5, shape.height()*0.65)
+        context.closePath()
+        context.fillStrokeShape(shape)
+      }
+      return this.$http.post('/data/getCaseData', {
+        caseNumber: this.caseNumber,
+        list: ['konvaGroupList', 'valueList', 'shapeList', 'konvaRelation', 'caseCondition', 'caseTestitem']
+      })
+      .then(({data: {result}})=>{
+        if (_.isArray(result.konvaGroupList) && !_.isEmpty(result.konvaGroupList)) {
+          this.konvaGroupList = result.konvaGroupList.map(i=>{i.list.map(e=>{e.sceneFunc = sceneFunc; return e}); return i})
+        }
+        if (_.isArray(result.valueList) && !_.isEmpty(result.valueList)) {
+          this.valueList = result.valueList
+        }
+        if (_.isArray(result.shapeList) && !_.isEmpty(result.shapeList)) {
+          this.shapeList = result.shapeList.map(e=>{e.sceneFunc = sceneFunc; return e})
+        }
+        if (_.isArray(result.konvaRelation) && !_.isEmpty(result.konvaRelation)) {
+          this.konvaRelation = result.konvaRelation
+        }
+        if (_.isArray(result.caseTestitem) && !_.isEmpty(result.caseTestitem)) {
+          this.caseTestitemList = result.caseTestitem
+        }
+        _.forIn(result.caseCondition, group=>{
+          _.forIn(group, indCondition=>{
+            this.$set(this.existCaseInfo, indCondition.id, indCondition.value)
+          })
+        })
+      })
+      .finally(()=>{
+        this.loadPointListLoading = false
       })
     },
     addPoint (count = 1, assign = {}) {
@@ -429,39 +460,6 @@ export default {
     handleSelectPoint(id) {
       let findPoint =  _.find(this.valueList, {id: id})
       this.$set(findPoint, 'isSelected', !findPoint.isSelected)
-    },
-    loadPointList () {
-      this.loadPointListLoading = true
-      let sceneFunc = (context, shape)=>{
-        context.beginPath()
-        context.rect(0, 0, shape.width(), shape.height())
-        context.font = '1em Arial'
-        context.textAlign = 'center'
-        context.fillText(shape.name(), shape.width()*0.5, shape.height()*0.65)
-        context.closePath()
-        context.fillStrokeShape(shape)
-      }
-      return this.$http.post('/data/getCaseData', {
-        caseNumber: this.caseNumber,
-        list: ['konvaGroupList', 'valueList', 'shapeList', 'konvaRelation']
-      })
-      .then(({data: {result}})=>{
-        if (_.isArray(result.konvaGroupList) && !_.isEmpty(result.konvaGroupList)) {
-          this.konvaGroupList = result.konvaGroupList.map(i=>{i.list.map(e=>{e.sceneFunc = sceneFunc; return e}); return i})
-        }
-        if (_.isArray(result.valueList) && !_.isEmpty(result.valueList)) {
-          this.valueList = result.valueList
-        }
-        if (_.isArray(result.shapeList) && !_.isEmpty(result.shapeList)) {
-          this.shapeList = result.shapeList.map(e=>{e.sceneFunc = sceneFunc; return e})
-        }
-        if (_.isArray(result.konvaRelation) && !_.isEmpty(result.konvaRelation)) {
-          this.konvaRelation = result.konvaRelation
-        }
-      })
-      .finally(()=>{
-        this.loadPointListLoading = false
-      })
     },
     savePointList () {
       this.confirmDialog(

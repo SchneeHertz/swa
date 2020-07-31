@@ -14,7 +14,8 @@ export default new Vuex.Store({
     konvaRelation: [],
     caseNumber: undefined,
     caseTestitemList: [],
-    conditionList: {}
+    existCaseInfo: {},
+    methodBaseData: {}
   },
   mutations: {
     updateValue (state, payload) {

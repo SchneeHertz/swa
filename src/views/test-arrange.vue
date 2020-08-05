@@ -29,6 +29,35 @@
           </overlay-scrollbars>
         </el-col>
         <el-col :span="14" class="group-list">
+          <div class="group-function">
+            <el-row>
+              <el-col :span="8">
+                <el-button size="mini" type="danger" plain 
+                  @click="emptyGroupList"
+                  title="清空选中的方法内的测试组"
+                >清空组</el-button>
+              </el-col>
+              <el-col :span="16">
+                <NameFormItem prependWidth="60px">
+                  <template #prepend>批量选择 Subclause</template>
+                  <el-select 
+                    size="mini" 
+                    v-model="batchSubclauseVal"
+                    @change="batchSubclause"
+                    class="batch-subclause"
+                  >
+                    <el-option :value="undefined" lable=""></el-option>
+                    <el-option
+                      v-for="subclause in displaySubclause"
+                      :key="subclause.id"
+                      :value="subclause.code"
+                      :label="subclause.name"
+                    ></el-option>
+                  </el-select>
+                </NameFormItem>
+              </el-col>
+            </el-row>
+          </div>
           <overlay-scrollbars
             :options="{scrollbars: {autoHide: 'scroll'}}"
             class="ol-group-list"
@@ -50,6 +79,7 @@
                   @change="$forceUpdate()"
                   placeholder="Sub Clause"
                 >
+                  <el-option :value="undefined" lable=""></el-option>
                   <el-option
                     v-for="subclause in displaySubclause"
                     :key="subclause.id"
@@ -70,6 +100,18 @@
           </overlay-scrollbars>
         </el-col>
         <el-col :span="6">
+          <div class="method-function">
+            <el-button-group class="function-button">
+              <el-button size="mini" type="danger" plain 
+                @click="emptyMethodList" 
+                title="删除列表内所有测试组"
+              >清空列表</el-button>
+              <el-button size="mini" type="danger" plain 
+                @click="reGeneMethodList" 
+                title="从测试项目重新生成列表，并代替原来的列表"
+              >重新生成空列表</el-button>
+            </el-button-group>
+          </div>
           <overlay-scrollbars class="method-pane">
             <div
               v-for="method in methodBaseData"
@@ -79,8 +121,8 @@
               @click="handleSelectMethod(method.id)"
             >
               {{method.name}}
-              <i class="method-icon el-third-icon-container" @click="pasteList"/>
-              <i class="method-icon el-third-icon-file-copy" @click="copyList"/>
+              <i class="method-icon el-third-icon-container" title="Paste" @click="pasteList"/>
+              <i class="method-icon el-third-icon-file-copy" title="Copy" @click="copyList"/>
             </div>
           </overlay-scrollbars>
           <overlay-scrollbars class="regulation-pane">
@@ -117,6 +159,7 @@ import BaseHeader from '@/components/BaseHeader.vue'
 import GroupNest from '@/components/GroupNest.vue'
 import RegulationTask from '@/components/RegulationTask.vue'
 import draggable from 'vuedraggable'
+import NameFormItem from '@/components/NameFormItem.vue'
 
 import {generate as _id } from 'shortid'
 
@@ -134,7 +177,8 @@ export default {
     BaseHeader,
     GroupNest,
     RegulationTask,
-    draggable
+    draggable,
+    NameFormItem
   },
   data () {
     return {
@@ -147,7 +191,8 @@ export default {
       methodList: [],
       materialObj: {},
       selectMethod: {},
-      selectRegulation: {}
+      selectRegulation: {},
+      batchSubclauseVal: ''
     }
   },
   computed: {
@@ -262,6 +307,16 @@ export default {
         ))
       })
       this.methodBaseData = tempList2
+    },
+    reGeneMethodList () {
+      this.confirmDialog(
+        ()=>{
+          this.geneMethodList()
+          this.selectRegulation = {}
+          this.selectMethod = {}
+        },
+        {question: '确认从测试项目重新生成列表，并代替原来的列表?', success: '操作完成', cancel: '已取消'}
+      )
     },
     handleSelectMethod (id) {
       this.selectMethod = _.find(this.methodBaseData, {id: id})
@@ -519,6 +574,9 @@ export default {
           if (regulation.method.defaultTest && this.checkConditionListPass(point, regulation.condition)) {
             point.regulation.push(regulation.id)
             point.maxMixArray.push(regulation.method.maxMix)
+            if (_.get(regulation, 'caseInfo.isIndTest')) {
+              point.maxMixArray.push(1)
+            }
           }
         })
       })
@@ -576,6 +634,38 @@ export default {
         this.$message({type: 'info', message: message.cancel, showClose: true})
       })
     },
+    emptyGroupList () {
+      this.confirmDialog(
+        ()=>{
+          this.$set(this.selectMethod, 'list', [])
+          _.forIn(this.selectMethod.regulationList, regulation=>{
+            this.$set(regulation, 'list', [])
+            this.$set(regulation, 'subclauseVal', {})
+          })
+        },
+        {question: '确认清空选中的方法内的测试组?', success: '操作完成', cancel: '已取消'}
+      )
+    },
+    batchSubclause () {
+      this.$set(this.selectRegulation, 'subclauseVal', _.zipObject(
+        this.selectRegulation.list,
+        _.fill(new Array(this.selectRegulation.list.length), this.batchSubclauseVal)
+      ))
+    },
+    emptyMethodList () {
+      this.confirmDialog(
+        ()=>{
+          _.forIn(this.methodBaseData, methodGroup=>{
+            this.$set(methodGroup, 'list', [])
+            _.forIn(methodGroup.regulationList, regulation=>{
+              this.$set(regulation, 'list', [])
+              this.$set(regulation, 'subclauseVal', {})
+            })
+          })
+        },
+        {question: '确认删除列表内所有测试组?', success: '操作完成', cancel: '已取消'}
+      )
+    },
     copyList () {
       console.log('copyList')
     },
@@ -593,6 +683,9 @@ export default {
   opacity: 0.5
 .point-list
   border-right: solid 1px rgba(0,0,0,0.125)
+
+.group-function .batch-subclause
+  width: 100%
 .ol-point-list
   height: calc(100vh - 2em)
 .point-list-item, .method-list-item
@@ -603,6 +696,8 @@ export default {
   background-color: #fbfbfb
   font-size: 14px
   cursor: move
+.method-function
+  margin: 1px
 .method-list-item
   padding: 8px 6px
   cursor: pointer
@@ -619,14 +714,14 @@ export default {
   position: relative
   top: 1em
 .method-pane
-  height: 40vh
+  height: 38vh
   border-bottom: solid 1px rgba(0,0,0,0.125)
 
 .active-method
   background-color: #FFCC66
 .regulation-pane
-  height: 52vh
-  margin-top: 1em
+  height: 50vh
+  margin-top: 0.5em
 .bottom-function-btn
   position: absolute
   bottom: 1em
@@ -638,7 +733,7 @@ export default {
   .group-list
     border-right: solid 1px rgba(0,0,0,0.125)
     .ol-group-list
-      height: 100vh
+      height: calc(100vh - 2em)
     .el-card.group-card
       margin: 4px 6px
       width: 21em

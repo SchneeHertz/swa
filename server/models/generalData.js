@@ -112,14 +112,6 @@ const saveCondition = (conditionList) => {
   db.set('condition', existConditionList).write()
 }
 
-// const getInfoList = () => {
-//   return db.get('infoList').value()
-// }
-
-// const saveInfoList = (infoList) => {
-//   db.set('infoList', infoList).write()
-// }
-
 module.exports = {
   getMaterialList,
   saveMaterialList,
@@ -130,6 +122,4 @@ module.exports = {
   saveRegulation,
   getCondition,
   saveCondition,
-  // getInfoList,
-  // saveInfoList
 }

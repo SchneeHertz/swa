@@ -1,12 +1,24 @@
 import Vue from 'vue'
 import VueRouter from 'vue-router'
+import axios from 'axios'
 
 Vue.use(VueRouter)
 
 const routes = [
-  { 
-    path: '/', 
-    redirect: '/case-info' 
+  {
+    path: '/',
+    name: 'Login',
+    component: () => import('../views/login.vue')
+  },
+  {
+    path: '/signup',
+    name: 'Signup',
+    component: () => import('../views/signup.vue')
+  },
+  {
+    path: '/changepassword',
+    name: 'ChangePassword',
+    component: () => import('../views/changepassword.vue')
   },
   {
     path: '/case-info',
@@ -37,6 +49,34 @@ const routes = [
 
 const router = new VueRouter({
   routes
+})
+
+router.beforeEach(async (to,from,next) =>{
+  const token = sessionStorage.getItem('token')
+  axios.defaults.headers.common['Authorization'] = 'Bearer ' + token
+  if(to.path == '/'){
+    await axios.get('/data/testAuth')
+    .then(()=>{
+      Vue.prototype.$http.defaults.headers.common['Authorization'] = 'Bearer ' + token
+      next('/case-info')
+    })
+    .catch(()=>{
+      next()
+    })
+  } else if (to.path == '/signup') {
+    next()
+  } else if (to.path == '/changepassword') {
+    next()
+  } else {
+    await axios.get('/data/testAuth')
+    .then(()=>{
+      Vue.prototype.$http.defaults.headers.common['Authorization'] = 'Bearer ' + token
+      next()
+    })
+    .catch(()=>{
+      next('/')
+    })
+  }
 })
 
 export default router

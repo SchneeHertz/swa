@@ -52,9 +52,9 @@ export default {
     }
   },
   mounted () {
-    // let userData = this.getUserInfo(sessionStorage.getItem('token')) || {}
-    // this.$store.commit('updateValue', {key: 'username', value: userData.name})
-    // this.$store.commit('updateValue', {key: 'authority', value: userData.authority})
+    let userData = this.getUserInfo(sessionStorage.getItem('token')) || {}
+    this.$store.commit('updateValue', {key: 'username', value: userData.name})
+    this.$store.commit('updateValue', {key: 'authority', value: userData.authority})
   },
   methods:{
     handleSelect (index) {

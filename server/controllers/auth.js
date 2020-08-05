@@ -93,8 +93,17 @@ const changePassword = async (ctx) =>{
   }
 }
 
+const getMailtoLink = async (ctx) =>{
+  let mails = _.filter(user.getUserGroup(), e=>e.authority === 'admin').map(e=>e.email)
+  ctx.body = {
+    success: true,
+    info: mails.join(';')
+  }
+}
+
 module.exports = {
   accountRegister,
   userAuth,
-  changePassword
+  changePassword,
+  getMailtoLink
 }

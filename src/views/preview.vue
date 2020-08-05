@@ -73,9 +73,55 @@
       <div class="bottom-function-btn">
         <el-button type="primary" class="bigicon" icon="el-third-icon-cloud-download" circle title="加载"  @click="loadTaskList"></el-button>
         <el-button type="success" class="bigicon" icon="el-third-icon-save" circle title="保存" @click="saveTaskList"></el-button>
-        <el-button type="primary" class="bigicon" icon="el-third-icon-export" circle title="导出"></el-button>
+        <el-button type="primary" class="bigicon" icon="el-third-icon-export" circle title="导出" @click="showExportDialog"></el-button>
       </div>
     </el-row>
+    <el-dialog
+      title="导出到OTS"
+      :visible.sync="dialogVisible"
+      width="75%"
+      top="2vh"
+      class="export-dialog"
+    >
+      <el-card shadow="never">
+        <template #header>导出进度</template>
+        <el-progress :percentage="exportPercentage.value"></el-progress>
+        <overlay-scrollbars class="export-log">
+          <p
+            v-for="(log, index) in exportLog"
+            :key="index"
+            :class="[log.success ? 'success-log' : 'fail-log']"
+          >{{log.info}}</p>
+        </overlay-scrollbars>
+      </el-card>
+      <el-table
+        :data="taskList"
+        height="44vh"
+        @selection-change="handleSelectionChange"
+        ref="taskTable"
+      >
+        <el-table-column type="selection"></el-table-column>
+        <el-table-column label="JobNumber" width="180">
+          <template v-slot:default="props">
+            {{props.row.taskInfo.JobNumber}}
+          </template>
+        </el-table-column>
+        <el-table-column label="TestItem">
+          <template v-slot:default="props">
+            {{props.row.regulation.name}}
+          </template>
+        </el-table-column>
+        <el-table-column label="Method">
+          <template v-slot:default="props">
+            {{props.row.method.name}}
+          </template>
+        </el-table-column>
+      </el-table>
+      <span slot="footer" class="dialog-footer">
+        <el-button type="info" @click="dialogVisible = false">关闭</el-button>
+        <el-button type="primary" @click="confirmExport">确定</el-button>
+      </span>
+    </el-dialog>
   </el-main>
 </el-container>
 </template>
@@ -94,18 +140,63 @@ function geneVuexValue (property) {
 }
 
 async function exportData (taskList) {
+  let existComponentObj = {}
+  let taskCount = taskList.length
+  let inCount = 0
   for (let task of taskList) {
-    console.log(task)
+    let uploadTask = _.cloneDeep(task.taskObj)
+    _.forIn(uploadTask.ComponentArray, component=>{
+      if (_.has(component, 'ShareID')) {
+        if (existComponentObj[component.ShareID]) {
+          component.ShareSolutionComponentID = existComponentObj[component.ShareID]
+        }
+      }
+    })
     await $.ajax({
       type:'POST',
       url:'http://10.168.128.44/OTS_UAT/Services/CaseService.asmx/ImportTestItemTask',
-      data:{json: JSON.stringify({ImportData: [task.taskObj]})}
+      data:{json: JSON.stringify({ImportData: [uploadTask]})}
     })
     .then(res=>{
-        addLog(JSON.parse($(res).find('string').html()))
+      let exportResult = _.head(JSON.parse($(res).find('string').html()))
+      if (exportResult.ImportResult === 'Success') {
+        addLog({
+          success: true,
+          info: `${task.taskInfo.JobNumber}, ${task.taskInfo.TestItemDescription}, ${task.taskInfo.TestMethodName} 导出成功`
+        })
+      } else {
+        addLog({
+          success: false,
+          info: `${task.taskInfo.JobNumber}, ${task.taskInfo.TestItemDescription}, ${task.taskInfo.TestMethodName} 导出失败：${exportResult.ImportResult}`
+        })
+      }
+    })
+    inCount++
+    exportPercentage.value =  Math.round(inCount / taskCount * 100)
+    await $.ajax({
+      type:'POST',
+      url:'http://10.168.128.44/OTS_UAT/Services/CaseService.asmx/GetTaskList',
+      data: {
+        CaseNumber: null, 
+        ReportNumber: null, 
+        JobNumber: task.taskInfo.JobNumber
+      }
+    })
+    .then(res=>{
+      return JSON.parse($(res).find('string').html())
+    })
+    .then(resData=>{
+      let findTask = _.find(resData, {CaseTestItemID: task.taskInfo.CaseTestItemID, TestMethodID: task.taskInfo.TestMethodID})
+      if (findTask) {
+        _.forIn(findTask.ComponentArray, taskComponent=>{
+          let findComponent = _.find(task.taskObj.ComponentArray, {ComponentNo: taskComponent.ComponentNo})
+          if (findComponent) {
+            existComponentObj[findComponent.ShareID] = taskComponent.SampleComponentID
+          }
+        })
+      }
     })
   }
-  console.log('loop end')
 }
 
 export default {
@@ -116,9 +207,14 @@ export default {
   },
   data () {
     return {
-      log: [],
+      exportLog: [],
       taskList: [],
-      selectTaskId: undefined
+      selectTaskId: undefined,
+      dialogVisible: false,
+      exportPercentage: {
+        value: 0
+      },
+      tableSelectTask: undefined
     }
   },
   computed: {
@@ -146,8 +242,8 @@ export default {
     }
   },
   mounted () {
-    window.exportData = exportData
     window.addLog = this.addLog
+    window.exportPercentage = this.exportPercentage
   },
   methods: {
     loadTaskList () {
@@ -209,7 +305,7 @@ export default {
           }
           _.forIn(regulation.list, (pointId, index)=>{
             let foundPoint = _.find(methodGroup.list, {id: pointId})
-            taskObj.ComponentArray.push({
+            let tempComponent = {
               ComponentNo: + index + 1 + '',
               ComponentType: null,
               Trial: 1,
@@ -217,14 +313,20 @@ export default {
               EnglishDescription: foundPoint.description.englishDescription,
               ChineseDescription: foundPoint.description.chineseDescription,
               IsDataTransfer: true,
-              IsShowInReport: true,
-            })
+              IsShowInReport: true
+            }
+            if (regulation.shareSolution) {
+              tempComponent.ShareID = pointId
+            }
+            taskObj.ComponentArray.push(tempComponent)
           })
           if (!_.isEmpty(taskObj.ComponentArray)) {
             mainGroupList.push({
               id: _id(),
               taskInfo: {
-                ..._.pick(regulation.caseInfo, ['CaseNumber', 'JobNumber', 'ReportNumber'])
+                TestMethodID: +methodGroup.code,
+                TestMethodName: methodGroup.name,
+                ..._.pick(regulation.caseInfo, ['CaseNumber', 'JobNumber', 'ReportNumber', 'CaseTestItemID', 'TestItemDescription'])
               },
               method: {
                 id: methodGroup.id,
@@ -256,7 +358,7 @@ export default {
       return [{englishDescription: point.englishDescription, chineseDescription: point.chineseDescription}, innerArray]
     },
     addLog (log) {
-      this.log.push(log)
+      this.exportLog.push(log)
     },
     handleNodeClick (data) {
       this.selectTaskId = data.id
@@ -277,6 +379,22 @@ export default {
         {question: '确认保存?', success: '操作完成', cancel: '已取消'}
       )
     },
+    showExportDialog () {
+      this.exportLog = []
+      this.exportPercentage.value = 0
+      this.dialogVisible = true
+      this.$nextTick(()=>{
+        if (_.isEmpty(this.tableSelectTask)) {
+          this.$refs.taskTable.toggleAllSelection()
+        }
+      })
+    },
+    handleSelectionChange (val) {
+      this.tableSelectTask = val
+    },
+    confirmExport () {
+      exportData(this.tableSelectTask)
+    },
     confirmDialog(callback, message = {question: '继续?', success: '操作完成', cancel: '已取消'}, failCallback = new Function) {
       this.$confirm(message.question, '提示', {confirmButtonText: '确定', cancelButtonText: '取消', type: 'warning'})
       .then(() => {
@@ -289,7 +407,6 @@ export default {
       })
     },
   }
-  
 }
 </script>
 
@@ -302,8 +419,6 @@ export default {
   height: calc(100vh - 32px)
 .task-main
   border-right: solid 1px rgba(0,0,0,0.125)
-  .el-input, .el-select
-    background-color: rgba(0,0,0,0.005)
 .task-header
   border: solid 1px rgba(0,0,0,0.125)
   margin: 2px 2px 0
@@ -325,9 +440,17 @@ export default {
   .component-block
     border: solid 1px rgba(0,0,0,0.125)
     border-radius: 4px
-    margin: 4px 2px 6px 2px
+    margin: 4px 2px 8px 2px
     .component-select
       width: 100%
+.export-log
+  max-height: 28vh
+  .success-log
+    color: green
+    margin: 0.2em
+  .fail-log
+    color: red
+    margin: 0.2em
 .bottom-function-btn
   position: absolute
   bottom: 1em
@@ -342,6 +465,14 @@ export default {
   .el-tree-node__label
     white-space: normal 
 .task-main
-  .el-input__inner, .el-textarea__inner
-    background-color: rgba(0,0,0,0.005)
+  .el-input__inner
+    background-color: rgba(0,0,0,0.01)
+.export-dialog
+  margin: 0 auto
+  .el-dialog__body
+    padding: 10px 18px
+  .el-card__header
+    padding: 8px 12px
+  .el-card__body
+    padding: 14px
 </style>

@@ -26,11 +26,15 @@
         <i class="el-icon-finished"></i>
         <template v-slot:title><span>预览及导出</span></template>
       </el-menu-item>
+      <el-menu-item index="user-manage" v-show="authority == 'admin'">
+        <i class="el-third-icon-team"></i>
+        <template v-slot:title><span>用户管理</span></template>
+      </el-menu-item>
       <el-menu-item index="testitem-manage">
         <i class="el-icon-guide"></i>
         <template v-slot:title><span>测试项目管理</span></template>
       </el-menu-item>
-      <el-menu-item index="logout">
+      <el-menu-item index="user-page">
         <i class="el-icon-user"></i>
         <template v-slot:title><span>{{displayUsername}}</span></template>
       </el-menu-item>
@@ -47,8 +51,11 @@ export default {
     return {}
   },
   computed:{
-    displayUsername(){
+    displayUsername () {
       return this.$store.state.username
+    },
+    authority () {
+      return this.$store.state.authority
     }
   },
   mounted () {
@@ -73,8 +80,6 @@ export default {
             showClose: true
           })
         })
-      } else if (index == 'setting') { 
-
       } else {
         this.$router.push(index)
       }
@@ -100,10 +105,18 @@ export default {
 .el-menu-vertical:not(.el-menu--collapse)
   width: 160px
 .el-menu-vertical
-  for row in 1 2
+  for row in 1 2 3
     li:nth-last-child({row})
       position: absolute
       width: 100%
       bottom: row * 56px - 56px
+</style>
+
+<style lang="stylus">
+.el-menu-vertical
+  .el-tooltip
+    text-align: center
+    [class^="el-third-icon"]
+      font-size: 18px
 </style>
 

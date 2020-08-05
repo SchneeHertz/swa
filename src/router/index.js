@@ -44,6 +44,16 @@ const routes = [
     path: '/testitem-manage',
     name: 'TestitemManage',
     component: () => import('../views/testitem-manage.vue')
+  },
+  {
+    path: '/user-page',
+    name: 'UserPage',
+    component: () => import('../views/user-page.vue')
+  },
+  {
+    path: '/user-manage',
+    name: 'UserManage',
+    component: () => import('../views/user-manage.vue')
   }
 ]
 

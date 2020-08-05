@@ -305,20 +305,22 @@ export default {
           }
           _.forIn(regulation.list, (pointId, index)=>{
             let foundPoint = _.find(methodGroup.list, {id: pointId})
-            let tempComponent = {
-              ComponentNo: + index + 1 + '',
-              ComponentType: null,
-              Trial: 1,
-              SubClass: regulation.subclauseVal[pointId] ? regulation.subclauseVal[pointId] : null,
-              EnglishDescription: foundPoint.description.englishDescription,
-              ChineseDescription: foundPoint.description.chineseDescription,
-              IsDataTransfer: true,
-              IsShowInReport: true
+            if (foundPoint) {
+              let tempComponent = {
+                ComponentNo: + index + 1 + '',
+                ComponentType: null,
+                Trial: 1,
+                SubClass: regulation.subclauseVal[pointId] ? regulation.subclauseVal[pointId] : null,
+                EnglishDescription: foundPoint.description.englishDescription,
+                ChineseDescription: foundPoint.description.chineseDescription,
+                IsDataTransfer: true,
+                IsShowInReport: true
+              }
+              if (regulation.shareSolution) {
+                tempComponent.ShareID = pointId
+              }
+              taskObj.ComponentArray.push(tempComponent)
             }
-            if (regulation.shareSolution) {
-              tempComponent.ShareID = pointId
-            }
-            taskObj.ComponentArray.push(tempComponent)
           })
           if (!_.isEmpty(taskObj.ComponentArray)) {
             mainGroupList.push({

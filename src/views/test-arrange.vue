@@ -66,6 +66,7 @@
               class="group-card"
               v-for="group in pointGroupList"
               :key="group.id"
+              :class="{'isSelectedGroup': selectRegulationGroupList.includes(group.id)}"
             >
               <template #header>
                 <el-input
@@ -223,6 +224,9 @@ export default {
     },
     displaySubclause () {
       return this.selectRegulation.subclause || []
+    },
+    selectRegulationGroupList () {
+      return this.selectRegulation.list || []
     }
   },
   mounted () {
@@ -704,6 +708,9 @@ export default {
 .method-icon
   float: right
   margin: 0 4px
+
+.isSelectedGroup
+  box-shadow: 0px 0px 2px 2px rgba(0,128,255,0.6)
 .add-group-card
   width: 21em
   height: 6em

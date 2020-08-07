@@ -24,10 +24,6 @@
             <i class="el-icon-document"></i>
             <span slot="title">测试项目</span>
           </el-menu-item>
-          <el-menu-item index="client-request">
-            <i class="el-icon-user"></i>
-            <span slot="title">客户要求</span>
-          </el-menu-item>
         </el-menu>
       </el-aside>
       <el-main v-if="activePage === 'condition'" class="condition-pane">
@@ -128,7 +124,7 @@
       </el-main>
       <el-main v-else-if="activePage === 'testitem'" class="testitem-pane">
         <el-row>
-          <el-col :span="6">
+          <el-col :span="7">
             <div class="testitem-filter">
               <el-input
                 v-model="searchName"
@@ -154,6 +150,24 @@
                   </el-select>
                 </template>
               </NameFormItem>
+              <NameFormItem class="card-line" prependWidth="32px">
+                <template #prepend>客户</template>
+                <template #default>
+                  <el-select
+                    v-model="searchGroupClient"
+                    multiple
+                    clearable
+                    class="testitem-filter-select"
+                  >
+                    <el-option value="Null"></el-option>
+                    <el-option
+                      v-for="op in clientGroupList"
+                      :key="op"
+                      :value="op"
+                    ></el-option>
+                  </el-select>
+                </template>
+              </NameFormItem>
             </div>
             <div>
               <overlay-scrollbars :options="{scrollbars: {autoHide: 'scroll'}}" class="regulation-list">
@@ -165,23 +179,29 @@
                     :key="regulation.id"
                     @click="handleSelectRegulation(regulation.id)"
                   >
-                    ({{regulation.code}}) {{regulation.name}}
-                    <span class="modify-remark" v-if="regulation.modify === 'add'">(新增)</span>
-                    <span class="modify-remark" v-if="regulation.modify === 'modify'">(已修改)</span>
-                    <span class="modify-remark" v-if="regulation.modify === 'delete'">(将要删除)</span>
+                    <span>({{regulation.code}})</span>
+                    <span> {{regulation.name}}</span>
+                    <span class="regulation-client">
+                       {{regulation.client != undefined && regulation.client.length != 0 ? `(${regulation.client.join(', ')})` : ''}}
+                    </span>
+                    <span class="modify-remark" v-if="regulation.modify === 'add'"> (新增)</span>
+                    <span class="modify-remark" v-if="regulation.modify === 'modify'"> (已修改)</span>
+                    <span class="modify-remark" v-if="regulation.modify === 'delete'"> (将要删除)</span>
                   </ul>
                 </li>
               </overlay-scrollbars>
               <el-pagination
                 :current-page.sync="pageTable"
-                :page-size="100"
+                :page-size="pageSize"
+                :pagerCount="5"
                 layout="total, prev, pager, next"
+                small
                 :total="displayRegulationCount"
                 class="regulation-table-pagination"
               ></el-pagination> 
             </div>
           </el-col>
-          <el-col :span="18">
+          <el-col :span="17">
             <el-tabs type="border-card" v-model="activeTestitemTab">
               <el-tab-pane label="信息" name="info" class="regulation-info-pane">
                 <div class="inner-tabs-list">
@@ -219,6 +239,25 @@
                       >
                         <el-option
                           v-for="op in testitemGroupList"
+                          :key="op"
+                          :value="op"
+                        ></el-option>
+                      </el-select>
+                    </template>
+                  </NameFormItem>
+                  <NameFormItem class="card-line" prependWidth="80px">
+                    <template #prepend>客户</template>
+                    <template #default>
+                      <el-select
+                        v-model="selectRegulation.client"
+                        allow-create
+                        filterable
+                        multiple
+                        class="one-line-select"
+                        @change="updateRegulationStatus"
+                      >
+                        <el-option
+                          v-for="op in clientGroupList"
                           :key="op"
                           :value="op"
                         ></el-option>
@@ -330,13 +369,11 @@
         </el-dialog>
         <div class="bottom-function-btn">
           <el-button type="primary" class="bigicon" icon="el-third-icon-plus" circle @click="addRegulation" title="新增项目"></el-button>
+          <el-button type="primary" class="bigicon" icon="el-third-icon-file-copy" circle @click="copyRegulation" title="复制项目"></el-button>
           <el-button type="primary" class="bigicon" icon="el-third-icon-edit" circle @click="addInnerCard" title="添加方法或条件"></el-button>
           <el-button type="danger" class="bigicon" icon="el-third-icon-delete" circle @click="deleteRegulation" title="删除项目"></el-button>
           <el-button type="success" class="bigicon" icon="el-third-icon-save" circle @click="saveRegulation" title="保存"></el-button>
         </div>
-      </el-main>
-      <el-main v-else-if="activePage === 'client-request'" class="client-request-pane">
-
       </el-main>
     </el-container>
   </el-container>
@@ -382,9 +419,11 @@ export default {
       activeMaterialTab: 'material',
       searchName: undefined,
       searchGroup: [],
+      searchGroupClient: [],
       pageTable: 1,
+      pageSize: 100,
       activeTestitemTab: 'info',
-      selectRegulation: {},
+      selectRegulation_: {},
       selectRegulationId: undefined,
       dialogConditionVisible: false,
       dialogConditionId: undefined,
@@ -393,6 +432,14 @@ export default {
     }
   },
   computed: {
+    selectRegulation: {
+      get () {
+        return this.selectRegulation_ || {}
+      },
+      set (val) {
+        this.selectRegulation_ = val
+      }
+    },
     singleConditionList () {
       return this.conditionList['single']
     },
@@ -407,14 +454,25 @@ export default {
     },
     displayRegulationList () {
       return this.regulationList
-        .filter(data => !this.searchName || (data.code + data.name).toLowerCase().includes(this.searchName.toLowerCase()))
+        .filter(data => !this.searchName || (data.code + JSON.stringify(data.client) + data.name).toLowerCase().includes(this.searchName.toLowerCase()))
         .filter(data => _.isEmpty(this.searchGroup) || _.isEmpty(_.difference(this.searchGroup, data.group)))
+        .filter(data =>{
+          if (_.isEmpty(this.searchGroupClient)) {
+            return true
+          } else if (_.includes(this.searchGroupClient, 'Null') && _.isEmpty(data.client)) {
+            return true
+          } else if (_.isEmpty(_.difference(this.searchGroupClient, data.client))) {
+            return true
+          } else {
+            return false
+          }
+        })
     },
     displayRegulationCount () {
       return this.displayRegulationList.length
     },
     displaySlicedRegultionList () {
-      return _.chunk(this.displayRegulationList, 100)[this.pageTable-1]
+      return _.chunk(this.displayRegulationList, this.pageSize)[this.pageTable-1]
     },
     materialList () {
       return _.sortBy(this.materialObj.material, 'name')
@@ -493,6 +551,9 @@ export default {
     },
     method_regulationMap () {
       return _.fromPairs(this.methodList.concat(this.regulationList).map(e=>[e.id, e.name]))
+    },
+    clientGroupList () {
+      return _.chain(this.regulationList).map(t=>t.client).flatten().compact().uniq().sortBy().value()
     }
   },
   mounted () {
@@ -658,6 +719,17 @@ export default {
         this.$message({type: 'info', message: '已取消', showClose: true})
       })
     },
+    copyRegulation () {
+      let geneId = _id()
+      this.regulationList.unshift(
+        _.assign(_.cloneDeep(this.selectRegulation), {
+          id: geneId,
+          followId: this.selectRegulation.id,
+          modify: 'add'
+        })
+      )
+      this.handleSelectRegulation(geneId)
+    },
     deleteRegulation () {
       switch (this.selectRegulation.modify){
         case 'delete':
@@ -774,10 +846,11 @@ export default {
   padding: 0
 .condition-pane .el-tabs, .material-pane .el-tabs, .testitem-pane .el-tabs
   height: 100vh
-  border: none
-.card-line:first-child
-  margin: 6px 0
-.card-line:not(:first-child)
+  border-top: none
+  border-bottom: none
+  border-left: solid 1px rgba(0,0,0,0.125)
+  box-shadow: none
+.card-line
   margin-bottom: 6px
 .bottom-function-btn
   position: absolute
@@ -789,13 +862,13 @@ export default {
 .inner-tabs-list-method
   height: 90vh
 .testitem-filter
-  height: 13vh
+  height: 15vh
   .testitem-filter-prepend
     padding: 0 2px
   .testitem-filter-select
     width:100%
 .regulation-list
-  height: calc(87vh - 35px)
+  height: calc(85vh - 35px)
 .regulation-list .list
   display: block
 .regulation-list .regulation-ul
@@ -804,6 +877,8 @@ export default {
   border-bottom: solid 1px rgba(0,0,0,0.125)
 .regulation-ul.active-regulation
   background-color: #FFCC66
+.regulation-client
+  color: blue
 .modify-remark
   color: red
 

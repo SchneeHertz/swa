@@ -150,6 +150,13 @@
           </div>
         </el-col>
       </el-row>
+      <el-dialog
+        title="自动安排测试"
+        :visible.sync="dialogVisible"
+        width="75%"
+        top="2vh"
+        class="autosolve-dialog"
+      ></el-dialog>
     </el-main>
   </el-container>
 </template>
@@ -188,12 +195,12 @@ export default {
         disabled: false,
         ghostClass: "ghost"
       },
-      test: '',
       methodList: [],
       materialObj: {},
       selectMethod: {},
       selectRegulation: {},
-      batchSubclauseVal: ''
+      batchSubclauseVal: '',
+      dialogVisible: false
     }
   },
   computed: {
@@ -205,7 +212,7 @@ export default {
     methodBaseData: geneVuexValue('methodBaseData'),
     displayRegulation: {
       get () {
-        return this.selectMethod.regulationList
+        return this.selectMethod.regulationList || []
       },
       set (val) {
         this.$set(this.selectMethod, 'regulationList', val)
@@ -213,7 +220,7 @@ export default {
     },
     pointGroupList: {
       get () {
-        return this.selectMethod.list
+        return this.selectMethod.list || []
       },
       set (val) {
         this.$set(this.selectMethod, 'list', val)
@@ -302,12 +309,21 @@ export default {
       })
       _.forIn(_.groupBy(tempList, 'id'), (group, id)=>{
         let regulationList = []
+        let regulationListForClient = []
         _.forIn(group, groupInd=>{
-          regulationList.push(groupInd.regulation)
+          if (_.isEmpty(groupInd.regulation.client)) {
+            regulationList.push(groupInd.regulation)
+          } else {
+            regulationListForClient.push(groupInd.regulation)
+          }
         })
         tempList2.push(_.assign(
           _.cloneDeep(_.find(this.methodList, {id: id})),
-          {regulationList: regulationList, list: []}
+          {
+            regulationList: regulationList,
+            regulationListForClient: regulationListForClient,
+            list: []
+          }
         ))
       })
       this.methodBaseData = tempList2

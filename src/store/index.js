@@ -6,8 +6,9 @@ Vue.use(Vuex)
 
 export default new Vuex.Store({
   state: {
-    username: 'test',
-    authority: 'test',
+    username: undefined,
+    authority: undefined,
+    otsId: undefined,
     konvaGroupList: [],
     valueList: [],
     shapeList: [],

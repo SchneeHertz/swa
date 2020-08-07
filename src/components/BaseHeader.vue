@@ -62,6 +62,7 @@ export default {
     let userData = this.getUserInfo(sessionStorage.getItem('token')) || {}
     this.$store.commit('updateValue', {key: 'username', value: userData.name})
     this.$store.commit('updateValue', {key: 'authority', value: userData.authority})
+    this.$store.commit('updateValue', {key: 'otsId', value: userData.otsId})
   },
   methods:{
     handleSelect (index) {

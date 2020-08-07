@@ -300,8 +300,8 @@ export default {
             ChineseRemark: '',
             ComponentArray: [],
             ComponentListCheckBy: 2568,
-            CreateBy: 68157,
-            Operator: 68157
+            CreateBy: this.$store.state.otsId ? + this.$store.state.otsId : null,
+            Operator: this.$store.state.otsId ? + this.$store.state.otsId : null
           }
           _.forIn(regulation.list, (pointId, index)=>{
             let foundPoint = _.find(methodGroup.list, {id: pointId})

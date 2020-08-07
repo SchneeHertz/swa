@@ -9,7 +9,7 @@
     >
       <slot name="header"></slot>
       <div class="mini-circle-btn">
-        <el-button type="success" icon="el-third-icon-file-copy" circle plain></el-button>
+        <el-button type="success" icon="el-third-icon-file-copy" circle plain @click="handleCopyButton"></el-button>
         <el-button type="danger" icon="el-third-icon-close" circle @click="handleDeleteButton" plain></el-button>
       </div>
     </div>
@@ -156,6 +156,36 @@ export default {
                 }
               }
               break
+            case 'icenglish':
+              if (innerCd.logic == 'yes') {
+                if (innerCd.valueLogic == 'and') {
+                  return _.every(innerCd.value, (word)=>{ return (this.data.englishDescription + '').toLowerCase().includes(word.toLowerCase()) })
+                } else if (innerCd.valueLogic == 'or') {
+                  return _.some(innerCd.value, (word)=>{ return (this.data.englishDescription + '').toLowerCase().includes(word.toLowerCase()) })
+                }
+              } else if (innerCd.logic == 'no') {
+                if (innerCd.valueLogic == 'and') {
+                  return !_.every(innerCd.value, (word)=>{ return (this.data.englishDescription + '').toLowerCase().includes(word.toLowerCase()) })
+                } else if (innerCd.valueLogic == 'or') {
+                  return !_.some(innerCd.value, (word)=>{ return (this.data.englishDescription + '').toLowerCase().includes(word.toLowerCase()) })
+                }
+              }
+              break
+            case 'icchinese':
+              if (innerCd.logic == 'yes') {
+                if (innerCd.valueLogic == 'and') {
+                  return _.every(innerCd.value, (word)=>{ return (this.data.chineseDescription + '').includes(word) })
+                } else if (innerCd.valueLogic == 'or') {
+                  return _.some(innerCd.value, (word)=>{ return (this.data.chineseDescription + '').includes(word) })
+                }
+              } else if (innerCd.logic == 'no') {
+                if (innerCd.valueLogic == 'and') {
+                  return !_.every(innerCd.value, (word)=>{ return (this.data.chineseDescription + '').includes(word) })
+                } else if (innerCd.valueLogic == 'or') {
+                  return !_.some(innerCd.value, (word)=>{ return (this.data.chineseDescription + '').includes(word) })
+                }
+              }
+              break
             default:
               let pointValue = _.flatten([this.data.condition[innerCd.id] || this.materialCondition[innerCd.id]])
               if (innerCd.logic == 'yes') {
@@ -187,6 +217,9 @@ export default {
     handleDeleteButton () {
       this.$emit('delete-point')
     },
+    handleCopyButton () {
+      this.$emit('copy-point')
+    },
     handlePointCard (e) {
       if (e.target.classList.contains('point-card__header')){
         this.$emit('select-point')
@@ -207,8 +240,8 @@ export default {
   transition: 0.3s
 .is-always-shadow, .is-hover-shadow:focus, .is-hover-shadow:hover
   box-shadow: 0 2px 12px 0 rgba(0,0,0,0.1)
-.select-point-card
-  box-shadow: 0 2px 12px 0 rgba(0, 128, 255, 0.8)
+// .select-point-card
+//   box-shadow: 0px 0px 2px 2px rgba(0,128,255,0.6)
 .point-card__header
   padding: 8px 16px
   border-bottom: 1px solid #EBEEF5

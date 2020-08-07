@@ -27,6 +27,7 @@
               width="48%"
               :isSelected="valueObj.isSelected"
               @delete-point="handleDeletePoint(valueObj.id)"
+              @copy-point="handleCopyPoint(valueObj.id)"
               @focus-point="handleFocusPoint(valueObj.id)"
               @blur-point="handleBlurPoint(valueObj.id)"
               @select-point="handleSelectPoint(valueObj.id)"
@@ -36,6 +37,7 @@
               </template>
             </PointCard>
             <el-card class="add-point-card">
+              <el-button type="primary" class="bigicon add-button" icon="el-third-icon-reload" circle title="排序" @click="reSortPointList"></el-button>
               <el-button type="success" class="bigicon add-button" icon="el-third-icon-plus" circle title="新增" @click="addPoint(1)"></el-button>
               <el-button type="success" class="bigicon add-button" icon="el-third-icon-rocket" circle title="新增10个" @click="addPoint(10)"></el-button>
             </el-card>
@@ -107,7 +109,6 @@ export default {
   },
   data () {
     return {
-      dragItemId: null,
       configKonva: {
         width: window.innerWidth*0.4,
         height: window.innerHeight - 80
@@ -183,19 +184,38 @@ export default {
         context.closePath()
         context.fillStrokeShape(shape)
       }
+      let dragBoundFunc = (pos) => {
+        let width =  window.innerWidth*0.4 - 80
+        let height = window.innerHeight - 80 - 50
+        return {
+          x: pos.x < 0 ? 0 : pos.x > width ? width : pos.x,
+          y: pos.y < 0 ? 0 : pos.y > height ? height : pos.y,
+        }
+      }
       return this.$http.post('/data/getCaseData', {
         caseNumber: this.caseNumber,
         list: ['konvaGroupList', 'valueList', 'shapeList', 'konvaRelation', 'caseCondition', 'caseTestitem']
       })
       .then(({data: {result}})=>{
         if (_.isArray(result.konvaGroupList) && !_.isEmpty(result.konvaGroupList)) {
-          this.konvaGroupList = result.konvaGroupList.map(i=>{i.list.map(e=>{e.sceneFunc = sceneFunc; return e}); return i})
+          this.konvaGroupList = result.konvaGroupList.map(i=>{
+            i.list.map(e=>{e.sceneFunc = sceneFunc; e.dragBoundFunc = dragBoundFunc; return e})
+            i.dragBoundFunc = (pos) => {
+              let width =  window.innerWidth*0.4 - i.mainPart.x - 80
+              let height = window.innerHeight - 80 - i.mainPart.y - 50
+              return {
+                x: pos.x < - i.mainPart.x ? - i.mainPart.x : pos.x > width ? width : pos.x,
+                y: pos.y < - i.mainPart.y ? - i.mainPart.y : pos.y > height ? height : pos.y,
+              }
+            }
+            return i
+          })
         }
         if (_.isArray(result.valueList) && !_.isEmpty(result.valueList)) {
           this.valueList = result.valueList
         }
         if (_.isArray(result.shapeList) && !_.isEmpty(result.shapeList)) {
-          this.shapeList = result.shapeList.map(e=>{e.sceneFunc = sceneFunc; return e})
+          this.shapeList = result.shapeList.map(e=>{e.sceneFunc = sceneFunc; e.dragBoundFunc = dragBoundFunc; return e})
         }
         if (_.isArray(result.konvaRelation) && !_.isEmpty(result.konvaRelation)) {
           this.konvaRelation = result.konvaRelation
@@ -229,6 +249,9 @@ export default {
         })
       }
     },
+    reSortPointList () {
+      this.valueList = _.sortBy(this.valueList, e=>+e.index)
+    },
     createShape (id, x, y, width, height, name) {
       return {
         id: id,
@@ -253,6 +276,14 @@ export default {
           context.fillText(shape.name(), shape.width()*0.5, shape.height()*0.65)
           context.closePath()
           context.fillStrokeShape(shape)
+        },
+        dragBoundFunc (pos) {
+          let width =  window.innerWidth*0.4 - 40
+          let height = window.innerHeight - 80 - 25
+          return {
+            x: pos.x < 0 ? 0 : pos.x > width ? width : pos.x,
+            y: pos.y < 0 ? 0 : pos.y > height ? height : pos.y,
+          }
         },
         name: name
       }
@@ -291,7 +322,6 @@ export default {
     },
     handleDragstart (e) {
       if (e.target.getClassName() == 'Shape') {
-        this.dragItemId = e.target.attrs.id
         let findRect = this.findRect(this.shapeList, e.target)
         findRect.fill = 'rgba(0, 255, 0, 0.6)'
         let findData = _.find(this.valueList, {id: e.target.attrs.id})
@@ -339,7 +369,6 @@ export default {
             evt: e.evt
           }, true)
         }
-        this.displayText = null
       }
     },
     handleDrop (e) {
@@ -354,11 +383,24 @@ export default {
         this.moveItem(e.from.id(), this.shapeList, findGroup.list)
       } else {
         this.findRect(this.shapeList, e.from).fill = 'rgba(255, 255, 0, 0.6)'
-        this.findRect(this.shapeList, e.target).fill = 'rgba(255, 0, 0, 0.6)'
+        let mainPart = this.findRect(this.shapeList, e.target)
+        mainPart.fill = 'rgba(255, 0, 0, 0.6)'
         let group = {
           id: _id(),
           list: [],
-          draggable: true
+          draggable: true,
+          mainPart: {
+            x: mainPart.x,
+            y: mainPart.y
+          },
+          dragBoundFunc (pos) {
+            let width =  window.innerWidth*0.4 - mainPart.x - 80
+            let height = window.innerHeight - 80 - mainPart.y - 50
+            return {
+              x: pos.x < - mainPart.x ? - mainPart.x : pos.x > width ? width : pos.x,
+              y: pos.y < - mainPart.y ? - mainPart.y : pos.y > height ? height : pos.y,
+            }
+          }
         }
         this.moveItem(e.target.id(), this.shapeList, group.list)
         this.moveItem(e.from.id(), this.shapeList, group.list)
@@ -425,6 +467,10 @@ export default {
       })
       return result ? result : array.length+1
     },
+    handleCopyPoint (id) {
+      let foundPoint  = _.find(this.valueList, {id: id})
+      this.addPoint(1, _.pick(_.cloneDeep(foundPoint), ['englishDescription', 'chineseDescription', 'condition']))
+    },
     handleDeletePoint (id) {
       let findRect = this.$refs.stage.getNode().findOne(`#${id}`)
       this.handleDbClick({target: findRect})
@@ -467,9 +513,13 @@ export default {
           this.$http.post('/data/saveCaseData', {
             caseNumber: this.caseNumber,
             data: {
-              konvaGroupList: _.cloneDeep(this.konvaGroupList).map(i=>{i.list.map(e=>{e.sceneFunc = undefined; return e}); return i}),
+              konvaGroupList: _.cloneDeep(this.konvaGroupList).map(i=>{
+                i.list.map(e=>{e.sceneFunc = undefined; e.dragBoundFunc = undefined; return e})
+                i.dragBoundFunc = undefined
+                return i
+              }),
               valueList: this.valueList,
-              shapeList: _.cloneDeep(this.shapeList).map(e=>{e.sceneFunc = undefined; return e}),
+              shapeList: _.cloneDeep(this.shapeList).map(e=>{e.sceneFunc = undefined; e.dragBoundFunc = undefined; return e}),
               konvaRelation: this.konvaRelation
             }
           })

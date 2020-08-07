@@ -1,23 +1,29 @@
 const Lowdb = require('lowdb')
-const LodashId = require('lodash-id')
 const FileSync = require('lowdb/adapters/FileSync')
 const path = require('path')
 const _ = require('lodash')
+const fs = require('fs')
 
-_.mixin(LodashId)
 
 const prepareCaseData = (caseNumber)=>{
-  const db = Lowdb(new FileSync(path.resolve(__dirname, `../../dbs/caseData/${caseNumber}.json`)))
-  db.defaults({}).write()
-  db._.mixin(LodashId)
+  let dir = `../../dbs/caseData/${caseNumber.slice(0, 5)}`
+  if (!fs.existsSync(path.resolve(__dirname, dir))) {
+    fs.mkdirSync(path.resolve(__dirname, dir))
+  }
+  const db = Lowdb(new FileSync(path.resolve(__dirname, dir, `./${caseNumber}.json`)))
+  db.defaults({log: []}).write()
   return db
 }
 
-const saveCaseData = (caseNumber, data)=>{
+const saveCaseData = (caseNumber, data, userData)=>{
   let db = prepareCaseData(caseNumber)
   _.forIn(data, (value, key)=>{
     db.set(key, value).write()
   })
+  db.get('log').push({
+    user: userData.name,
+    date: new Date().toLocaleString()
+  }).write()
 }
 
 const getCaseData = (caseNumber, list)=>{

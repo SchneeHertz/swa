@@ -1,5 +1,6 @@
 const db = require('../models/caseData')
 const _ = require('lodash')
+const jwt = require('jsonwebtoken')
 
 
 const getCaseData = async (ctx) => {
@@ -22,8 +23,9 @@ const getCaseData = async (ctx) => {
 const saveCaseData = async (ctx) => {
   let caseNumber = ctx.request.body.caseNumber
   let data = ctx.request.body.data
+  let userData = getUserData(ctx)
   if (/^CA\d{12}$/.test(caseNumber)) {
-    db.saveCaseData(caseNumber, data)
+    db.saveCaseData(caseNumber, data, userData)
     ctx.body = {
       success: true,
       info: '保存成功'
@@ -33,6 +35,13 @@ const saveCaseData = async (ctx) => {
       success: false,
       info: '参数错误'
     }
+  }
+}
+
+const getUserData = (ctx) =>{
+  let getHeader =_.split(_.get(ctx, 'request.header.authorization'), ' ')[1]
+  if (getHeader) {
+    return jwt.decode(getHeader)
   }
 }
 

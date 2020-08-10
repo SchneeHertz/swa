@@ -143,7 +143,7 @@
             </draggable>
           </overlay-scrollbars>
           <div class="bottom-function-btn">
-            <el-button type="primary" class="bigicon" icon="el-third-icon-robot" circle @click="autoSolve" title="自动安排"></el-button>
+            <el-button type="primary" class="bigicon" icon="el-third-icon-robot" circle @click="showSolveDialog" title="自动安排"></el-button>
             <el-button type="primary" class="bigicon" icon="el-third-icon-cloud-download" circle @click="loadTasklist" title="载入"></el-button>
             <el-button type="success" class="bigicon" icon="el-third-icon-save" circle @click="saveTasklist" title="保存"></el-button>
             <el-button type="primary" class="bigicon" icon="el-third-icon-right" circle title="下一步" @click="toNextPage"></el-button>
@@ -153,10 +153,25 @@
       <el-dialog
         title="自动安排测试"
         :visible.sync="dialogVisible"
-        width="75%"
+        width="90%"
         top="2vh"
         class="autosolve-dialog"
-      ></el-dialog>
+      >
+        <el-row>
+          <el-col :span="8">
+            <div class="solve-option">
+
+            </div>
+          </el-col>
+          <el-col :span="16"></el-col>
+        </el-row>
+        <template #footer>
+          <span class="dialog-footer">
+            <el-button type="info" @click="dialogVisible = false">取消</el-button>
+            <el-button type="primary" @click="confirmAutoSolve">确定</el-button>
+          </span>
+        </template>
+      </el-dialog>
     </el-main>
   </el-container>
 </template>
@@ -340,7 +355,7 @@ export default {
     },
     handleSelectMethod (id) {
       this.selectMethod = _.find(this.methodBaseData, {id: id})
-      this.handleSelectRegulation(this.selectMethod.regulationList[0].id)
+      this.handleSelectRegulation(_.head(this.selectMethod.regulationList).id)
     },
     handleSelectRegulation (id) {
       this.selectRegulation = _.find(this.selectMethod.regulationList, {id: id})
@@ -379,6 +394,12 @@ export default {
       if (foundGroup != -1) {
         this.pointGroupList.splice(foundGroup, 1)
       }
+    },
+    showSolveDialog () {
+      this.dialogVisible = true
+    },
+    confirmAutoSolve () {
+      this.autoSolve()
     },
     autoSolve () {
       let startTime = new Date()
@@ -421,7 +442,7 @@ export default {
             _.groupBy(group, point=>{
               return JSON.stringify(
                 _.sortBy(point.groupBy, o=>{
-                  return _.keys(o)[0]
+                  return _.head(_.keys(o))
                 })
               )
             })
@@ -431,7 +452,7 @@ export default {
           _.forIn(groupR, group=>{
             let regulationList
             let subclauseValList = {}
-            let minMix = _.min(group[0].maxMixArray)
+            let minMix = _.min(_.head(group).maxMixArray)
             _.forIn(group, point=>{
               regulationList = point.regulation
               if (minMix > 1 && point.condition['weightType'] != '够重') {
@@ -471,9 +492,9 @@ export default {
               })
               startIndex += 1
               idList.push(id)
-              _.forIn(pointGroup[0].groupBy, groupObj=>{
-                let key = _.keys(groupObj)[0]
-                let code = _.values(groupObj)[0]
+              _.forIn(_.head(pointGroup).groupBy, groupObj=>{
+                let key = _.head(_.keys(groupObj))
+                let code = _.head(_.values(groupObj))
                 if (!subclauseValList[key]) {
                   subclauseValList[key] = []
                 }

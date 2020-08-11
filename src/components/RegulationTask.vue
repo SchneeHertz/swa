@@ -5,7 +5,7 @@
     @click="$emit('regulation-select')"
   >
     <div class="regulation-task-card__header">
-      <span>{{data.name}}</span>
+      <span>{{data.grouped ? `${data.name} - ${data.method.name}` : data.name}}</span>
       <slot name="header"></slot>
     </div>
     <div class="regulation-task-card__body">

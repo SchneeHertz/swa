@@ -24,6 +24,12 @@
       <div class="card-line">
         <label class="card-label">OTS编号: <span>{{data.code}}</span></label>
       </div>
+      <div class="card-line">
+        <label class="card-label">共溶液组: <span>{{data.methodGroup}}</span></label>
+      </div>
+      <div class="card-line">
+        <label class="card-label">共溶液组内排序: <span>{{data.methodGroupRank}}</span></label>
+      </div>
       <slot :data="data"></slot>
       <div
         v-for="condition in data.condition"
@@ -68,6 +74,28 @@
         class="card-line"
       >
         <template #prepend>OTS编号</template>
+      </el-input>
+      <NameFormItem class="card-line" prependWidth="100px">
+        <template #prepend>共溶液组</template>
+        <template #default>
+          <el-select
+            v-model="dialogData.methodGroup"
+            allow-create
+            filterable
+          >
+            <el-option
+              v-for="op in methodGroupList"
+              :key="op"
+              :value="op"
+            ></el-option>
+          </el-select>
+        </template>
+      </NameFormItem>
+      <el-input
+        v-model.number="dialogData.methodGroupRank"
+        class="card-line"
+      >
+        <template #prepend>共溶液组内排序</template>
       </el-input>
       <slot name="edit-area" :dialogData="dialogData"></slot>
       <div class="frame-condition">
@@ -130,7 +158,11 @@ export default {
       type: Object,
       default: ()=>({})
     },
-    conditionOptionList: Object
+    conditionOptionList: Object,
+    methodGroupList: {
+      type: Array,
+      default: ()=>[]
+    }
   },
   data () {
     return {
@@ -237,5 +269,5 @@ export default {
 <style lang="stylus">
 .method-card .card-line .el-input-group__prepend
   text-align: center
-  min-width: 60px
+  min-width: 100px
 </style>

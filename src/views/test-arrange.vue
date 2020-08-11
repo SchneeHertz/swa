@@ -133,11 +133,11 @@
             >
               <RegulationTask
                 v-for="regulation in displayRegulation"
-                :key="regulation.id"
+                :key="regulation.id + regulation.method.id"
                 :data="regulation"
                 :pointGroupList="pointGroupList"
-                :selected="selectRegulation.id == regulation.id"
-                @regulation-select="handleSelectRegulation(regulation.id)"
+                :selected="selectRegulation.id == regulation.id && selectRegulation.method.id == regulation.method.id"
+                @regulation-select="handleSelectRegulation(regulation.id, regulation.method.id)"
                 width="97%"
               ></RegulationTask>
             </draggable>
@@ -309,10 +309,11 @@ export default {
           _.forIn(testitem.regulation, regulation=>{
             if (_.isArray(regulation.method)) {
               _.forIn(regulation.method, method=>{
+                let foundMethod = _.find(this.methodList, {id: method.id})
                 tempList.push({
                   id: method.id,
                   regulation: _.assign(
-                    {method: _.cloneDeep(method)},
+                    {method: _.assign(_.cloneDeep(method), {code: foundMethod.code, name: foundMethod.name})},
                     _.omit(_.cloneDeep(regulation), 'method'),
                     {caseInfo: _.omit(_.cloneDeep(testitem), 'regulation'), list: [], subclauseVal:{}, shareSolution: true}
                   )
@@ -355,10 +356,12 @@ export default {
     },
     handleSelectMethod (id) {
       this.selectMethod = _.find(this.methodBaseData, {id: id})
-      this.handleSelectRegulation(_.head(this.selectMethod.regulationList).id)
+      this.handleSelectRegulation(_.head(this.selectMethod.regulationList).id, _.head(this.selectMethod.regulationList).method.id)
     },
-    handleSelectRegulation (id) {
-      this.selectRegulation = _.find(this.selectMethod.regulationList, {id: id})
+    handleSelectRegulation (id, id2) {
+      this.selectRegulation = _.find(this.selectMethod.regulationList, r=>{
+        return r.id == id && r.method.id == id2
+      })
     },
     clonePoint (point) {
       return _.merge(_.cloneDeep(point), {elements: []})
@@ -405,6 +408,7 @@ export default {
       let startTime = new Date()
       const STATUSCONDITIONID = 'n0l2O8mir'
       let pointList = this.resolvePointList(this.pointList)
+      let pointHashObj = {}
       _.forIn(this.methodBaseData, methodObj=>{
         let filterByMethodList = this.pointFilterByConditionList(pointList, methodObj.condition)
         let filterByRegulationList = this.pointTagRegulation(filterByMethodList, methodObj.regulationList)
@@ -485,6 +489,8 @@ export default {
             let idList = []
             _.forIn(finalMethodGroupList, pointGroup=>{
               let id = _id()
+              let pointHash = _.flatten(this.geneGroupId(pointGroup)).join('')
+              pointHashObj[id] = pointHash
               methodObj.list.push({
                 id: id,
                 index: startIndex,
@@ -511,6 +517,35 @@ export default {
             })
           })
         })
+      })
+      _.forIn(_.groupBy(this.methodBaseData, 'methodGroup'), (methodG, methodGroup)=>{
+        if (methodGroup != 'undefined') {
+          let methodG2 = _.sortBy(_.cloneDeep(methodG), 'methodGroupRank')
+          _.forIn(methodG, methodRegulation=>{
+            let findGIndex = _.findIndex(this.methodBaseData, {id: methodRegulation.id})
+            this.methodBaseData.splice(findGIndex, 1)
+          })
+          this.methodBaseData.push({
+            id: _id(),
+            name: methodG2.map(e=>e.name).join(', '),
+            list: _.chain(methodG2).map(e=>e.list).flatten().uniqBy(e=>{
+              return pointHashObj[e.id] ? pointHashObj[e.id] : _id()
+            }).map((e, index)=>{
+              e.id = pointHashObj[e.id] + '_'
+              e.index = index + 1
+              return e
+            }).value(),
+            regulationList: _.chain(methodG2).map(e=>e.regulationList).flatten().map(e=>{
+              e.grouped = true
+              let tempList = []
+              e.list.map(p=>{
+                tempList.push(pointHashObj[p] + '_')
+              })
+              e.list = tempList
+              return e
+            }).value()
+          })
+        }
       })
       console.log(`used time: ${new Date() - startTime}ms`)
     },
@@ -642,6 +677,16 @@ export default {
         do {
           result = this.findParentId(relationList, result)
         } while (result && !_.some(relationList, r=> r.id == result))
+      }
+      return result
+    },
+    geneGroupId (group) {
+      let result = []
+      for (let point of group) {
+        result.push(point.id)
+        if (!_.isEmpty(point.elements)) {
+          result.push('w-' ,this.geneGroupId(point.elements), '-w')
+        }
       }
       return result
     },

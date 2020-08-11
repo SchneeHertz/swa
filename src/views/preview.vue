@@ -25,7 +25,7 @@
           <div class="task-header-info">Report: {{selectTask.taskInfo.ReportNumber}}</div>
           <div class="task-header-info">Job: {{selectTask.taskInfo.JobNumber}}</div>
           <div class="task-header-info one-line">Test Item: {{selectTask.regulation.name}}</div>
-          <div class="task-header-info one-line">Method: {{selectTask.method.name}}</div>
+          <div class="task-header-info one-line">Method: {{selectTask.regulation.method.name}}</div>
         </div>
         <div class="task-remark">
           <NameFormItem class="card-line" prependWidth="110px">
@@ -113,13 +113,13 @@
         </el-table-column>
         <el-table-column label="Method">
           <template v-slot:default="props">
-            {{props.row.method.name}}
+            {{props.row.regulation.method.name}}
           </template>
         </el-table-column>
       </el-table>
       <span slot="footer" class="dialog-footer">
         <el-button type="info" @click="dialogVisible = false">关闭</el-button>
-        <el-button type="primary" @click="confirmExport">确定</el-button>
+        <el-button type="primary" @click="confirmExport" :loading="exportLoading.value">导出</el-button>
       </span>
     </el-dialog>
   </el-main>
@@ -197,6 +197,7 @@ async function exportData (taskList) {
       }
     })
   }
+  exportLoading.value = false
 }
 
 export default {
@@ -214,7 +215,10 @@ export default {
       exportPercentage: {
         value: 0
       },
-      tableSelectTask: undefined
+      tableSelectTask: undefined,
+      exportLoading: {
+        value: false
+      }
     }
   },
   computed: {
@@ -229,7 +233,7 @@ export default {
           label: regulation,
           children: taskArray.map(task=>{
             return {
-              label: task.method.name,
+              label: task.regulation.method.name,
               id: task.id
             }
           })
@@ -238,12 +242,13 @@ export default {
       return taskTree
     },
     selectTask () {
-      return _.find(this.taskList, {id: this.selectTaskId}) || {taskInfo: {}, method: {}, regulation: {}, taskObj: {}, pointIdList: []}
+      return _.find(this.taskList, {id: this.selectTaskId}) || {taskInfo: {}, method: {}, regulation: {method:{}}, taskObj: {}, pointIdList: []}
     }
   },
   mounted () {
     window.addLog = this.addLog
     window.exportPercentage = this.exportPercentage
+    window.exportLoading = this.exportLoading
   },
   methods: {
     loadTaskList () {
@@ -294,7 +299,7 @@ export default {
           let taskObj = {
             RequiredSequenceID: 1,
             JobID: regulation.caseInfo.JobID,
-            TestMethodID: +methodGroup.code,
+            TestMethodID: +regulation.method.code,
             CaseTestItemID: regulation.caseInfo.CaseTestItemID,
             EnglishRemark: '',
             ChineseRemark: '',
@@ -326,8 +331,8 @@ export default {
             mainGroupList.push({
               id: _id(),
               taskInfo: {
-                TestMethodID: +methodGroup.code,
-                TestMethodName: methodGroup.name,
+                TestMethodID: +regulation.method.code,
+                TestMethodName: regulation.method.name,
                 ..._.pick(regulation.caseInfo, ['CaseNumber', 'JobNumber', 'ReportNumber', 'CaseTestItemID', 'TestItemDescription'])
               },
               method: {
@@ -337,6 +342,7 @@ export default {
               regulation: {
                 id: regulation.id,
                 name: regulation.name,
+                method: regulation.method,
                 subclause: regulation.subclause
               },
               taskObj: taskObj,
@@ -395,6 +401,7 @@ export default {
       this.tableSelectTask = val
     },
     confirmExport () {
+      this.$set(this.exportLoading, 'value', true)
       exportData(this.tableSelectTask)
     },
     confirmDialog(callback, message = {question: '继续?', success: '操作完成', cancel: '已取消'}, failCallback = new Function) {

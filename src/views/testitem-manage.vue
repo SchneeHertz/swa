@@ -114,6 +114,7 @@
             :key="method.id"
             :data="method"
             :conditionOptionList="conditionOptionList"
+            :methodGroupList="methodGroupList"
             width="48%"
           ></MethodCard>
         </div>
@@ -554,6 +555,9 @@ export default {
     },
     clientGroupList () {
       return _.chain(this.regulationList).map(t=>t.client).flatten().compact().uniq().sortBy().value()
+    },
+    methodGroupList () {
+      return _.chain(this.methodList).map(m=>m.methodGroup).compact().uniq().sortBy().value()
     }
   },
   mounted () {

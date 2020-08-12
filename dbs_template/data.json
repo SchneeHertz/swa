@@ -6,8 +6,7 @@
   "condition": {
     "single": [],
     "multiple": [],
-    "text": [],
-    "testitem": [],
+    "special": [],
     "afterward": []
   },
   "regulation": [],

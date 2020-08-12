@@ -32,10 +32,11 @@
           <div class="group-function">
             <el-row>
               <el-col :span="8">
-                <el-button size="mini" type="danger" plain 
-                  @click="emptyGroupList"
-                  title="清空选中的方法内的测试组"
-                >清空组</el-button>
+                <el-tooltip effect="dark" content="清空选中的方法内的测试组" placement="bottom">
+                  <el-button size="mini" type="danger" plain 
+                    @click="emptyGroupList"
+                  >清空组</el-button>
+                </el-tooltip>
               </el-col>
               <el-col :span="16">
                 <NameFormItem prependWidth="60px">
@@ -93,25 +94,28 @@
               <group-nest v-model="group.list" />
             </el-card>
             <el-card class="add-group-card">
-              <el-button type="primary" class="bigicon add-button" icon="el-third-icon-reload" circle title="排序" @click="reSortGroupList"></el-button>
-              <el-button type="success" class="bigicon add-button" icon="el-third-icon-plus" circle title="新增" @click="addGroup(1)"></el-button>
-              <el-button type="success" class="bigicon add-button" icon="el-third-icon-rocket" circle title="新增10个" @click="addGroup(10)"></el-button>
-              <el-button type="success" class="bigicon add-button" icon="el-third-icon-infomation" circle title="新增文本组" @click="addTextGroup"></el-button>
+              <el-tooltip effect="dark" content="排序" placement="top">
+                <el-button type="primary" class="bigicon add-button" icon="el-third-icon-reload" circle @click="reSortGroupList"></el-button>
+              </el-tooltip>
+              <el-tooltip effect="dark" content="新增" placement="top">
+                <el-button type="success" class="bigicon add-button" icon="el-third-icon-plus" circle @click="addGroup(1)"></el-button>
+              </el-tooltip>
+              <el-tooltip effect="dark" content="新增10个" placement="top">
+                <el-button type="success" class="bigicon add-button" icon="el-third-icon-rocket" circle @click="addGroup(10)"></el-button>
+              </el-tooltip>
+              <el-tooltip effect="dark" content="新增文本组" placement="top">
+                <el-button type="success" class="bigicon add-button" icon="el-third-icon-infomation" circle @click="addTextGroup"></el-button>
+              </el-tooltip>
             </el-card>
           </overlay-scrollbars>
         </el-col>
         <el-col :span="6">
           <div class="method-function">
-            <el-button-group class="function-button">
-              <el-button size="mini" type="danger" plain 
-                @click="emptyMethodList" 
-                title="删除列表内所有测试组"
-              >清空列表</el-button>
+            <el-tooltip effect="dark" content="从测试项目重新生成列表，并代替原来的列表" placement="bottom">
               <el-button size="mini" type="danger" plain 
                 @click="reGeneMethodList" 
-                title="从测试项目重新生成列表，并代替原来的列表"
               >重新生成空列表</el-button>
-            </el-button-group>
+            </el-tooltip>
           </div>
           <overlay-scrollbars class="method-pane">
             <div
@@ -143,10 +147,18 @@
             </draggable>
           </overlay-scrollbars>
           <div class="bottom-function-btn">
-            <el-button type="primary" class="bigicon" icon="el-third-icon-robot" circle @click="showSolveDialog" title="自动安排"></el-button>
-            <el-button type="primary" class="bigicon" icon="el-third-icon-cloud-download" circle @click="loadTasklist" title="载入"></el-button>
-            <el-button type="success" class="bigicon" icon="el-third-icon-save" circle @click="saveTasklist" title="保存"></el-button>
-            <el-button type="primary" class="bigicon" icon="el-third-icon-right" circle title="下一步" @click="toNextPage"></el-button>
+            <el-tooltip effect="dark" content="自动安排" placement="top">
+              <el-button type="primary" class="bigicon" icon="el-third-icon-robot" circle @click="showSolveDialog"></el-button>
+            </el-tooltip>
+            <el-tooltip effect="dark" content="载入" placement="top">
+              <el-button type="primary" class="bigicon" icon="el-third-icon-cloud-download" circle @click="loadTasklist"></el-button>
+            </el-tooltip>
+            <el-tooltip effect="dark" content="保存" placement="top">
+              <el-button type="success" class="bigicon" icon="el-third-icon-save" circle @click="saveTasklist"></el-button>
+            </el-tooltip>
+            <el-tooltip effect="dark" content="下一步" placement="top">
+              <el-button type="primary" class="bigicon" icon="el-third-icon-right" circle @click="toNextPage"></el-button>
+            </el-tooltip>
           </div>
         </el-col>
       </el-row>
@@ -158,12 +170,48 @@
         class="autosolve-dialog"
       >
         <el-row>
-          <el-col :span="8">
+          <el-col :span="7">
             <div class="solve-option">
-
+              <NameFormItem class="card-line" prependWidth="100px">
+                <template #prepend>按Style分开Mix</template>
+                <template #default>
+                  <el-select
+                    v-model="mixByStyle"
+                    size="mini"
+                  >
+                    <el-option label="是" :value="true"></el-option>
+                    <el-option label="否" :value="false"></el-option>
+                  </el-select>
+                </template>
+              </NameFormItem>
+              <NameFormItem class="card-line" prependWidth="100px">
+                <template #prepend>客户</template>
+                <template #default>
+                  <el-select
+                    v-model="selectClient"
+                    size="mini"
+                  >
+                    <el-option
+                      v-for="op in clientList"
+                      :key="op"
+                      :value="op"
+                    ></el-option>
+                  </el-select>
+                </template>
+              </NameFormItem>
             </div>
           </el-col>
-          <el-col :span="16"></el-col>
+          <el-col :span="17">
+            <overlay-scrollbars class="regulation-select-pane">
+            <DialogRegulationSelector
+              v-for="methodGroup in methodBaseData"
+              :key="methodGroup.id"
+              :data="methodGroup"
+              width="48%"
+            >
+            </DialogRegulationSelector>
+            </overlay-scrollbars>
+          </el-col>
         </el-row>
         <template #footer>
           <span class="dialog-footer">
@@ -183,6 +231,7 @@ import GroupNest from '@/components/GroupNest.vue'
 import RegulationTask from '@/components/RegulationTask.vue'
 import draggable from 'vuedraggable'
 import NameFormItem from '@/components/NameFormItem.vue'
+import DialogRegulationSelector from '@/components/DialogRegulationSelector.vue'
 
 import {generate as _id } from 'shortid'
 
@@ -201,7 +250,8 @@ export default {
     GroupNest,
     RegulationTask,
     draggable,
-    NameFormItem
+    NameFormItem,
+    DialogRegulationSelector
   },
   data () {
     return {
@@ -215,7 +265,9 @@ export default {
       selectMethod: {},
       selectRegulation: {},
       batchSubclauseVal: '',
-      dialogVisible: false
+      dialogVisible: false,
+      mixByStyle: false,
+      selectClient: undefined
     }
   },
   computed: {
@@ -249,6 +301,11 @@ export default {
     },
     selectRegulationGroupList () {
       return this.selectRegulation.list || []
+    },
+    clientList () {
+      return _.chain(this.methodBaseData).map(e=>e.regulationListForClient)
+        .flatten().compact().map(e=>e.client)
+        .flatten().compact().uniq().sortBy().unshift(undefined).value()
     }
   },
   mounted () {
@@ -402,16 +459,26 @@ export default {
       this.dialogVisible = true
     },
     confirmAutoSolve () {
+      _.forIn(this.methodBaseData, methodGroup=>{
+        _.forIn(methodGroup.regulationListForClient, regulation=>{
+          if ( (this.selectClient && _.includes(regulation.client, this.selectClient)) || regulation.switchTo ) {
+            let foundGeneralRegulationIndex = _.findIndex(methodGroup.regulationList, {code: regulation.code})
+            foundGeneralRegulationIndex ? methodGroup.regulationList.splice(foundGeneralRegulationIndex, 1, regulation) : ''
+          }
+        })
+      })
       this.autoSolve()
+      this.dialogVisible = false
     },
     autoSolve () {
       let startTime = new Date()
       const STATUSCONDITIONID = 'n0l2O8mir'
       let pointList = this.resolvePointList(this.pointList)
       let pointHashObj = {}
+      let pointPicked = {}
       _.forIn(this.methodBaseData, methodObj=>{
         let filterByMethodList = this.pointFilterByConditionList(pointList, methodObj.condition)
-        let filterByRegulationList = this.pointTagRegulation(filterByMethodList, methodObj.regulationList)
+        let filterByRegulationList = this.pointTagRegulation(filterByMethodList, methodObj.regulationList, pointPicked)
         let groupedList = _.groupBy(_.filter(filterByRegulationList, point=>{return !_.isEmpty(point.regulation)}), point=>JSON.stringify(point.regulation))
 
         _.forIn(groupedList, group=>{
@@ -535,19 +602,25 @@ export default {
               e.index = index + 1
               return e
             }).value(),
-            regulationList: _.chain(methodG2).map(e=>e.regulationList).flatten().map(e=>{
-              e.grouped = true
+            regulationList: _.chain(methodG2).map(e=>e.regulationList).flatten().map(regulation=>{
+              regulation.grouped = true
               let tempList = []
-              e.list.map(p=>{
-                tempList.push(pointHashObj[p] + '_')
+              regulation.list.map(oldId=>{
+                tempList.push(pointHashObj[oldId] + '_')
               })
-              e.list = tempList
-              return e
+              regulation.list = tempList
+              let tempObj = {}
+              _.forIn(regulation.subclauseVal, (code, oldId)=>{
+                tempObj[pointHashObj[oldId] + '_'] = code
+              })
+              regulation.subclauseVal = tempObj
+              return regulation
             }).value()
           })
         }
       })
       console.log(`used time: ${new Date() - startTime}ms`)
+      console.log(pointPicked)
     },
     resolvePointList (pointList) {
       let tempList = []
@@ -640,7 +713,7 @@ export default {
       })
       return tempList
     },
-    pointTagRegulation (pointList, regulationList) {
+    pointTagRegulation (pointList, regulationList, pointPicked) {
       pointList = _.cloneDeep(pointList)
       _.forIn(pointList, point=>{
         point.regulation = []
@@ -648,10 +721,26 @@ export default {
         point.elements = []
         _.forIn(regulationList, regulation=>{
           if (regulation.method.defaultTest && this.checkConditionListPass(point, regulation.condition)) {
-            point.regulation.push(regulation.id)
-            point.maxMixArray.push(regulation.method.maxMix)
-            if (_.get(regulation, 'caseInfo.isIndTest')) {
-              point.maxMixArray.push(1)
+            let checked = true
+            if (_.isArray(pointPicked[point.id])) {
+              if (_.some(pointPicked[point.id], sign=>{
+                  return sign.regulationId == regulation.id &&  sign.group == regulation.method.group
+                })
+              ) {
+                  checked = false
+              } else {
+                pointPicked[point.id].push({regulationId: regulation.id, group: regulation.method.group})
+              }
+            } else {
+              pointPicked[point.id] = []
+              pointPicked[point.id].push({regulationId: regulation.id, group: regulation.method.group})
+            }
+            if (checked) {
+              point.regulation.push(regulation.id)
+              point.maxMixArray.push(regulation.method.maxMix)
+              if (_.get(regulation, 'caseInfo.isIndTest')) {
+                point.maxMixArray.push(1)
+              }
             }
           }
         })
@@ -738,20 +827,6 @@ export default {
         _.fill(new Array(this.selectRegulation.list.length), this.batchSubclauseVal)
       ))
     },
-    emptyMethodList () {
-      this.confirmDialog(
-        ()=>{
-          _.forIn(this.methodBaseData, methodGroup=>{
-            this.$set(methodGroup, 'list', [])
-            _.forIn(methodGroup.regulationList, regulation=>{
-              this.$set(regulation, 'list', [])
-              this.$set(regulation, 'subclauseVal', {})
-            })
-          })
-        },
-        {question: '确认删除列表内所有测试组?', success: '操作完成', cancel: '已取消'}
-      )
-    },
     copyList () {
       console.log('copyList')
     },
@@ -815,6 +890,12 @@ export default {
   position: absolute
   bottom: 1em
   right: 1.5em
+
+.solve-option
+  .card-line
+    margin: 4px 10px
+.regulation-select-pane
+  max-height: 72vh
 </style>
 
 <style lang="stylus">

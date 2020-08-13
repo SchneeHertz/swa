@@ -197,6 +197,14 @@ export default {
         context.closePath()
         context.fillStrokeShape(shape)
       }
+      let dragBoundFunc = (pos) => {
+        let width =  window.innerWidth*0.4 - 80
+        let height = window.innerHeight - 80 - 50
+        return {
+          x: pos.x < 0 ? 0 : pos.x > width ? width : pos.x,
+          y: pos.y < 0 ? 0 : pos.y > height ? height : pos.y,
+        }
+      }
       return this.$http.post('/data/getCaseData', {
         caseNumber: this.caseNumber,
         list: ['caseCondition', 'caseTestitem', 'konvaGroupList', 'valueList', 'shapeList', 'konvaRelation', 'methodBaseData']
@@ -217,13 +225,24 @@ export default {
           })
         })
         if (_.isArray(result.konvaGroupList) && !_.isEmpty(result.konvaGroupList)) {
-          this.konvaGroupList = result.konvaGroupList.map(i=>{i.list.map(e=>{e.sceneFunc = sceneFunc; return e}); return i})
+          this.konvaGroupList = result.konvaGroupList.map(i=>{
+            i.list.map(e=>{e.sceneFunc = sceneFunc; e.dragBoundFunc = dragBoundFunc; return e})
+            i.dragBoundFunc = (pos) => {
+              let width =  window.innerWidth*0.4 - i.mainPart.x - 80
+              let height = window.innerHeight - 80 - i.mainPart.y - 50
+              return {
+                x: pos.x < - i.mainPart.x ? - i.mainPart.x : pos.x > width ? width : pos.x,
+                y: pos.y < - i.mainPart.y ? - i.mainPart.y : pos.y > height ? height : pos.y,
+              }
+            }
+            return i
+          })
         }
         if (_.isArray(result.valueList) && !_.isEmpty(result.valueList)) {
           this.valueList = result.valueList
         }
         if (_.isArray(result.shapeList) && !_.isEmpty(result.shapeList)) {
-          this.shapeList = result.shapeList.map(e=>{e.sceneFunc = sceneFunc; return e})
+          this.shapeList = result.shapeList.map(e=>{e.sceneFunc = sceneFunc; e.dragBoundFunc = dragBoundFunc; return e})
         }
         if (_.isArray(result.konvaRelation) && !_.isEmpty(result.konvaRelation)) {
           this.konvaRelation = result.konvaRelation

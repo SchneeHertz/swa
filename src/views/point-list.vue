@@ -79,9 +79,15 @@
             </v-stage>
           </overlay-scrollbars>
           <div class="bottom-function-btn">
-            <el-button type="primary" class="bigicon" icon="el-third-icon-cloud-download" circle title="加载" @click="loadPointList"></el-button>
-            <el-button type="success" class="bigicon" icon="el-third-icon-save" circle title="保存" @click="savePointList"></el-button>
-            <el-button type="primary" class="bigicon" icon="el-third-icon-right" circle title="下一步" @click="toNextPage"></el-button>
+            <el-tooltip effect="dark" content="加载" placement="top">
+              <el-button type="primary" class="bigicon" icon="el-third-icon-cloud-download" circle @click="loadPointList"></el-button>
+            </el-tooltip>
+            <el-tooltip effect="dark" content="保存" placement="top">
+              <el-button type="success" class="bigicon" icon="el-third-icon-save" circle @click="savePointList"></el-button>
+            </el-tooltip>
+            <el-tooltip effect="dark" content="下一步" placement="top">
+              <el-button type="primary" class="bigicon" icon="el-third-icon-right" circle title="下一步" @click="toNextPage"></el-button>
+            </el-tooltip>
           </div>
         </el-col>
       </el-row>

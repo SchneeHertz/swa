@@ -64,7 +64,9 @@
         </el-table-column>
       </el-table>
       <div class="bottom-function-btn">
-        <el-button type="success" class="bigicon" icon="el-third-icon-save" circle @click="saveUserList" title="保存"></el-button>
+        <el-tooltip effect="dark" content="保存" placement="top">
+          <el-button type="success" class="bigicon" icon="el-third-icon-save" circle @click="saveUserList"></el-button>
+        </el-tooltip>
       </div>
     </el-main>
   </el-container>

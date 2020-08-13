@@ -73,8 +73,12 @@
           </el-tab-pane>
         </el-tabs>
         <div class="bottom-function-btn">
-          <el-button type="primary" class="bigicon" icon="el-third-icon-plus" circle @click="addCondition" title="新增"></el-button>
-          <el-button type="success" class="bigicon" icon="el-third-icon-save" circle @click="saveCondition" title="保存"></el-button>
+          <el-tooltip effect="dark" content="新增" placement="top">
+            <el-button type="primary" class="bigicon" icon="el-third-icon-plus" circle @click="addCondition"></el-button>
+          </el-tooltip>
+          <el-tooltip effect="dark" content="保存" placement="top">
+            <el-button type="success" class="bigicon" icon="el-third-icon-save" circle @click="saveCondition"></el-button>
+          </el-tooltip>
         </div>
       </el-main>
       <el-main v-if="activePage === 'material'" class="material-pane">
@@ -103,8 +107,12 @@
           </el-tab-pane>
         </el-tabs>
         <div class="bottom-function-btn">
-          <el-button type="primary" class="bigicon" icon="el-third-icon-plus" circle @click="addMaterial" title="新增"></el-button>
-          <el-button type="success" class="bigicon" icon="el-third-icon-save" circle @click="saveMaterial" title="保存"></el-button>
+          <el-tooltip effect="dark" content="新增" placement="top">
+            <el-button type="primary" class="bigicon" icon="el-third-icon-plus" circle @click="addMaterial"></el-button>
+          </el-tooltip>
+          <el-tooltip effect="dark" content="保存" placement="top">
+            <el-button type="success" class="bigicon" icon="el-third-icon-save" circle @click="saveMaterial"></el-button>
+          </el-tooltip>
         </div>
       </el-main>
       <el-main v-if="activePage === 'method'" class="method-pane">
@@ -119,8 +127,12 @@
           ></MethodCard>
         </div>
         <div class="bottom-function-btn">
-          <el-button type="primary" class="bigicon" icon="el-third-icon-plus" circle @click="addMethod" title="新增"></el-button>
-          <el-button type="success" class="bigicon" icon="el-third-icon-save" circle @click="saveMethod" title="保存"></el-button>
+          <el-tooltip effect="dark" content="新增" placement="top">
+            <el-button type="primary" class="bigicon" icon="el-third-icon-plus" circle @click="addMethod"></el-button>
+          </el-tooltip>
+          <el-tooltip effect="dark" content="保存" placement="top">
+            <el-button type="success" class="bigicon" icon="el-third-icon-save" circle @click="saveMethod"></el-button>
+          </el-tooltip>
         </div>
       </el-main>
       <el-main v-else-if="activePage === 'testitem'" class="testitem-pane">
@@ -369,11 +381,21 @@
           </span>
         </el-dialog>
         <div class="bottom-function-btn">
-          <el-button type="primary" class="bigicon" icon="el-third-icon-plus" circle @click="addRegulation" title="新增项目"></el-button>
-          <el-button type="primary" class="bigicon" icon="el-third-icon-file-copy" circle @click="copyRegulation" title="复制项目"></el-button>
-          <el-button type="primary" class="bigicon" icon="el-third-icon-edit" circle @click="addInnerCard" title="添加方法或条件"></el-button>
-          <el-button type="danger" class="bigicon" icon="el-third-icon-delete" circle @click="deleteRegulation" title="删除项目"></el-button>
-          <el-button type="success" class="bigicon" icon="el-third-icon-save" circle @click="saveRegulation" title="保存"></el-button>
+          <el-tooltip effect="dark" content="新增项目" placement="top">
+            <el-button type="primary" class="bigicon" icon="el-third-icon-plus" circle @click="addRegulation"></el-button>
+          </el-tooltip>
+          <el-tooltip effect="dark" content="复制项目" placement="top">
+            <el-button type="primary" class="bigicon" icon="el-third-icon-file-copy" circle @click="copyRegulation"></el-button>
+          </el-tooltip>
+          <el-tooltip effect="dark" content="添加方法或条件" placement="top">
+            <el-button type="primary" class="bigicon" icon="el-third-icon-edit" circle @click="addInnerCard"></el-button>
+          </el-tooltip>
+          <el-tooltip effect="dark" content="删除项目" placement="top">
+            <el-button type="danger" class="bigicon" icon="el-third-icon-delete" circle @click="deleteRegulation"></el-button>
+          </el-tooltip>
+          <el-tooltip effect="dark" content="保存" placement="top">
+            <el-button type="success" class="bigicon" icon="el-third-icon-save" circle @click="saveRegulation"></el-button>
+          </el-tooltip>
         </div>
       </el-main>
     </el-container>

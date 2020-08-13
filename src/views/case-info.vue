@@ -84,10 +84,18 @@
             </el-card>
           </overlay-scrollbars>
           <div class="bottom-function-btn">
-            <el-button type="primary" class="bigicon" icon="el-third-icon-cloud-sync" circle title="载入所有数据" @click="loadAllData"></el-button>
-            <el-button type="primary" class="bigicon" icon="el-third-icon-cloud-download" circle title="载入Case信息" @click="loadExistCaseData"></el-button>
-            <el-button type="success" class="bigicon" icon="el-third-icon-save" circle title="保存Case信息" @click="saveCaseInfo"></el-button>
-            <el-button type="primary" class="bigicon" icon="el-third-icon-right" circle title="下一步" @click="toNextPage"></el-button>
+            <el-tooltip effect="dark" content="载入所有数据" placement="top">
+              <el-button type="primary" class="bigicon" icon="el-third-icon-cloud-sync" circle @click="loadAllData"></el-button>
+            </el-tooltip>
+            <el-tooltip effect="dark" content="载入Case信息" placement="top">
+              <el-button type="primary" class="bigicon" icon="el-third-icon-cloud-download" circle @click="loadExistCaseData"></el-button>
+            </el-tooltip>
+            <el-tooltip effect="dark" content="保存Case信息" placement="top">
+              <el-button type="success" class="bigicon" icon="el-third-icon-save" circle @click="saveCaseInfo"></el-button>
+            </el-tooltip>
+            <el-tooltip effect="dark" content="下一步" placement="top">
+              <el-button type="primary" class="bigicon" icon="el-third-icon-right" circle @click="toNextPage"></el-button>
+            </el-tooltip>
           </div>
         </el-col>
       </el-row>

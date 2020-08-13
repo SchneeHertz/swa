@@ -71,9 +71,15 @@
       </el-col>
       <el-col :span="5"></el-col>
       <div class="bottom-function-btn">
-        <el-button type="primary" class="bigicon" icon="el-third-icon-cloud-download" circle title="加载"  @click="loadTaskList"></el-button>
-        <el-button type="success" class="bigicon" icon="el-third-icon-save" circle title="保存" @click="saveTaskList"></el-button>
-        <el-button type="primary" class="bigicon" icon="el-third-icon-export" circle title="导出" @click="showExportDialog"></el-button>
+        <el-tooltip effect="dark" content="加载" placement="top">
+          <el-button type="primary" class="bigicon" icon="el-third-icon-cloud-download" circle @click="loadTaskList"></el-button>
+        </el-tooltip>
+        <el-tooltip effect="dark" content="保存" placement="top">
+          <el-button type="success" class="bigicon" icon="el-third-icon-save" circle @click="saveTaskList"></el-button>
+        </el-tooltip>
+        <el-tooltip effect="dark" content="导出" placement="top">
+          <el-button type="primary" class="bigicon" icon="el-third-icon-export" circle @click="showExportDialog"></el-button>
+        </el-tooltip>
       </div>
     </el-row>
     <el-dialog

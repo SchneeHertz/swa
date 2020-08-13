@@ -505,10 +505,10 @@ export default {
     },
     materialOptionList () {
       return {
-        status: _.chain(this.materialList.map(m=>m.status)).flatten().uniq().sortBy().map(e=>({value: e})).value(),
-        element: _.chain(this.materialList.map(m=>m.element)).flatten().uniq().sortBy().map(e=>({value: e})).value(),
-        digestion: _.chain(this.materialList.map(m=>m.digestion)).flatten().uniq().sortBy().map(e=>({value: e})).value(),
-        other: _.chain(this.materialList.map(m=>m.other)).flatten().uniq().sortBy().map(e=>({value: e})).value()
+        status: _.chain(this.materialList.map(m=>m.status)).flatten().compact().uniq().sortBy().map(e=>({value: e})).value(),
+        element: _.chain(this.materialList.map(m=>m.element)).flatten().compact().uniq().sortBy().map(e=>({value: e})).value(),
+        digestion: _.chain(this.materialList.map(m=>m.digestion)).flatten().compact().uniq().sortBy().map(e=>({value: e})).value(),
+        other: _.chain(this.materialList.map(m=>m.other)).flatten().compact().uniq().sortBy().map(e=>({value: e})).value()
       }
     },
     conditionOptionList () {

@@ -100,6 +100,7 @@
       title="添加条件"
       :visible.sync="dialogConditionVisible"
       width="30%"
+      :close-on-click-modal="false"
     >
       <el-select
         v-model="dialogConditionId"

@@ -363,6 +363,7 @@
           title="添加条件"
           :visible.sync="dialogConditionVisible"
           width="30%"
+          :close-on-click-modal="false"
         >
           <el-select
             v-model="dialogConditionId"
@@ -619,7 +620,8 @@ export default {
     addCondition () {
       this.$prompt('请输入条件名称', '提示', {
         confirmButtonText: '确定',
-        cancelButtonText: '取消'
+        cancelButtonText: '取消',
+        closeOnClickModal: false
       }).then(({ value }) => {
         this.conditionList[this.activeConditionTab].push({
           cat: this.activeConditionTab,
@@ -667,7 +669,8 @@ export default {
     addMaterial () {
       this.$prompt('请输入材质/材质条件名称', '提示', {
         confirmButtonText: '确定',
-        cancelButtonText: '取消'
+        cancelButtonText: '取消',
+        closeOnClickModal: false
       }).then(({ value }) => {
         this.materialObj[this.activeMaterialTab].push({
           name: value,
@@ -701,7 +704,8 @@ export default {
     addMethod () {
       this.$prompt('请输入方法名称', '提示', {
         confirmButtonText: '确定',
-        cancelButtonText: '取消'
+        cancelButtonText: '取消',
+        closeOnClickModal: false
       }).then(({ value }) => {
         this.methodList.push({
           name: value,
@@ -732,7 +736,8 @@ export default {
     addRegulation () {
       this.$prompt('请输入法规名称', '提示', {
         confirmButtonText: '确定',
-        cancelButtonText: '取消'
+        cancelButtonText: '取消',
+        closeOnClickModal: false
       }).then(({ value }) => {
         let geneId = _id()
         this.regulationList.unshift({

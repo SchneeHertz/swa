@@ -53,6 +53,7 @@
       width="75%"
       top="10vh"
       class="edit-dialog"
+      :close-on-click-modal="false"
     >
       <el-input
         v-model="dialogData.name"

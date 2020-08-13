@@ -58,6 +58,7 @@
       width="30%"
       top="10vh"
       class="edit-dialog"
+      :close-on-click-modal="false"
     >
       <NameFormItem class="card-line" prependWidth="60px">
         <template #prepend>Mix数</template>

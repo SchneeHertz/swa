@@ -37,6 +37,7 @@
       :visible.sync="dialogVisible"
       width="45%"
       class="edit-dialog"
+      :close-on-click-modal="false"
     >
       <el-input
         v-model="dialogData.name"

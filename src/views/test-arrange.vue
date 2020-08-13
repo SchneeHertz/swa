@@ -168,6 +168,7 @@
         width="90%"
         top="2vh"
         class="autosolve-dialog"
+        :close-on-click-modal="false"
       >
         <el-row>
           <el-col :span="7">

@@ -88,6 +88,7 @@
       width="75%"
       top="2vh"
       class="export-dialog"
+      :close-on-click-modal="false"
     >
       <el-card shadow="never">
         <template #header>导出进度</template>

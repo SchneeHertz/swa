@@ -486,6 +486,13 @@ export default {
             point.groupBy = []
             let splitByStatus = false
             let regulationList = point.regulation.map(e=>_.find(methodObj.regulationList, {id: e}))
+            if (this.mixByStyle) {
+              if (!_.isEmpty(point.style)) {
+                point.groupBy.push({
+                  style: _.sortBy(point.style)
+                })
+              }
+            }
             _.forIn(regulationList, regulation=>{
               if (regulation.splitByStatus) {
                 splitByStatus = true

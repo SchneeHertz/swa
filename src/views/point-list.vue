@@ -8,9 +8,9 @@
             <el-input v-model="caseNumber" class="case-number" size="small">
               <template #prepend>Case:</template>
             </el-input>
-            <el-button-group class="function-button">
-              <el-button size="mini" >超小按钮</el-button>
-            </el-button-group>
+            <div class="point-function-button">
+              <el-switch v-model="useStyle" active-text="Style" @change="handleStyleSwitchChange"></el-switch>
+            </div>
           </div>
           <overlay-scrollbars
             :options="{scrollbars: {autoHide: 'scroll'}}"
@@ -23,9 +23,11 @@
               :afterwardConditionList="afterwardConditionList"
               :testitemIdList="testitemIdList"
               :materialObj="materialObj"
-              :data.sync="valueObj"
+              :data="valueObj"
               width="48%"
               :isSelected="valueObj.isSelected"
+              :useStyle="useStyle"
+              :styleList="styleList"
               @delete-point="handleDeletePoint(valueObj.id)"
               @copy-point="handleCopyPoint(valueObj.id)"
               @focus-point="handleFocusPoint(valueObj.id)"
@@ -115,7 +117,8 @@ export default {
       },
       conditionList: {},
       loadPointListLoading: false,
-      materialObj: {}
+      materialObj: {},
+      useStyle: false
     }
   },
   computed: {
@@ -135,30 +138,38 @@ export default {
     afterwardConditionList () {
       return _.chain(this.conditionList).get('afterward').filter(e=>!e.caseRank).value()
     },
+    styleList () {
+      return _.chain(this.valueList).map(e=>e.style).flatten().compact().uniq().sortBy().value() || []
+    },
   },
   mounted () {
     this.loadConditionList()
     this.loadMaterialList()
+    this.$nextTick(()=>{
+      if (!_.isEmpty(this.styleList)) {
+        this.useStyle = true
+      }
+    })
   },
   watch: {
-    shapeList (newVal) {
-      this.$store.commit('updateValue', {
-        key: 'shapeList',
-        value: newVal
-      })
-    },
-    konvaGroupList (newVal) {
-      this.$store.commit('updateValue', {
-        key: 'konvaGroupList',
-        value: newVal
-      })
-    },
-    konvaRelation (newVal) {
-      this.$store.commit('updateValue', {
-        key: 'konvaRelation',
-        value: newVal
-      })
-    }
+    // shapeList (newVal) {
+    //   this.$store.commit('updateValue', {
+    //     key: 'shapeList',
+    //     value: newVal
+    //   })
+    // },
+    // konvaGroupList (newVal) {
+    //   this.$store.commit('updateValue', {
+    //     key: 'konvaGroupList',
+    //     value: newVal
+    //   })
+    // },
+    // konvaRelation (newVal) {
+    //   this.$store.commit('updateValue', {
+    //     key: 'konvaRelation',
+    //     value: newVal
+    //   })
+    // }
   },
   methods: {
     loadConditionList () {
@@ -544,6 +555,18 @@ export default {
         this.$message({type: 'info', message: message.cancel, showClose: true})
       })
     },
+    handleStyleSwitchChange (val) {
+      if (!val) {
+        this.confirmDialog(
+          ()=>{
+            _.forIn(this.valueList, point=>{
+              this.$set(point, 'style', undefined)
+            })
+          },
+          {question: '清除所有样品点的Style?', success: '已清除', cancel: '已取消'}
+        )
+      }
+    }
   }
 }
 </script>
@@ -556,9 +579,12 @@ export default {
 .point-list-header
   .case-number
     width: 17em
-  .function-button
-    float: right
-    margin: 2px 2px
+  .point-function-button
+    display: inline-block
+    width: calc(100% - 16em)
+    margin-bottom: -6px
+    .el-switch
+      float: right
 .add-point-card
   width: 48%
   height: 10em

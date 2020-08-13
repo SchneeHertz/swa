@@ -33,6 +33,24 @@
         @focus="$emit('focus-point')"
         @blur="$emit('blur-point')"
       ></el-input>
+      <NameFormItem class="point-option" prependWidth="4em" v-show="useStyle">
+        <template #prepend>Style</template>
+        <template #default>
+          <el-select
+            v-model="data['style']"
+            allow-create
+            filterable
+            multiple
+            size="mini"
+          >
+            <el-option
+              v-for="op in styleList"
+              :key="op"
+              :value="op"
+            ></el-option>
+          </el-select>
+        </template>
+      </NameFormItem>
       <NameFormItem class="point-option"
         v-for="indForm in simpleConditionList"
         :key="indForm.id"
@@ -109,6 +127,8 @@ export default {
     },
     isSelected: Boolean,
     materialObj: Object,
+    useStyle: Boolean,
+    styleList: Array
   },
   data () {
     return {

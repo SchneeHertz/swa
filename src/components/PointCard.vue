@@ -66,13 +66,19 @@
             size="mini"
             :multiple="indForm.cat == 'multiple'"
           >
-            <el-option
+            <el-tooltip 
+              effect="dark"
+              :content="op.remark"
+              placement="right"
               v-for="op in indForm.list"
               :key="op.value"
-              :label="op.value"
-              :value="op.value"
-              :title="op.remark"
-            ></el-option>
+              :open-delay="500"
+            >
+              <el-option
+                :label="op.value"
+                :value="op.value"
+              ></el-option>
+            </el-tooltip>
           </el-select>
         </template>
       </NameFormItem>
@@ -91,13 +97,19 @@
             size="mini"
             :multiple="indForm.cat == 'multiple'"
           >
-            <el-option
+            <el-tooltip 
+              effect="dark"
+              :content="op.remark"
+              placement="right"
               v-for="op in indForm.list"
               :key="op.value"
-              :label="op.value"
-              :value="op.value"
-              :title="op.remark"
-            ></el-option>
+              :open-delay="500"
+            >
+              <el-option
+                :label="op.value"
+                :value="op.value"
+              ></el-option>
+            </el-tooltip>
           </el-select>
         </template>
       </NameFormItem>

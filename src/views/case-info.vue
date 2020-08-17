@@ -353,4 +353,7 @@ export default {
 .testitem-card, .condition-card
   .el-card__body
     padding: 10px
+.case-condition
+  .el-checkbox.is-bordered, .el-radio.is-bordered
+    margin: 6px 8px
 </style>

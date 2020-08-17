@@ -9,7 +9,7 @@
     <div class="dialog-regulation__body">
       <el-switch
         v-for="regulation in data.regulationList"
-        :key="regulation.id + regulation.method.id"
+        :key="regulation.id + regulation.method.id + regulation.method.group"
         class="regulation-switch"
         v-model="regulation.method.defaultTest"
         :active-text="regulation.grouped ? `${regulation.name} - ${regulation.method.name}` : regulation.name"
@@ -58,7 +58,6 @@ export default {
   margin: 2px
   border-radius: 4px
   border: 2px solid rgba(0,0,0,0.125)
-  overflow: hidden
   transition: 0.3s
 .dialog-regulation__header
   padding:  4px
@@ -79,4 +78,9 @@ export default {
     min-width: 40px
   .el-divider
     margin: 10px 0
+  .el-switch
+    height: auto
+    line-height: normal
+  .el-switch__label
+    height: auto
 </style>

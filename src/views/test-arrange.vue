@@ -137,11 +137,11 @@
             >
               <RegulationTask
                 v-for="regulation in displayRegulation"
-                :key="regulation.id + regulation.method.id"
+                :key="regulation.id + regulation.method.id + regulation.method.group"
                 :data="regulation"
                 :pointGroupList="pointGroupList"
-                :selected="selectRegulation.id == regulation.id && selectRegulation.method.id == regulation.method.id"
-                @regulation-select="handleSelectRegulation(regulation.id, regulation.method.id)"
+                :selected="selectRegulation.id == regulation.id && selectRegulation.method.id == regulation.method.id && selectRegulation.method.group == regulation.method.group"
+                @regulation-select="handleSelectRegulation(regulation.id, regulation.method.id, regulation.method.group)"
                 width="97%"
               ></RegulationTask>
             </draggable>
@@ -414,11 +414,15 @@ export default {
     },
     handleSelectMethod (id) {
       this.selectMethod = _.find(this.methodBaseData, {id: id})
-      this.handleSelectRegulation(_.head(this.selectMethod.regulationList).id, _.head(this.selectMethod.regulationList).method.id)
+      this.handleSelectRegulation(
+        _.head(this.selectMethod.regulationList).id,
+        _.head(this.selectMethod.regulationList).method.id,
+        _.head(this.selectMethod.regulationList).method.group
+      )
     },
-    handleSelectRegulation (id, id2) {
+    handleSelectRegulation (regulationId, methodId, methodGroup) {
       this.selectRegulation = _.find(this.selectMethod.regulationList, r=>{
-        return r.id == id && r.method.id == id2
+        return r.id == regulationId && r.method.id == methodId && r.method.group == methodGroup
       })
     },
     clonePoint (point) {
@@ -480,13 +484,13 @@ export default {
       _.forIn(this.methodBaseData, methodObj=>{
         let filterByMethodList = this.pointFilterByConditionList(pointList, methodObj.condition)
         let filterByRegulationList = this.pointTagRegulation(filterByMethodList, methodObj.regulationList, pointPicked)
-        let groupedList = _.groupBy(_.filter(filterByRegulationList, point=>{return !_.isEmpty(point.regulation)}), point=>JSON.stringify(point.regulation))
-
+        let groupedList = _.groupBy(_.filter(filterByRegulationList, point=>{return !_.isEmpty(point.regulation)}), point=>JSON.stringify(point.regulation.map(r=>r.id)))
         _.forIn(groupedList, group=>{
           _.forIn(group, point=>{
             point.groupBy = []
             let splitByStatus = false
-            let regulationList = point.regulation.map(e=>_.find(methodObj.regulationList, {id: e}))
+            let regulationList = point.regulation
+            // let regulationList = point.regulation.map(e=>_.find(methodObj.regulationList, {id: e}))
             if (this.mixByStyle) {
               if (!_.isEmpty(point.style)) {
                 point.groupBy.push({
@@ -499,11 +503,13 @@ export default {
                 splitByStatus = true
               }
               _.forIn(regulation.subclause, subclause=>{
-                if (this.checkConditionListPass(point, subclause.condition, methodObj.id)) {
+                if (this.checkConditionListPass({point: point, conditionList:subclause.condition, methodId:methodObj.id, group: regulation.method.group})) {
                   point.groupBy.push({
-                    [regulation.id]: subclause.code
+                    [regulation.id + '_' + regulation.method.group]: subclause.code
                   })
-                  point.maxMixArray.push(subclause.maxMix)
+                  if (subclause.maxMix) {
+                    point.maxMixArray.push(subclause.maxMix)
+                  }
                   return false
                 }
               })
@@ -558,7 +564,7 @@ export default {
                 point.minorType = 'main'
               }
             })
-            regulationList = regulationList.map(e=>_.find(methodObj.regulationList, {id: e}))
+            // regulationList = regulationList.map(e=>_.find(methodObj.regulationList, {id: e}))
             let finalMethodGroupList = _.chunk(_.filter(group, point=>point.minorType == 'main' || point.minorType == 'unWithed'), minMix)
             let startIndex = methodObj.list.length + 1
             let idList = []
@@ -586,8 +592,8 @@ export default {
             })
             _.forIn(regulationList, regulation=>{
               regulation.list = regulation.list.concat(idList)
-              if (subclauseValList[regulation.id]) {
-                regulation.subclauseVal = _.assign(regulation.subclauseVal, ...subclauseValList[regulation.id])
+              if (subclauseValList[regulation.id + '_' + regulation.method.group]) {
+                regulation.subclauseVal = _.assign(regulation.subclauseVal, ...subclauseValList[regulation.id + '_' + regulation.method.group])
               }
             })
           })
@@ -654,7 +660,7 @@ export default {
       })
       return tempList
     },
-    checkConditionListPass (point, conditionList, methodId) {
+    checkConditionListPass ({point, conditionList, methodId, group}) {
       if (_.isEmpty(conditionList)) {
         return false
       }
@@ -691,8 +697,18 @@ export default {
               }
               break
             case 'icmethod':
-              return condition.value.includes(methodId)
+              if (condition.logic == 'yes') {
+                return condition.value.includes(methodId)
+              } else if (condition.logic == 'no') {
+                return !condition.value.includes(methodId)
+              }
               break
+            case 'icgroup':
+              if (condition.logic == 'yes') {
+                return condition.value.includes(group)
+              } else if (condition.logic == 'no') {
+                return !condition.value.includes(group)
+              }
             default:
               let pointValue = _.flatten([point.condition[condition.id] || this.existCaseInfo[condition.id]])
               if (condition.logic == 'yes') {
@@ -715,7 +731,7 @@ export default {
     pointFilterByConditionList(pointList, conditionList) {
       let tempList = []
       _.forIn(pointList, point=>{
-        if (this.checkConditionListPass(point, conditionList)){
+        if (this.checkConditionListPass({point:point, conditionList: conditionList})){
           tempList.push(point)
         }
       })
@@ -728,7 +744,7 @@ export default {
         point.maxMixArray = []
         point.elements = []
         _.forIn(regulationList, regulation=>{
-          if (regulation.method.defaultTest && this.checkConditionListPass(point, regulation.condition)) {
+          if (regulation.method.defaultTest && this.checkConditionListPass({point:point, conditionList: regulation.condition})) {
             let checked = true
             if (_.isArray(pointPicked[point.id])) {
               if (_.some(pointPicked[point.id], sign=>{
@@ -744,7 +760,7 @@ export default {
               pointPicked[point.id].push({regulationId: regulation.id, group: regulation.method.group})
             }
             if (checked) {
-              point.regulation.push(regulation.id)
+              point.regulation.push(regulation)
               point.maxMixArray.push(regulation.method.maxMix)
               if (_.get(regulation, 'caseInfo.isIndTest')) {
                 point.maxMixArray.push(1)

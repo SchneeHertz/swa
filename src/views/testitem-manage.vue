@@ -143,6 +143,7 @@
                 v-model="searchName"
                 clearable
                 class="card-line"
+                size="small"
               >
                 <template #prepend><span class="testitem-filter-prepend">筛选</span></template>
               </el-input>
@@ -154,6 +155,7 @@
                     multiple
                     clearable
                     class="testitem-filter-select"
+                    size="small"
                   >
                     <el-option
                       v-for="op in testitemGroupList"
@@ -171,6 +173,7 @@
                     multiple
                     clearable
                     class="testitem-filter-select"
+                    size="small"
                   >
                     <el-option value="Null"></el-option>
                     <el-option
@@ -548,6 +551,15 @@ export default {
           }
         }),
         name: '测试方法',
+        rank: 1
+      }
+      tempArr['icgroup'] = {
+        caseRank: false,
+        cat: 'group',
+        description: '分组',
+        id:'icgroup',
+        list: [...Array(20).keys()].map(e=>({value: e+1})),
+        name: '分组',
         rank: 1
       }
       tempArr['icenglish'] = {

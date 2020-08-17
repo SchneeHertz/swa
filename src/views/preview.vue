@@ -197,7 +197,7 @@ async function exportData (taskList) {
       if (findTask) {
         _.forIn(findTask.ComponentArray, taskComponent=>{
           let findComponent = _.find(task.taskObj.ComponentArray, {ComponentNo: taskComponent.ComponentNo})
-          if (findComponent) {
+          if (findComponent && !existComponentObj[findComponent.ShareID]) {
             existComponentObj[findComponent.ShareID] = taskComponent.SampleComponentID
           }
         })
@@ -303,18 +303,7 @@ export default {
           group.description = _.mergeWith(...pointList, (obj, src)=>[obj, src].join(' + '))
         })
         _.forIn(methodGroup.regulationList, regulation=>{
-          let taskObj = {
-            RequiredSequenceID: 1,
-            JobID: regulation.caseInfo.JobID,
-            TestMethodID: +regulation.method.code,
-            CaseTestItemID: regulation.caseInfo.CaseTestItemID,
-            EnglishRemark: '',
-            ChineseRemark: '',
-            ComponentArray: [],
-            ComponentListCheckBy: 2568,
-            CreateBy: this.$store.state.otsId ? + this.$store.state.otsId : null,
-            Operator: this.$store.state.otsId ? + this.$store.state.otsId : null
-          }
+          let ComponentArray = []
           _.forIn(regulation.list, (pointId, index)=>{
             let foundPoint = _.find(methodGroup.list, {id: pointId})
             if (foundPoint) {
@@ -331,30 +320,53 @@ export default {
               if (regulation.shareSolution) {
                 tempComponent.ShareID = pointId
               }
-              taskObj.ComponentArray.push(tempComponent)
+              ComponentArray.push(tempComponent)
             }
           })
-          if (!_.isEmpty(taskObj.ComponentArray)) {
-            mainGroupList.push({
-              id: _id(),
-              taskInfo: {
-                TestMethodID: +regulation.method.code,
-                TestMethodName: regulation.method.name,
-                ..._.pick(regulation.caseInfo, ['CaseNumber', 'JobNumber', 'ReportNumber', 'CaseTestItemID', 'TestItemDescription'])
-              },
-              method: {
-                id: methodGroup.id,
-                name: methodGroup.name
-              },
-              regulation: {
-                id: regulation.id,
-                name: regulation.name,
-                method: regulation.method,
-                subclause: regulation.subclause
-              },
-              taskObj: taskObj,
-              pointIdList: regulation.list
-            })
+          if (!_.isEmpty(ComponentArray)) {
+            let taskInfo = {
+              TestMethodID: +regulation.method.code,
+              TestMethodName: regulation.method.name,
+              ..._.pick(regulation.caseInfo, ['CaseNumber', 'JobNumber', 'ReportNumber', 'CaseTestItemID', 'TestItemDescription'])
+            }
+            let findExistTask = _.find(mainGroupList, task=>_.isEqual(task.taskInfo, taskInfo))
+            if (findExistTask) {
+              let middleIndex = _.last(findExistTask.taskObj.ComponentArray).ComponentNo
+              ComponentArray = ComponentArray.map(c=>{c.ComponentNo = + c.ComponentNo + (+ middleIndex) + ''; return c})
+              findExistTask.taskObj.ComponentArray = findExistTask.taskObj.ComponentArray.concat(ComponentArray)
+            } else {
+              mainGroupList.push({
+                id: _id(),
+                taskInfo: {
+                  TestMethodID: +regulation.method.code,
+                  TestMethodName: regulation.method.name,
+                  ..._.pick(regulation.caseInfo, ['CaseNumber', 'JobNumber', 'ReportNumber', 'CaseTestItemID', 'TestItemDescription'])
+                },
+                method: {
+                  id: methodGroup.id,
+                  name: methodGroup.name
+                },
+                regulation: {
+                  id: regulation.id,
+                  name: regulation.name,
+                  method: regulation.method,
+                  subclause: regulation.subclause
+                },
+                taskObj: {
+                  RequiredSequenceID: 1,
+                  JobID: regulation.caseInfo.JobID,
+                  TestMethodID: +regulation.method.code,
+                  CaseTestItemID: regulation.caseInfo.CaseTestItemID,
+                  EnglishRemark: '',
+                  ChineseRemark: '',
+                  ComponentArray: ComponentArray,
+                  ComponentListCheckBy: 2568,
+                  CreateBy: this.$store.state.otsId ? + this.$store.state.otsId : null,
+                  Operator: this.$store.state.otsId ? + this.$store.state.otsId : null
+                },
+                pointIdList: regulation.list
+              })
+            }
           }
         })
         taskList.push(mainGroupList)

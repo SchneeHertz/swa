@@ -5,7 +5,10 @@
       <el-row>
         <el-col :span="4" class="point-list">
           <el-input v-model="caseNumber" class="case-number" size="small">
-            <template #prepend>CA:</template>
+            <template #prepend>Case:</template>
+          </el-input>
+          <el-input v-model="searchString" class="pointlist-searchstring" size="small">
+            <template #prepend>筛选</template>
           </el-input>
           <overlay-scrollbars
             :options="{scrollbars: {autoHide: 'scroll'}}"
@@ -15,11 +18,11 @@
               class="point-list-group"
               :group="{ name: 'point', pull: 'clone', put: false }"
               :clone="clonePoint"
-              v-model="pointList"
+              v-model="displayPointList"
               v-bind="dragOptions"
             >
               <div
-                v-for="point in pointList"
+                v-for="point in displayPointList"
                 :key="point.id"
                 class="point-list-item"
               >
@@ -268,7 +271,8 @@ export default {
       batchSubclauseVal: '',
       dialogVisible: false,
       mixByStyle: false,
-      selectClient: undefined
+      selectClient: undefined,
+      searchString: undefined
     }
   },
   computed: {
@@ -285,6 +289,9 @@ export default {
       set (val) {
         this.$set(this.selectMethod, 'regulationList', val)
       }
+    },
+    displayPointList () {
+      return this.pointList.filter(data => !this.searchString || JSON.stringify(data).toLowerCase().includes(this.searchString.toLowerCase()))
     },
     pointGroupList: {
       get () {
@@ -540,7 +547,7 @@ export default {
             let minMix = _.min(_.head(group).maxMixArray)
             _.forIn(group, point=>{
               regulationList = point.regulation
-              if (minMix > 1 && point.condition['weightType'] != '够重') {
+              if (minMix > 1 && point.condition['weightType'] != 'Enough') {
                 let parentId = this.findParentId(this.pointRelation, point.id)
                 let foundParent = _.find(group, {id: parentId})
                 if (foundParent) {
@@ -549,7 +556,7 @@ export default {
                 } else {
                   let inwith = false
                   _.forIn(group, parentPoint=>{
-                    if (parentPoint.condition['weightType'] == '够重' && parentPoint.elements.length < 3) {
+                    if (parentPoint.condition['weightType'] == 'Not enough' && parentPoint.elements.length < 3) {
                       parentPoint.elements.push(_.cloneDeep(point))
                       point.minorType = 'withed'
                       inwith = true
@@ -868,11 +875,13 @@ export default {
   opacity: 0.5
 .point-list
   border-right: solid 1px rgba(0,0,0,0.125)
+.pointlist-searchstring
+  margin-top: 1px
 
 .group-function .batch-subclause
   width: 100%
 .ol-point-list
-  height: calc(100vh - 2em)
+  height: calc(100vh - 4em - 1px)
 .point-list-item, .method-list-item
   margin: 1px
   padding: 6px
@@ -923,6 +932,11 @@ export default {
 </style>
 
 <style lang="stylus">
+.point-list
+  .el-input-group__prepend
+    padding: 0 10px
+    width: 34px
+    text-align: center
 .test-arrange-page
   .group-list
     border-right: solid 1px rgba(0,0,0,0.125)

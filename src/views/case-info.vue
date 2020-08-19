@@ -327,12 +327,12 @@ export default {
 .case-testitem-header
   .case-number
     width: 17em
-    margin: 2px 1px
+    margin: 0 1px
   .el-button
-    margin: 4px 2px
+    margin: 0 2px
 
 .case-testitem
-  height: calc(100vh - 3em)
+  height: calc(100vh - 2em)
 
 .case-condition
   height: calc(100vh - 5em)

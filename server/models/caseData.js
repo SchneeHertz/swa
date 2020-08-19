@@ -6,7 +6,7 @@ const fs = require('fs')
 
 
 const prepareCaseData = (caseNumber)=>{
-  let dir = `../../dbs/caseData/${caseNumber.slice(0, 5)}`
+  let dir = `../../dbs/caseData/${caseNumber.slice(0, 9)}`
   if (!fs.existsSync(path.resolve(__dirname, dir))) {
     fs.mkdirSync(path.resolve(__dirname, dir))
   }

@@ -199,9 +199,10 @@ export default {
       let sceneFunc = (context, shape)=>{
         context.beginPath()
         context.rect(0, 0, shape.width(), shape.height())
-        context.font = '1em Arial'
+        context.font = '1.5em Arial'
         context.textAlign = 'center'
-        context.fillText(shape.name(), shape.width()*0.5, shape.height()*0.65)
+        context.textBaseline = 'middle'
+        context.fillText(shape.name(), shape.width()*0.5, shape.height()*0.5)
         context.closePath()
         context.fillStrokeShape(shape)
       }

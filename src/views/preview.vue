@@ -4,7 +4,7 @@
   <el-main>
     <el-row>
       <el-col :span="6" class="task-list-panel">
-        <el-input v-model="caseNumber" class="case-number" size="small">
+        <el-input v-model="caseNumber" class="case-number" size="small" @keyup.enter.native="loadTaskList">
           <template #prepend>Case:</template>
         </el-input>
         <overlay-scrollbars

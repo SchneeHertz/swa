@@ -5,7 +5,7 @@
       <el-row>
         <el-col :span="14">
           <div class="point-list-header">
-            <el-input v-model="caseNumber" class="case-number" size="small">
+            <el-input v-model="caseNumber" class="case-number" size="small" @keyup.enter.native="loadPointList">
               <template #prepend>Case:</template>
             </el-input>
             <div class="point-function-button">
@@ -144,7 +144,7 @@
             size="medium"
             highlight-current-row
             @cell-click="handleCellClick"
-            :default-sort = "{prop: 'index', order: 'descending'}"
+            :default-sort = "{prop: 'index', order: 'ascending'}"
             >
               <el-table-column
                 label="#"
@@ -420,7 +420,7 @@ export default {
         })
         this.$set(this.findRectData(row.id), 'strokeEnabled', true)
       } else {
-        this.$refs.tablepointlist.clearSelection()
+        this.$refs.tablepointlist.setCurrentRow()
       }
     },
     sortIndex (a, b) {
@@ -446,9 +446,10 @@ export default {
       let sceneFunc = (context, shape)=>{
         context.beginPath()
         context.rect(0, 0, shape.width(), shape.height())
-        context.font = '1em Arial'
+        context.font = '1.5em Arial'
         context.textAlign = 'center'
-        context.fillText(shape.name(), shape.width()*0.5, shape.height()*0.65)
+        context.textBaseline = 'middle'
+        context.fillText(shape.name(), shape.width()*0.5, shape.height()*0.5)
         context.closePath()
         context.fillStrokeShape(shape)
       }
@@ -541,7 +542,8 @@ export default {
           context.rect(0, 0, shape.width(), shape.height())
           context.font = '1.5em Arial'
           context.textAlign = 'center'
-          context.fillText(shape.name(), shape.width()*0.5, shape.height()*0.7)
+          context.textBaseline = 'middle'
+          context.fillText(shape.name(), shape.width()*0.5, shape.height()*0.5)
           context.closePath()
           context.fillStrokeShape(shape)
         },

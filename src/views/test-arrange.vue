@@ -4,7 +4,7 @@
     <el-main>
       <el-row>
         <el-col :span="4" class="point-list">
-          <el-input v-model="caseNumber" class="case-number" size="small">
+          <el-input v-model="caseNumber" class="case-number" size="small" @keyup.enter.native="loadTasklist">
             <template #prepend>Case:</template>
           </el-input>
           <el-input v-model="searchString" class="pointlist-searchstring" size="small">

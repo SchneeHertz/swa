@@ -837,6 +837,8 @@ export default {
 .point-form
   height: calc(34vh - 2em - 10px)
   margin-top: 8px
+  .el-textarea
+    font-size: 15px
 .point-form-body
   height: calc(34vh - 5em - 46px)
 
@@ -865,7 +867,7 @@ export default {
 <style lang="stylus">
 .point-form
   .el-input__inner
-    font-size: 14px
+    font-size: 15px
   .el-card__header
     padding: 8px 20px
   .el-card__body

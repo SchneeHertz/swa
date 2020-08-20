@@ -28,11 +28,11 @@
           <div class="task-header-info one-line">Method: {{selectTask.regulation.method.name}}</div>
         </div>
         <div class="task-remark">
-          <NameFormItem class="card-line" prependWidth="110px">
+          <NameFormItem class="card-line" prependWidth="8em">
             <template #prepend>English Remark:</template>
             <el-input type="textarea" v-model="selectTask.taskObj.EnglishRemark"></el-input>
           </NameFormItem>
-          <NameFormItem class="card-line" prependWidth="110px">
+          <NameFormItem class="card-line" prependWidth="8em">
             <template #prepend>Chinese Remark:</template>
             <el-input type="textarea" v-model="selectTask.taskObj.ChineseRemark"></el-input>
           </NameFormItem>
@@ -464,7 +464,7 @@ export default {
   .card-line
     margin: 4px 2px
 .task-body
-  height: calc(100vh - 205px )
+  height: calc(100vh - 14em )
   .component-block
     border: solid 1px rgba(0,0,0,0.125)
     border-radius: 4px
@@ -502,5 +502,5 @@ export default {
   .el-card__header
     padding: 8px 12px
   .el-card__body
-    padding: 14px
+    padding: 15px
 </style>

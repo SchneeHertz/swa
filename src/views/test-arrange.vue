@@ -176,7 +176,7 @@
         <el-row>
           <el-col :span="7">
             <div class="solve-option">
-              <NameFormItem class="card-line" prependWidth="100px">
+              <NameFormItem class="card-line" prependWidth="7em">
                 <template #prepend>按Style分开Mix</template>
                 <template #default>
                   <el-select
@@ -188,7 +188,7 @@
                   </el-select>
                 </template>
               </NameFormItem>
-              <NameFormItem class="card-line" prependWidth="100px">
+              <NameFormItem class="card-line" prependWidth="7em">
                 <template #prepend>客户</template>
                 <template #default>
                   <el-select
@@ -888,7 +888,7 @@ export default {
   border: solid 1px rgba(0,0,0,0.125)
   border-radius: 4px
   background-color: #fbfbfb
-  font-size: 14px
+  font-size: 15px
   cursor: move
 .method-function
   margin: 1px

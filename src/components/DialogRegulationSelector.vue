@@ -63,7 +63,7 @@ export default {
   padding:  4px
   border-bottom: 1px solid #dddddd
   box-sizing: border-box
-  font-size: 14px
+  font-size: 15px
   background-color: #f6f6f6
 .dialog-regulation__body
   padding: 6px

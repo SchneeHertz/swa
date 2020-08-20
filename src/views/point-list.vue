@@ -874,4 +874,6 @@ export default {
     padding: 10px
   .el-card__footer
     padding: 10px 20px
+  .point-option .el-select--mini
+    width: 100%
 </style>

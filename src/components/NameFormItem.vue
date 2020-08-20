@@ -39,7 +39,7 @@ export default {
 
 <style lang="stylus" scoped>
 .name-form-item
-  font-size: 15px
+  font-size: 14px
 .name-select__prepend
   background-color: #F5F7FA
   color: #909399

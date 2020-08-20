@@ -19,6 +19,9 @@
     </div>
     <div class="inner-method-card__body">
       <div class="card-line">
+        <label class="card-label">id: <span>{{methodData.id}}</span></label>
+      </div>
+      <div class="card-line">
         <label class="card-label">描述: <span>{{methodData.description}}</span></label>
       </div>
       <div class="card-line">

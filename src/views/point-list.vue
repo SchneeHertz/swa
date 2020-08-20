@@ -12,38 +12,180 @@
               <el-switch v-model="useStyle" active-text="Style" @change="handleStyleSwitchChange"></el-switch>
             </div>
           </div>
-          <overlay-scrollbars
-            :options="{scrollbars: {autoHide: 'scroll'}}"
-            class="point-card-list"
+          <el-card
+            class="point-form"
+            shadow="never"
           >
-            <PointCard
-              v-for="valueObj in valueList"
-              :key="valueObj.id"
-              :simpleConditionList="simpleConditionList"
-              :afterwardConditionList="afterwardConditionList"
-              :testitemIdList="testitemIdList"
-              :materialObj="materialObj"
-              :data="valueObj"
-              width="48%"
-              :isSelected="valueObj.isSelected"
-              :useStyle="useStyle"
-              :styleList="styleList"
-              @delete-point="handleDeletePoint(valueObj.id)"
-              @copy-point="handleCopyPoint(valueObj.id)"
-              @focus-point="handleFocusPoint(valueObj.id)"
-              @blur-point="handleBlurPoint(valueObj.id)"
-              @select-point="handleSelectPoint(valueObj.id)"
+            <template #header>
+              {{selectPoint.index ? selectPoint.index: nextIndex}}
+            </template>
+            <overlay-scrollbars
+              :options="{overflowBehavior: {x: 'hidden'}}"
+              class="point-form-body"
             >
-              <template #header>
-                {{valueObj.index}}
-              </template>
-            </PointCard>
-            <el-card class="add-point-card">
-              <el-button type="primary" class="bigicon add-button" icon="el-third-icon-reload" circle title="排序" @click="reSortPointList"></el-button>
-              <el-button type="success" class="bigicon add-button" icon="el-third-icon-plus" circle title="新增" @click="addPoint(1)"></el-button>
-              <el-button type="success" class="bigicon add-button" icon="el-third-icon-rocket" circle title="新增10个" @click="addPoint(10)"></el-button>
-            </el-card>
-          </overlay-scrollbars>
+              <el-row :gutter="4">
+                <el-col :span="12">
+                  <el-input
+                    type="textarea"
+                    placeholder="英文描述"
+                    class="point-description point-form-line"
+                    v-model="selectPoint['englishDescription']"
+                    :autosize="{ minRows: 2, maxRows: 4}"
+                    ref="pointDescriptionEnglish"
+                  ></el-input>
+                </el-col>
+                <el-col :span="12">
+                  <el-input
+                    type="textarea"
+                    placeholder="中文描述"
+                    class="point-description point-form-line"
+                    v-model="selectPoint['chineseDescription']"
+                    :autosize="{minRows: 2, maxRows: 4}"
+                  ></el-input>
+                </el-col>
+                <el-col :span="12">
+                  <NameFormItem 
+                    class="point-option point-form-line" 
+                    prependWidth="4em" 
+                    v-show="useStyle"
+                  >
+                    <template #prepend>Style</template>
+                    <template #default>
+                      <el-select
+                        v-model="selectPoint['style']"
+                        allow-create
+                        filterable
+                        multiple
+                        size="mini"
+                      >
+                        <el-option
+                          v-for="op in styleList"
+                          :key="op"
+                          :value="op"
+                        ></el-option>
+                      </el-select>
+                    </template>
+                  </NameFormItem>
+                </el-col>
+                <el-col 
+                  :span="12"
+                  v-for="indForm in simpleConditionList"
+                  :key="indForm.id"
+                >
+                  <NameFormItem class="point-option point-form-line">
+                    <template #prepend>{{indForm.name}}</template>
+                    <template #default>
+                      <el-select
+                        v-model="selectPoint.condition[indForm.id]"
+                        filterable
+                        size="mini"
+                        :multiple="indForm.cat == 'multiple'"
+                      >
+                        <el-tooltip 
+                          effect="dark"
+                          :content="op.remark"
+                          placement="right"
+                          v-for="op in indForm.list"
+                          :key="op.value"
+                          :open-delay="500"
+                        >
+                          <el-option
+                            :label="op.value"
+                            :value="op.value"
+                          ></el-option>
+                        </el-tooltip>
+                      </el-select>
+                    </template>
+                  </NameFormItem>
+                </el-col>
+                <el-col 
+                  :span="12"
+                  v-for="indForm in displayAfterwardConditionList"
+                  :key="indForm.id"
+                >
+                  <NameFormItem class="point-option point-form-line">
+                    <template #prepend>{{indForm.name}}</template>
+                    <template #default>
+                      <el-select
+                        v-model="selectPoint.condition[indForm.id]"
+                        filterable
+                        size="mini"
+                        :multiple="indForm.cat == 'multiple'"
+                      >
+                        <el-tooltip 
+                          effect="dark"
+                          :content="op.remark"
+                          placement="right"
+                          v-for="op in indForm.list"
+                          :key="op.value"
+                          :open-delay="500"
+                        >
+                          <el-option
+                            :label="op.value"
+                            :value="op.value"
+                          ></el-option>
+                        </el-tooltip>
+                      </el-select>
+                    </template>
+                  </NameFormItem>
+                </el-col>
+              </el-row>
+            </overlay-scrollbars>
+            <div class="footer-button-group">
+              <el-button size="small" type="success" plain @click="addPoint()">新增</el-button>
+              <el-button size="small" type="primary" plain @click="resetPointForm">重置</el-button>
+            </div>
+          </el-card>
+          <div class="point-list-table">
+            <el-table
+            :data="displayPointList"
+            ref="tablepointlist"
+            height="66vh"
+            size="medium"
+            highlight-current-row
+            @cell-click="handleCellClick"
+            :default-sort = "{prop: 'index', order: 'descending'}"
+            >
+              <el-table-column
+                label="#"
+                prop="index"
+                width="60"
+                sortable
+                :sort-method="sortIndex"
+              />
+              <el-table-column label="english" prop="englishDescription" width="180">
+                <template #header>
+                  <el-input
+                    v-model="searchEnglishString"
+                    size="mini"
+                    placeholder="English"
+                  />
+                </template>
+              </el-table-column>
+              <el-table-column label="chinese" prop="chineseDescription" width="180">
+                <template #header>
+                  <el-input
+                    v-model="searchChineseString"
+                    size="mini"
+                    placeholder="Chinese"
+                  />
+                </template>
+              </el-table-column>
+              <el-table-column label="material" width="160">
+                <template v-slot:default="props">
+                  {{props.row.condition.material ? props.row.condition.material.join(',') : ''}}
+                </template>
+              </el-table-column>
+              <el-table-column label="Operate" width="120">
+                <template v-slot:default="props">
+                  <div class="mini-circle-btn">
+                    <el-button type="success" icon="el-third-icon-file-copy" circle plain @click="handleCopyPoint(props.row.id)"></el-button>
+                    <el-button type="danger" icon="el-third-icon-close" circle plain @click="handleDeletePoint(props.row.id)"></el-button>
+                  </div>
+                </template>
+              </el-table-column>
+            </el-table>
+          </div>
         </el-col>
         <el-col :span="10">
           <overlay-scrollbars
@@ -78,27 +220,27 @@
               </v-layer>
             </v-stage>
           </overlay-scrollbars>
-          <div class="bottom-function-btn">
-            <el-tooltip effect="dark" content="加载" placement="top">
-              <el-button type="primary" class="bigicon" icon="el-third-icon-cloud-download" circle @click="loadPointList"></el-button>
-            </el-tooltip>
-            <el-tooltip effect="dark" content="保存" placement="top">
-              <el-button type="success" class="bigicon" icon="el-third-icon-save" circle @click="savePointList"></el-button>
-            </el-tooltip>
-            <el-tooltip effect="dark" content="下一步" placement="top">
-              <el-button type="primary" class="bigicon" icon="el-third-icon-right" circle title="下一步" @click="toNextPage"></el-button>
-            </el-tooltip>
-          </div>
         </el-col>
       </el-row>
     </el-main>
+    <div class="bottom-function-btn">
+      <el-tooltip effect="dark" content="加载" placement="top">
+        <el-button type="primary" class="bigicon" icon="el-third-icon-cloud-download" circle @click="loadPointList" :loading="loadPointListLoading"></el-button>
+      </el-tooltip>
+      <el-tooltip effect="dark" content="保存" placement="top">
+        <el-button type="success" class="bigicon" icon="el-third-icon-save" circle @click="savePointList"></el-button>
+      </el-tooltip>
+      <el-tooltip effect="dark" content="下一步" placement="top">
+        <el-button type="primary" class="bigicon" icon="el-third-icon-right" circle title="下一步" @click="toNextPage"></el-button>
+      </el-tooltip>
+    </div>
   </el-container>
 </template>
 
 <script>
 
 import BaseHeader from '@/components/BaseHeader.vue'
-import PointCard from '@/components/PointCard.vue'
+import NameFormItem from '@/components/NameFormItem.vue'
 
 import {generate as _id } from 'shortid'
 
@@ -113,7 +255,7 @@ export default {
   name: 'PointList',
   components: {
     BaseHeader,
-    PointCard
+    NameFormItem
   },
   data () {
     return {
@@ -124,7 +266,10 @@ export default {
       conditionList: {},
       loadPointListLoading: false,
       materialObj: {},
-      useStyle: false
+      useStyle: false,
+      selectPoint: {condition: {}},
+      searchEnglishString: '',
+      searchChineseString: ''
     }
   },
   computed: {
@@ -147,6 +292,112 @@ export default {
     styleList () {
       return _.chain(this.valueList).map(e=>e.style).flatten().compact().uniq().sortBy().value() || []
     },
+    nextIndex () {
+      return  this.findMinIndex(this.valueList.map(e=>e.index)) + ''
+    },
+    materialCondition () {
+      let materialValArray = []
+      _.forIn(_.get(this.selectPoint, 'condition.material', []), material=>{
+        let materialData = _.find(this.materialObj.material, {name: material})
+        let mtempObj = {}
+        _.forIn(materialData, (valArray, key)=>{
+          let found = _.find(this.materialObj.materialCondition, {property: key})
+          if (found) {
+            mtempObj[found.id] = valArray
+          }
+        })
+        materialValArray.push(mtempObj)
+      })
+      let result =  _.mergeWith({}, ...materialValArray, (obj,src)=>{
+        if (_.isArray(obj)) {
+          return _.uniq(_.compact(obj.concat(src)))
+        }
+      })
+      return result
+    },
+    displayAfterwardConditionList () {
+      let tempList = []
+      if (!_.isEmpty(this.selectPoint['condition'])) {
+      _.forIn(this.afterwardConditionList, condition=>{
+        let isCheck = _.every(condition.condition, innerCd=>{
+          switch(innerCd.id){
+            case 'ictestitem':
+              if (innerCd.logic == 'yes') {
+                if (innerCd.valueLogic == 'and') {
+                  return _.difference(innerCd.value, this.testitemIdList).length == 0
+                } else if (innerCd.valueLogic == 'or') {
+                  return _.uniq(innerCd.value.concat(this.testitemIdList)).length < _.uniq(innerCd.value).concat(_.uniq(this.testitemIdList)).length
+                }
+              } else if (innerCd.logic == 'no') {
+                if (innerCd.valueLogic == 'and') {
+                  return _.difference(innerCd.value, this.testitemIdList).length > 0
+                } else if (innerCd.valueLogic == 'or') {
+                  return !(_.difference(innerCd.value, this.testitemIdList).length == 0)
+                }
+              }
+              break
+            case 'icenglish':
+              if (innerCd.logic == 'yes') {
+                if (innerCd.valueLogic == 'and') {
+                  return _.every(innerCd.value, (word)=>{ return (this.selectPoint.englishDescription + '').toLowerCase().includes(word.toLowerCase()) })
+                } else if (innerCd.valueLogic == 'or') {
+                  return _.some(innerCd.value, (word)=>{ return (this.selectPoint.englishDescription + '').toLowerCase().includes(word.toLowerCase()) })
+                }
+              } else if (innerCd.logic == 'no') {
+                if (innerCd.valueLogic == 'and') {
+                  return !_.every(innerCd.value, (word)=>{ return (this.selectPoint.englishDescription + '').toLowerCase().includes(word.toLowerCase()) })
+                } else if (innerCd.valueLogic == 'or') {
+                  return !_.some(innerCd.value, (word)=>{ return (this.selectPoint.englishDescription + '').toLowerCase().includes(word.toLowerCase()) })
+                }
+              }
+              break
+            case 'icchinese':
+              if (innerCd.logic == 'yes') {
+                if (innerCd.valueLogic == 'and') {
+                  return _.every(innerCd.value, (word)=>{ return (this.selectPoint.chineseDescription + '').includes(word) })
+                } else if (innerCd.valueLogic == 'or') {
+                  return _.some(innerCd.value, (word)=>{ return (this.selectPoint.chineseDescription + '').includes(word) })
+                }
+              } else if (innerCd.logic == 'no') {
+                if (innerCd.valueLogic == 'and') {
+                  return !_.every(innerCd.value, (word)=>{ return (this.selectPoint.chineseDescription + '').includes(word) })
+                } else if (innerCd.valueLogic == 'or') {
+                  return !_.some(innerCd.value, (word)=>{ return (this.selectPoint.chineseDescription + '').includes(word) })
+                }
+              }
+              break
+            default:
+              let pointValue = _.flatten([_.get(this.selectPoint, ['condition', innerCd.id]) || this.materialCondition[innerCd.id]])
+              if (innerCd.logic == 'yes') {
+                if (innerCd.valueLogic == 'and') {
+                  return _.difference(innerCd.value, pointValue).length == 0
+                } else if (innerCd.valueLogic == 'or') {
+                  return _.uniq(innerCd.value.concat(pointValue)).length < _.uniq(innerCd.value).concat(_.uniq(pointValue)).length
+                }
+              } else if (innerCd.logic == 'no') {
+                if (innerCd.valueLogic == 'and') {
+                  return _.difference(innerCd.value, pointValue).length > 0
+                } else if (innerCd.valueLogic == 'or') {
+                  return !(_.difference(innerCd.value, pointValue).length == 0)
+                }
+              }
+              break
+            }
+        })
+        if (isCheck) {
+          tempList.push(condition)
+        } else {
+          // if (this.selectPoint.condition[condition.id] ) this.$set(this.selectPoint.condition, condition.id, undefined)
+        }
+      })
+      }
+      return tempList
+    },
+    displayPointList () {
+      return this.valueList
+        .filter(data => !this.searchEnglishString || data.englishDescription.toLowerCase().includes(this.searchEnglishString.toLowerCase()))
+        .filter(data => !this.searchChineseString || data.chineseDescription.toLowerCase().includes(this.searchChineseString.toLowerCase()))
+    }
   },
   mounted () {
     this.loadConditionList()
@@ -158,26 +409,26 @@ export default {
     })
   },
   watch: {
-    // shapeList (newVal) {
-    //   this.$store.commit('updateValue', {
-    //     key: 'shapeList',
-    //     value: newVal
-    //   })
-    // },
-    // konvaGroupList (newVal) {
-    //   this.$store.commit('updateValue', {
-    //     key: 'konvaGroupList',
-    //     value: newVal
-    //   })
-    // },
-    // konvaRelation (newVal) {
-    //   this.$store.commit('updateValue', {
-    //     key: 'konvaRelation',
-    //     value: newVal
-    //   })
-    // }
+
   },
   methods: {
+    handleCellClick (row, column) {
+      if (column.label != 'Operate') {
+        this.selectPoint = row
+        _.forIn(this.valueList, point=>{
+          this.$set(this.findRectData(point.id), 'strokeEnabled', false)
+        })
+        this.$set(this.findRectData(row.id), 'strokeEnabled', true)
+      } else {
+        this.$refs.tablepointlist.clearSelection()
+      }
+    },
+    sortIndex (a, b) {
+      return b.index - a.index
+    },
+    resetPointForm () {
+      this.selectPoint = {condition: {}}
+    },
     loadConditionList () {
       return this.$http.get('/data/getCondition')
       .then(res=>{
@@ -250,24 +501,24 @@ export default {
         this.loadPointListLoading = false
       })
     },
-    addPoint (count = 1, assign = {}) {
-      for (let i = 0; i < count; i++) {
-        let id = _id()
-        let index = this.findMinIndex(this.valueList.map(e=>e.index)) + ''
-        let x = 40 * ((+index - 1) % Math.floor(this.configKonva.width / 40))
-        let y = 30 * Math.floor((+index - 1) / Math.floor(this.configKonva.width / 40))
-        this.valueList.push(_.assign({id: id, index: index, condition: {}}, assign))
-        this.konvaRelation.push({id: id, label: index})
-        this.shapeList.unshift(this.createShape(id, x, y, 40, 30, index))
+    addPoint (assign) {
+      let id = _id()
+      let index = this.findMinIndex(this.valueList.map(e=>e.index)) + ''
+      let x = 40 * ((+index - 1) % Math.floor(this.configKonva.width / 40))
+      let y = 30 * Math.floor((+index - 1) / Math.floor(this.configKonva.width / 40))
+      let addObj = {}
+      if (_.isEmpty(assign)) {
+        addObj = _.assign({}, _.cloneDeep(this.selectPoint), {id: id, index: index})
+        this.selectPoint = {condition: {}}
+      } else {
+        addObj = _.assign({}, assign, {id: id, index: index})
+        this.selectPoint = addObj
       }
-      if (count == 1) {
-        this.$nextTick(()=>{
-          $(`#input-${_.last(this.valueList).id}`).focus()
-        })
-      }
-    },
-    reSortPointList () {
-      this.valueList = _.sortBy(this.valueList, e=>+e.index)
+      this.valueList.push(addObj)
+      this.konvaRelation.push({id: id, label: index})
+      this.shapeList.unshift(this.createShape(id, x, y, 40, 30, index))
+      this.$refs.pointDescriptionEnglish.focus()
+      return addObj
     },
     createShape (id, x, y, width, height, name) {
       return {
@@ -288,9 +539,9 @@ export default {
         sceneFunc (context, shape) {
           context.beginPath()
           context.rect(0, 0, shape.width(), shape.height())
-          context.font = '1em Arial'
+          context.font = '1.5em Arial'
           context.textAlign = 'center'
-          context.fillText(shape.name(), shape.width()*0.5, shape.height()*0.65)
+          context.fillText(shape.name(), shape.width()*0.5, shape.height()*0.7)
           context.closePath()
           context.fillStrokeShape(shape)
         },
@@ -343,11 +594,11 @@ export default {
         findRect.fill = 'rgba(0, 255, 0, 0.6)'
         let findData = _.find(this.valueList, {id: e.target.attrs.id})
         switch (findData.condition['weightType']) {
-          case '够重':
+          case 'Enough':
             findRect.width = 80
             findRect.height = 50
             break
-          case '不够重':
+          case 'Not enough':
           case '<10mg':
             findRect.width = 60
             findRect.height = 30
@@ -447,7 +698,7 @@ export default {
         let removeItemFromGroup = (rect) => {
           let findRect = _.find(findGroup.list, {id: rect.id})
           findRect.draggable = true
-          findRect.fill = 'rgba(255, 255, 220, 0.6)'
+          findRect.fill = 'rgba(255, 255, 255, 0.6)'
           findRect.x += groupOffset.x
           findRect.y += groupOffset.y
           this.moveItem(rect.id, findGroup.list, this.shapeList)
@@ -486,7 +737,7 @@ export default {
     },
     handleCopyPoint (id) {
       let foundPoint  = _.find(this.valueList, {id: id})
-      this.addPoint(1, _.pick(_.cloneDeep(foundPoint), ['englishDescription', 'chineseDescription', 'condition']))
+      this.addPoint(_.pick(_.cloneDeep(foundPoint), ['englishDescription', 'chineseDescription', 'condition']))
     },
     handleDeletePoint (id) {
       let findRect = this.$refs.stage.getNode().findOne(`#${id}`)
@@ -513,16 +764,6 @@ export default {
       } else {
         return _.find(_.flatten(this.konvaGroupList.map(e=>e.list)), {id: id})
       }
-    },
-    handleFocusPoint (id) {
-      this.$set(this.findRectData(id), 'strokeEnabled', true)
-    },
-    handleBlurPoint (id) {
-      this.$set(this.findRectData(id), 'strokeEnabled', false)
-    },
-    handleSelectPoint(id) {
-      let findPoint =  _.find(this.valueList, {id: id})
-      this.$set(findPoint, 'isSelected', !findPoint.isSelected)
     },
     savePointList () {
       this.confirmDialog(
@@ -580,8 +821,7 @@ export default {
 <style lang="stylus" scoped>
 .el-main
   padding: 0
-.point-card-list
-  height: calc(100vh - 2em)
+
 .point-list-header
   .case-number
     width: 17em
@@ -591,15 +831,26 @@ export default {
     margin-bottom: -6px
     .el-switch
       float: right
-.add-point-card
-  width: 48%
-  height: 10em
-  display: inline-block
-  margin: 4px
-  text-align: center
-.add-point-card .add-button
-  position: relative
-  top: 2.2em
+
+.point-form
+  height: calc(34vh - 2em - 10px)
+  margin-top: 8px
+.point-form-body
+  height: calc(34vh - 5em - 46px)
+
+.point-form-line
+  margin: 2px 0
+
+.footer-button-group
+  float: right
+
+.point-list-table
+  .el-table
+    font-size:15px
+.mini-circle-btn .el-button
+  padding: 1px
+  margin: 0 1px
+
 .konva-list
   border-left: 1px solid rgb(220, 223, 230)
   border-bottom: 1px solid rgb(220, 223, 230)
@@ -610,6 +861,13 @@ export default {
 </style>
 
 <style lang="stylus">
-.point-card-list .component-card
-  vertical-align: top
+.point-form
+  .el-input__inner
+    font-size: 14px
+  .el-card__header
+    padding: 8px 20px
+  .el-card__body
+    padding: 10px
+  .el-card__footer
+    padding: 10px 20px
 </style>

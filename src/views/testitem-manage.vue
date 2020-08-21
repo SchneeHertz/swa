@@ -481,7 +481,8 @@ export default {
     },
     displayRegulationList () {
       return this.regulationList
-        .filter(data => !this.searchName || (data.code + JSON.stringify(data.client) + data.name).toLowerCase().includes(this.searchName.toLowerCase()))
+        // .filter(data => !this.searchName || (data.code + JSON.stringify(data.client) + data.name).toLowerCase().includes(this.searchName.toLowerCase()))
+        .filter(data => !this.searchName || JSON.stringify(data).toLowerCase().includes(this.searchName.toLowerCase()))
         .filter(data => _.isEmpty(this.searchGroup) || _.isEmpty(_.difference(this.searchGroup, data.group)))
         .filter(data =>{
           if (_.isEmpty(this.searchGroupClient)) {
@@ -908,6 +909,7 @@ export default {
   height: 15vh
   .testitem-filter-prepend
     padding: 0 2px
+    font-size: 14px
   .testitem-filter-select
     width:100%
 .regulation-list

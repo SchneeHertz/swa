@@ -104,8 +104,8 @@
 </template>
 
 <script>
-
 import BaseHeader from '@/components/BaseHeader.vue'
+const OTSHOST = '10.168.128.44/OTS_UAT'
 
 function geneVuexValue (property) {
   return {
@@ -265,7 +265,7 @@ export default {
       this.loadOTSTestitemLoading = true
       $.ajax({
         type: 'POST',
-        url: 'http://10.168.128.44/OTS_UAT/Services/CaseService.asmx/GetTestItemListByCaseNumber',
+        url: `http://${OTSHOST}/Services/CaseService.asmx/GetTestItemListByCaseNumber`,
         data: {CaseNumber: this.caseNumber}
       })
       .done(res=>{

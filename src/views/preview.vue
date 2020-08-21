@@ -136,8 +136,8 @@
 <script>
 import BaseHeader from '@/components/BaseHeader.vue'
 import NameFormItem from '@/components/NameFormItem.vue'
-
 import {generate as _id } from 'shortid'
+const OTSHOST = '10.168.128.44/OTS_UAT'
 
 function geneVuexValue (property) {
   return {
@@ -161,7 +161,7 @@ async function exportData (taskList) {
     })
     await $.ajax({
       type:'POST',
-      url:'http://10.168.128.44/OTS_UAT/Services/CaseService.asmx/ImportTestItemTask',
+      url:`http://${OTSHOST}/Services/CaseService.asmx/ImportTestItemTask`,
       data:{json: JSON.stringify({ImportData: [uploadTask]})}
     })
     .then(res=>{
@@ -182,7 +182,7 @@ async function exportData (taskList) {
     exportPercentage.value =  Math.round(inCount / taskCount * 100)
     await $.ajax({
       type:'POST',
-      url:'http://10.168.128.44/OTS_UAT/Services/CaseService.asmx/GetTaskList',
+      url:`http://${OTSHOST}/Services/CaseService.asmx/GetTaskList`,
       data: {
         CaseNumber: null, 
         ReportNumber: null, 

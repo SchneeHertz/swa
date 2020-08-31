@@ -118,7 +118,7 @@
       <el-main v-if="activePage === 'method'" class="method-pane">
         <div class="inner-tabs-list inner-tabs-list-method">
           <MethodCard
-            v-for="method in methodList"
+            v-for="method in displayMethodList"
             :key="method.id"
             :data="method"
             :conditionOptionList="conditionOptionList"
@@ -126,6 +126,13 @@
             width="48%"
           ></MethodCard>
         </div>
+        <el-pagination
+          :current-page.sync="pageMethodList"
+          :page-size="100"
+          layout="total, prev, pager, next"
+          :total="methodList.length"
+          class="method-list-pagination"
+        ></el-pagination> 
         <div class="bottom-function-btn">
           <el-tooltip effect="dark" content="新增" placement="top">
             <el-button type="primary" class="bigicon" icon="el-third-icon-plus" circle @click="addMethod"></el-button>
@@ -456,6 +463,7 @@ export default {
       dialogConditionId: undefined,
       dialogMethodVisible: false,
       dialogMethodId: undefined,
+      pageMethodList: 1,
     }
   },
   computed: {
@@ -501,6 +509,9 @@ export default {
     },
     displaySlicedRegultionList () {
       return _.chunk(this.displayRegulationList, this.pageSize)[this.pageTable-1]
+    },
+    displayMethodList () {
+      return _.chunk(this.methodList, 100)[this.pageMethodList-1]
     },
     materialList () {
       return _.sortBy(this.materialObj.material, 'name')
@@ -720,7 +731,7 @@ export default {
         cancelButtonText: '取消',
         closeOnClickModal: false
       }).then(({ value }) => {
-        this.methodList.push({
+        this.methodList.unshift({
           name: value,
           id: _id(),
           modify: 'add',

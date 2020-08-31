@@ -302,9 +302,11 @@ export default {
           })
           group.description = _.mergeWith(...pointList, (obj, src)=>[obj, src].join(' + '))
         })
+        let methodPointList = methodGroup.list.map(p=>p.id)
         _.forIn(methodGroup.regulationList, regulation=>{
           let ComponentArray = []
-          _.forIn(regulation.list, (pointId, index)=>{
+          let sortedList = _.filter(methodPointList, pointId=>_.includes(regulation.list, pointId))
+          _.forIn(sortedList, (pointId, index)=>{
             let foundPoint = _.find(methodGroup.list, {id: pointId})
             if (foundPoint) {
               let tempComponent = {
@@ -329,8 +331,8 @@ export default {
               TestMethodName: regulation.method.name,
               ..._.pick(regulation.caseInfo, ['CaseNumber', 'JobNumber', 'ReportNumber', 'CaseTestItemID', 'TestItemDescription'])
             }
-            let findExistTask = _.find(mainGroupList, task=>_.isEqual(task.taskInfo, taskInfo))
-            if (findExistTask) {
+            let findExistTask = _.find(mainGroupList, task=>_.isEqual(_.omit(task.taskInfo, 'TestMethodName'), _.omit(taskInfo, 'TestMethodName')))
+            if (findExistTask) { //merge same source task
               let middleIndex = _.last(findExistTask.taskObj.ComponentArray).ComponentNo
               ComponentArray = ComponentArray.map(c=>{c.ComponentNo = + c.ComponentNo + (+ middleIndex) + ''; return c})
               findExistTask.taskObj.ComponentArray = findExistTask.taskObj.ComponentArray.concat(ComponentArray)

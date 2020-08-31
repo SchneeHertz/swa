@@ -154,7 +154,7 @@
               <el-button type="primary" class="bigicon" icon="el-third-icon-robot" circle @click="showSolveDialog"></el-button>
             </el-tooltip>
             <el-tooltip effect="dark" content="载入" placement="top">
-              <el-button type="primary" class="bigicon" icon="el-third-icon-cloud-download" circle @click="loadTasklist"></el-button>
+              <el-button type="primary" class="bigicon" icon="el-third-icon-cloud-download" circle @click="loadTasklist" :loading="loadTasklistLoading"></el-button>
             </el-tooltip>
             <el-tooltip effect="dark" content="保存" placement="top">
               <el-button type="success" class="bigicon" icon="el-third-icon-save" circle @click="saveTasklist"></el-button>
@@ -272,14 +272,17 @@ export default {
       dialogVisible: false,
       mixByStyle: false,
       selectClient: undefined,
-      searchString: undefined
+      searchString: undefined,
+      loadTasklistLoading: false
     }
   },
   computed: {
     caseNumber: geneVuexValue('caseNumber'),
     caseTestitemList: geneVuexValue('caseTestitemList'),
     existCaseInfo: geneVuexValue('existCaseInfo'),
+    konvaGroupList: geneVuexValue('konvaGroupList'),
     pointList: geneVuexValue('valueList'),
+    shapeList: geneVuexValue('shapeList'),
     pointRelation: geneVuexValue('konvaRelation'),
     methodBaseData: geneVuexValue('methodBaseData'),
     displayRegulation: {
@@ -339,11 +342,47 @@ export default {
       })
     },
     loadTasklist () {
+      this.loadTasklistLoading = true
+      let sceneFunc = (context, shape)=>{
+        context.beginPath()
+        context.rect(0, 0, shape.width(), shape.height())
+        context.font = '1.5em Arial'
+        context.textAlign = 'center'
+        context.textBaseline = 'middle'
+        context.fillText(shape.name(), shape.width()*0.5, shape.height()*0.5)
+        context.closePath()
+        context.fillStrokeShape(shape)
+      }
+      let dragBoundFunc = (pos) => {
+        let width =  window.innerWidth*0.4 - 80
+        let height = window.innerHeight - 80 - 50
+        return {
+          x: pos.x < 0 ? 0 : pos.x > width ? width : pos.x,
+          y: pos.y < 0 ? 0 : pos.y > height ? height : pos.y,
+        }
+      }
       return this.$http.post('/data/getCaseData', {
         caseNumber: this.caseNumber,
-        list: ['methodBaseData', 'valueList', 'konvaRelation', 'caseCondition', 'caseTestitem']
+        list: ['methodBaseData', 'konvaGroupList', 'valueList', 'shapeList', 'konvaRelation', 'caseCondition', 'caseTestitem']
       })
       .then(({data: {result}})=>{
+        if (_.isArray(result.konvaGroupList) && !_.isEmpty(result.konvaGroupList)) {
+          this.konvaGroupList = result.konvaGroupList.map(i=>{
+            i.list.map(e=>{e.sceneFunc = sceneFunc; e.dragBoundFunc = dragBoundFunc; return e})
+            i.dragBoundFunc = (pos) => {
+              let width =  window.innerWidth*0.4 - i.mainPart.x - 80
+              let height = window.innerHeight - 80 - i.mainPart.y - 50
+              return {
+                x: pos.x < - i.mainPart.x ? - i.mainPart.x : pos.x > width ? width : pos.x,
+                y: pos.y < - i.mainPart.y ? - i.mainPart.y : pos.y > height ? height : pos.y,
+              }
+            }
+            return i
+          })
+        }
+        if (_.isArray(result.shapeList) && !_.isEmpty(result.shapeList)) {
+          this.shapeList = result.shapeList.map(e=>{e.sceneFunc = sceneFunc; e.dragBoundFunc = dragBoundFunc; return e})
+        }
         if (_.isArray(result.methodBaseData) && !_.isEmpty(result.methodBaseData)) {
           this.methodBaseData = result.methodBaseData
           if (this.selectMethod.id) {
@@ -364,6 +403,9 @@ export default {
             this.$set(this.existCaseInfo, indCondition.id, indCondition.value)
           })
         })
+      })
+      .finally(()=>{
+        this.loadTasklistLoading = false
       })
     },
     geneMethodList () {
@@ -556,7 +598,7 @@ export default {
                 } else {
                   let inwith = false
                   _.forIn(group, parentPoint=>{
-                    if (parentPoint.condition['weightType'] == 'Not enough' && parentPoint.elements.length < 3) {
+                    if (parentPoint.condition['weightType'] == 'Enough' && parentPoint.elements.length < 3) {
                       parentPoint.elements.push(_.cloneDeep(point))
                       point.minorType = 'withed'
                       inwith = true

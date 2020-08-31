@@ -80,6 +80,7 @@
                         filterable
                         size="mini"
                         :multiple="indForm.cat == 'multiple'"
+                        default-first-option
                       >
                         <el-tooltip 
                           effect="dark"
@@ -111,6 +112,7 @@
                         filterable
                         size="mini"
                         :multiple="indForm.cat == 'multiple'"
+                        default-first-option
                       >
                         <el-tooltip 
                           effect="dark"
@@ -413,6 +415,10 @@ export default {
   },
   methods: {
     handleCellClick (row, column) {
+      if (_.isEmpty(this.konvaGroupList) && _.isEmpty(this.shapeList)) {
+        this.$message({type: 'error', message: '需要载入已有的样品点关系', showClose: true})
+        return
+      }
       if (column.label != 'Operate') {
         this.selectPoint = row
         _.forIn(this.valueList, point=>{

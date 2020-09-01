@@ -545,7 +545,7 @@ export default {
         list: this.regulationList.map(e=>{
           return {
             value: e.id,
-            label: `(${e.code}) ${e.name}`
+            label: `(${e.code}) ${e.name} ${_.isEmpty(e.client) ? '' : `(${e.client.join(',')})`}`
           }
         }),
         name: '测试项目',

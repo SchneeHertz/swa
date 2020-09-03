@@ -604,7 +604,7 @@ export default {
       return _.chain(this.regulationList).map(t=>t.client).flatten().compact().uniq().sortBy().value()
     },
     methodGroupList () {
-      return _.chain(this.methodList).map(m=>m.methodGroup).compact().uniq().sortBy().value()
+      return _.chain(this.methodList).map(m=>m.methodGroup).compact().uniq().sortBy().unshift(undefined).value()
     }
   },
   mounted () {

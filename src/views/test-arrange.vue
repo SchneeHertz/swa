@@ -129,8 +129,8 @@
               @click="handleSelectMethod(method.id)"
             >
               {{method.name}}
-              <i class="method-icon el-third-icon-container" title="Paste" @click="pasteList"/>
-              <i class="method-icon el-third-icon-file-copy" title="Copy" @click="copyList"/>
+              <i class="method-icon el-third-icon-container" title="Paste" @click="pasteList(method)"/>
+              <i class="method-icon el-third-icon-file-copy" title="Copy" @click="copyList(method.list)"/>
             </div>
           </overlay-scrollbars>
           <overlay-scrollbars class="regulation-pane">
@@ -273,7 +273,8 @@ export default {
       mixByStyle: false,
       selectClient: undefined,
       searchString: undefined,
-      loadTasklistLoading: false
+      loadTasklistLoading: false,
+      copyedList: []
     }
   },
   computed: {
@@ -527,7 +528,14 @@ export default {
     autoSolve () {
       let startTime = new Date()
       const STATUSCONDITIONID = 'n0l2O8mir'
-      let pointList = this.resolvePointList(this.pointList)
+      const ACCESSIBLECONDTION = '1yrtsYdd12'
+      const MATERIALCONDTION = 'material'
+      let sortedPointList = _.sortBy(this.pointList, (point)=>{
+        return ["Accessible and mouthable", "Unmouthable but accessible ", "Cover by fabric and mouthable", "Inaccessible and unmouthable"].indexOf(point.condition['ACCESSIBLECONDTION'])
+      }, (point)=>{
+        return _.get(point.condition, 'material[0]')
+      })
+      let pointList = this.resolvePointList(sortedPointList)
       let pointHashObj = {}
       let pointPicked = {}
       _.forIn(this.methodBaseData, methodObj=>{
@@ -853,20 +861,15 @@ export default {
       return result
     },
     saveTasklist () {
-      this.confirmDialog(
-        ()=>{
-          this.$http.post('/data/saveCaseData', {
-            caseNumber: this.caseNumber,
-            data: {
-              methodBaseData: this.methodBaseData
-            }
-          })
-          .then(res=>{
-            this.$message({type: 'success', message: '保存成功', showClose: true})
-          })
-        },
-        {question: '确认保存?', success: '操作完成', cancel: '已取消'}
-      )
+      this.$http.post('/data/saveCaseData', {
+        caseNumber: this.caseNumber,
+        data: {
+          methodBaseData: this.methodBaseData
+        }
+      })
+      .then(res=>{
+        this.$message({type: 'success', message: '保存成功', showClose: true})
+      })
     },
     toNextPage () {
       this.$router.push('/preview')
@@ -900,11 +903,19 @@ export default {
         _.fill(new Array(this.selectRegulation.list.length), this.batchSubclauseVal)
       ))
     },
-    copyList () {
-      console.log('copyList')
+    copyList (sourceList) {
+      this.copyedList = _.cloneDeep(sourceList).map(
+        g=>{
+          g.id = _id()
+          g.list = g.list.map(p=>_.omit(p, 'regulation'))
+          return g
+        }
+      )
+      this.$message({type: 'success', message: 'Copyed!', showClose: true})
     },
-    pasteList () {
-      console.log('pasteList')
+    pasteList (method) {
+      method.list = _.cloneDeep(this.copyedList)
+      this.$message({type: 'success', message: 'Pasted!', showClose: true})
     }
   }
 }

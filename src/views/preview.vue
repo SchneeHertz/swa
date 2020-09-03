@@ -61,10 +61,18 @@
               </NameFormItem>
             </el-col>
             <el-col :span="12">
-              <el-input type="textarea" v-model="component.EnglishDescription"></el-input>
+              <el-input
+                type="textarea"
+                v-model="component.EnglishDescription"
+                :autosize="{minRows: 2, maxRows: 6}"
+              ></el-input>
             </el-col>
             <el-col :span="12">
-              <el-input type="textarea" v-model="component.ChineseDescription"></el-input>
+              <el-input
+                type="textarea"
+                v-model="component.ChineseDescription"
+                :autosize="{minRows: 2, maxRows: 6}"
+              ></el-input>
             </el-col>
           </el-row>
         </overlay-scrollbars>
@@ -138,6 +146,7 @@ import BaseHeader from '@/components/BaseHeader.vue'
 import NameFormItem from '@/components/NameFormItem.vue'
 import {generate as _id } from 'shortid'
 const OTSHOST = '10.168.128.44/OTS_UAT'
+// const OTSHOST = 'cnots.sgs.net/OTS'
 
 function geneVuexValue (property) {
   return {
@@ -393,20 +402,15 @@ export default {
       this.selectTaskId = data.id
     },
     saveTaskList () {
-      this.confirmDialog(
-        ()=>{
-          this.$http.post('/data/saveCaseData', {
-            caseNumber: this.caseNumber,
-            data: {
-              taskList: this.taskList
-            }
-          })
-          .then(res=>{
-            this.$message({type: 'success', message: '保存成功', showClose: true})
-          })
-        },
-        {question: '确认保存?', success: '操作完成', cancel: '已取消'}
-      )
+      this.$http.post('/data/saveCaseData', {
+        caseNumber: this.caseNumber,
+        data: {
+          taskList: this.taskList
+        }
+      })
+      .then(res=>{
+        this.$message({type: 'success', message: '保存成功', showClose: true})
+      })
     },
     showExportDialog () {
       this.exportLog = []
@@ -424,17 +428,6 @@ export default {
     confirmExport () {
       this.$set(this.exportLoading, 'value', true)
       exportData(this.tableSelectTask)
-    },
-    confirmDialog(callback, message = {question: '继续?', success: '操作完成', cancel: '已取消'}, failCallback = new Function) {
-      this.$confirm(message.question, '提示', {confirmButtonText: '确定', cancelButtonText: '取消', type: 'warning'})
-      .then(() => {
-        callback()
-        this.$message({type: 'success', message: message.success, showClose: true})
-      })
-      .catch(() => {
-        failCallback()
-        this.$message({type: 'info', message: message.cancel, showClose: true})
-      })
     },
   }
 }

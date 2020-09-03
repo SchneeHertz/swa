@@ -30,6 +30,7 @@
                     placeholder="英文描述"
                     class="point-description point-form-line"
                     v-model="selectPoint['englishDescription']"
+                    @change="autoCorrect"
                     :autosize="{ minRows: 2, maxRows: 4}"
                     ref="pointDescriptionEnglish"
                   ></el-input>
@@ -80,7 +81,6 @@
                         filterable
                         size="mini"
                         :multiple="indForm.cat == 'multiple'"
-                        default-first-option
                       >
                         <el-tooltip 
                           effect="dark"
@@ -112,7 +112,6 @@
                         filterable
                         size="mini"
                         :multiple="indForm.cat == 'multiple'"
-                        default-first-option
                       >
                         <el-tooltip 
                           effect="dark"
@@ -135,6 +134,7 @@
             </overlay-scrollbars>
             <div class="footer-button-group">
               <el-button size="small" type="success" plain @click="addPoint()">新增</el-button>
+              <el-button size="small" type="success" plain @click="modifyPoint">修改</el-button>
               <el-button size="small" type="primary" plain @click="resetPointForm">重置</el-button>
             </div>
           </el-card>
@@ -414,13 +414,16 @@ export default {
 
   },
   methods: {
+    autoCorrect () {
+      this.$set(this.selectPoint, 'englishDescription', _.upperFirst(this.selectPoint['englishDescription']))
+    },
     handleCellClick (row, column) {
       if (_.isEmpty(this.konvaGroupList) && _.isEmpty(this.shapeList)) {
         this.$message({type: 'error', message: '需要载入已有的样品点关系', showClose: true})
         return
       }
       if (column.label != 'Operate') {
-        this.selectPoint = row
+        this.selectPoint = _.cloneDeep(row)
         _.forIn(this.valueList, point=>{
           this.$set(this.findRectData(point.id), 'strokeEnabled', false)
         })
@@ -516,7 +519,7 @@ export default {
       let addObj = {}
       if (_.isEmpty(assign)) {
         addObj = _.assign({}, _.cloneDeep(this.selectPoint), {id: id, index: index})
-        this.selectPoint = {condition: {}}
+        this.selectPoint = {condition: _.cloneDeep(this.selectPoint.condition)}
       } else {
         addObj = _.assign({}, assign, {id: id, index: index})
         this.selectPoint = addObj
@@ -526,6 +529,13 @@ export default {
       this.shapeList.unshift(this.createShape(id, x, y, 40, 30, index))
       this.$refs.pointDescriptionEnglish.focus()
       return addObj
+    },
+    modifyPoint () {
+      let foundPoint  = _.findIndex(this.valueList, {id: this.selectPoint.id})
+      if (foundPoint != -1) {
+        this.$set(this.valueList, foundPoint, _.assign(this.valueList[foundPoint], _.cloneDeep(this.selectPoint)))
+      }
+      this.selectPoint = {condition: {}}
     },
     createShape (id, x, y, width, height, name) {
       return {
@@ -774,27 +784,22 @@ export default {
       }
     },
     savePointList () {
-      this.confirmDialog(
-        ()=>{
-          this.$http.post('/data/saveCaseData', {
-            caseNumber: this.caseNumber,
-            data: {
-              konvaGroupList: _.cloneDeep(this.konvaGroupList).map(i=>{
-                i.list.map(e=>{e.sceneFunc = undefined; e.dragBoundFunc = undefined; return e})
-                i.dragBoundFunc = undefined
-                return i
-              }),
-              valueList: this.valueList,
-              shapeList: _.cloneDeep(this.shapeList).map(e=>{e.sceneFunc = undefined; e.dragBoundFunc = undefined; return e}),
-              konvaRelation: this.konvaRelation
-            }
-          })
-          .then(res=>{
-            this.$message({type: 'success', message: '保存成功', showClose: true})
-          })
-        },
-        {question: '确认保存?', success: '操作完成', cancel: '已取消'}
-      )
+      this.$http.post('/data/saveCaseData', {
+        caseNumber: this.caseNumber,
+        data: {
+          konvaGroupList: _.cloneDeep(this.konvaGroupList).map(i=>{
+            i.list.map(e=>{e.sceneFunc = undefined; e.dragBoundFunc = undefined; return e})
+            i.dragBoundFunc = undefined
+            return i
+          }),
+          valueList: this.valueList,
+          shapeList: _.cloneDeep(this.shapeList).map(e=>{e.sceneFunc = undefined; e.dragBoundFunc = undefined; return e}),
+          konvaRelation: this.konvaRelation
+        }
+      })
+      .then(res=>{
+        this.$message({type: 'success', message: '保存成功', showClose: true})
+      })
     },
     toNextPage () {
       this.$router.push('/test-arrange')

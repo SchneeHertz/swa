@@ -117,28 +117,23 @@ export default {
       )
     },
     saveUserList () {
-      this.confirmDialog(
-        ()=>{
-          this.$http.post('/data/saveUserGroup', {
-            userList: this.userList
-          })
+      this.$http.post('/data/saveUserGroup', {
+        userList: this.userList
+      })
+      .then(res=>{
+        if(res.data.success){
+          this.$http.get('/data/getUserGroup')
           .then(res=>{
-            if(res.data.success){
-              this.$http.get('/data/getUserGroup')
-              .then(res=>{
-                this.userList = res.data.userList
-              })
-              this.$message({type: 'success', message: res.data.info, showClose: true})
-            } else {
-              this.$message({type: 'warning', message: res.data.info, showClose: true})
-            }
+            this.userList = res.data.userList
           })
-          .catch(() => {
-            this.$message({type: 'warning', message: '未知错误', showClose: true})
-          })
-        },
-        {question: '保存用户权限修改?', success: '已保存', cancel: '已取消'}
-      )
+          this.$message({type: 'success', message: res.data.info, showClose: true})
+        } else {
+          this.$message({type: 'warning', message: res.data.info, showClose: true})
+        }
+      })
+      .catch(() => {
+        this.$message({type: 'warning', message: '未知错误', showClose: true})
+      })
     },
     confirmDialog(callback, message = {question: '继续?', success: '操作完成', cancel: '已取消'}, failCallback = new Function) {
       this.$confirm(message.question, '提示', {confirmButtonText: '确定', cancelButtonText: '取消', type: 'warning'})

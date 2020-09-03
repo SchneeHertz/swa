@@ -663,13 +663,14 @@ export default {
             let findGIndex = _.findIndex(this.methodBaseData, {id: methodRegulation.id})
             this.methodBaseData.splice(findGIndex, 1)
           })
+          let methodBaseDataIndId = _id()
           this.methodBaseData.push({
-            id: _id(),
+            id: methodBaseDataIndId,
             name: methodG2.map(e=>e.name).join(', '),
             list: _.chain(methodG2).map(e=>e.list).flatten().uniqBy(e=>{
               return pointHashObj[e.id] ? pointHashObj[e.id] : _id()
             }).map((e, index)=>{
-              e.id = pointHashObj[e.id] + '_'
+              e.id = pointHashObj[e.id] + '_' + methodBaseDataIndId
               e.index = index + 1
               return e
             }).value(),
@@ -677,12 +678,12 @@ export default {
               regulation.grouped = true
               let tempList = []
               regulation.list.map(oldId=>{
-                tempList.push(pointHashObj[oldId] + '_')
+                tempList.push(pointHashObj[oldId] + '_' + methodBaseDataIndId)
               })
               regulation.list = tempList
               let tempObj = {}
               _.forIn(regulation.subclauseVal, (code, oldId)=>{
-                tempObj[pointHashObj[oldId] + '_'] = code
+                tempObj[pointHashObj[oldId] + '_' + methodBaseDataIndId] = code
               })
               regulation.subclauseVal = tempObj
               return regulation

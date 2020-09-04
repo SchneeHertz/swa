@@ -119,10 +119,15 @@
                 @click="reGeneMethodList" 
               >重新生成空列表</el-button>
             </el-tooltip>
+            <el-switch
+              class="method-switch"
+              v-model="hideEmptyMethod"
+              active-text="隐藏空Method"
+            ></el-switch>
           </div>
           <overlay-scrollbars class="method-pane">
             <div
-              v-for="method in methodBaseData"
+              v-for="method in displayMethodBaseData"
               :key="method.id"
               class="method-list-item"
               :class="{'active-method': selectMethod.id == method.id}"
@@ -274,7 +279,8 @@ export default {
       selectClient: undefined,
       searchString: undefined,
       loadTasklistLoading: false,
-      copyedList: []
+      copyedList: [],
+      hideEmptyMethod: false
     }
   },
   computed: {
@@ -318,6 +324,13 @@ export default {
       return _.chain(this.methodBaseData).map(e=>e.regulationListForClient)
         .flatten().compact().map(e=>e.client)
         .flatten().compact().uniq().sortBy().unshift(undefined).value()
+    },
+    displayMethodBaseData () {
+      if (this.hideEmptyMethod) {
+        return _.filter(this.methodBaseData, methodG=>methodG.list.length != 0)
+      } else {
+        return this.methodBaseData
+      }
     }
   },
   mounted () {
@@ -407,6 +420,7 @@ export default {
       })
       .finally(()=>{
         this.loadTasklistLoading = false
+        this.hideEmptyMethod = true
       })
     },
     geneMethodList () {
@@ -656,6 +670,9 @@ export default {
           })
         })
       })
+      _.forIn(this.methodBaseData, methodG=>{
+        methodG.regulationList = _(methodG.regulationList).sortBy(r=>r.list.length).reverse().value()
+      })
       _.forIn(_.groupBy(this.methodBaseData, 'methodGroup'), (methodG, methodGroup)=>{
         if (methodGroup != 'undefined') {
           let methodG2 = _.sortBy(_.cloneDeep(methodG), 'methodGroupRank')
@@ -691,6 +708,7 @@ export default {
           })
         }
       })
+      this.hideEmptyMethod = true
       console.log(`used time: ${new Date() - startTime}ms`)
       console.log(pointPicked)
     },
@@ -915,7 +933,7 @@ export default {
       this.$message({type: 'success', message: 'Copyed!', showClose: true})
     },
     pasteList (method) {
-      method.list = _.cloneDeep(this.copyedList)
+      method.list = method.list.concat(_.cloneDeep(this.copyedList))
       this.$message({type: 'success', message: 'Pasted!', showClose: true})
     }
   }
@@ -968,6 +986,9 @@ export default {
   height: 38vh
   border-bottom: solid 1px rgba(0,0,0,0.125)
 
+.method-switch
+  margin: 4px 2px 0 0
+  float: right
 .active-method
   background-color: #FFCC66
 .regulation-pane
@@ -1009,6 +1030,8 @@ export default {
         .el-input__inner
           padding: 0 5px
           text-align: center
+          font-weight: bold
+          font-size: 14px
       .el-select
         width: 15.5em
       .close-circle-button

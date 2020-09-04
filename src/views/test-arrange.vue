@@ -397,14 +397,15 @@ export default {
         if (_.isArray(result.shapeList) && !_.isEmpty(result.shapeList)) {
           this.shapeList = result.shapeList.map(e=>{e.sceneFunc = sceneFunc; e.dragBoundFunc = dragBoundFunc; return e})
         }
+        if (_.isArray(result.valueList) && !_.isEmpty(result.valueList)) {
+          this.pointList = result.valueList
+        }
         if (_.isArray(result.methodBaseData) && !_.isEmpty(result.methodBaseData)) {
           this.methodBaseData = result.methodBaseData
+          this.refreshDescription(this.methodBaseData)
           if (this.selectMethod.id) {
             this.handleSelectMethod(this.selectMethod.id)
           }
-        }
-        if (_.isArray(result.valueList) && !_.isEmpty(result.valueList)) {
-          this.pointList = result.valueList
         }
         if (_.isArray(result.konvaRelation) && !_.isEmpty(result.konvaRelation)) {
           this.pointRelation = result.konvaRelation
@@ -421,6 +422,19 @@ export default {
       .finally(()=>{
         this.loadTasklistLoading = false
         this.hideEmptyMethod = true
+      })
+    },
+    refreshDescription (methodBaseData) {
+      _.forIn(methodBaseData, methodG=>{
+        _.forIn(methodG.list, listGroup=>{
+          _.forIn(listGroup.list, point=>{
+            let foundSourcePoint = _.find(this.pointList, {id: point.id})
+            if (foundSourcePoint) {
+              point.englishDescription = foundSourcePoint.englishDescription
+              point.chineseDescription = foundSourcePoint.chineseDescription
+            }
+          })
+        })
       })
     },
     geneMethodList () {

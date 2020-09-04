@@ -239,6 +239,7 @@ export default {
   },
   computed: {
     caseNumber: geneVuexValue('caseNumber'),
+    pointList: geneVuexValue('valueList'),
     methodBaseData: geneVuexValue('methodBaseData'),
     displayTaskList () {
       let taskTree = []
@@ -270,11 +271,15 @@ export default {
     loadTaskList () {
       this.$http.post('/data/getCaseData', {
         caseNumber: this.caseNumber,
-        list: ['taskList', 'methodBaseData']
+        list: ['taskList', 'valueList', 'methodBaseData']
       })
       .then(({data: {result}})=>{
+        if (_.isArray(result.valueList) && !_.isEmpty(result.valueList)) {
+          this.pointList = result.valueList
+        }
         if (_.isArray(result.methodBaseData) && !_.isEmpty(result.methodBaseData)) {
           this.methodBaseData = result.methodBaseData
+          this.refreshDescription(this.methodBaseData)
         }
         if (_.isArray(result.taskList) && !_.isEmpty(result.taskList)) {
           this.$confirm('之前已保存TaskList，载入已保存的TaskList，还是重新生成TaskList', '确认信息', {
@@ -293,6 +298,19 @@ export default {
         } else {
           this.geneTaskList()
         }
+      })
+    },
+    refreshDescription (methodBaseData) {
+      _.forIn(methodBaseData, methodG=>{
+        _.forIn(methodG.list, listGroup=>{
+          _.forIn(listGroup.list, point=>{
+            let foundSourcePoint = _.find(this.pointList, {id: point.id})
+            if (foundSourcePoint) {
+              point.englishDescription = foundSourcePoint.englishDescription
+              point.chineseDescription = foundSourcePoint.chineseDescription
+            }
+          })
+        })
       })
     },
     geneTaskList () {

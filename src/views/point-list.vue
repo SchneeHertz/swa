@@ -33,6 +33,7 @@
                     @change="autoCorrect"
                     :autosize="{ minRows: 2, maxRows: 4}"
                     ref="pointDescriptionEnglish"
+                    id="pointDescriptionEnglish"
                   ></el-input>
                 </el-col>
                 <el-col :span="12">
@@ -243,6 +244,7 @@
 
 import BaseHeader from '@/components/BaseHeader.vue'
 import NameFormItem from '@/components/NameFormItem.vue'
+import '@/components/areacomplete.js'
 
 import {generate as _id } from 'shortid'
 
@@ -271,7 +273,15 @@ export default {
       useStyle: false,
       selectPoint: {condition: {}},
       searchEnglishString: '',
-      searchChineseString: ''
+      searchChineseString: '',
+      preList: [
+        'plastic', 'soft plastic', 'rubber', 'coating', 'glitter', 'rubber coating', 'paper label', 'ceramic', 'elastic', 'printing', 'feather', 
+        'lubricant', 'adhesive', 'non-woven', 'string', 'polyfiber', 'plywood', 'flocking', 'fabric', 'woven band', 'embroidery', 'hardboard',
+        'thread', 'lacquer', 'silicone rubber', 'battery', 'satin ribbon', 'hook and loop fastener',
+        'interlayer', 'wire jacket', 'backing', 'sewn-in label', 'corrugated', 'laminated', 'electrolytic capacitor',  'surfaced', 'lettering',
+        'chassis', 'blister', 'instruction', 'sticker', 'clothes',
+        'transparent', 'translucent', 'multi-color', 'iridescent', 'silvery', 'apricot', 'purple', 'off-white'
+      ]
     }
   },
   computed: {
@@ -399,6 +409,10 @@ export default {
       return this.valueList
         .filter(data => !this.searchEnglishString || data.englishDescription.toLowerCase().includes(this.searchEnglishString.toLowerCase()))
         .filter(data => !this.searchChineseString || data.chineseDescription.toLowerCase().includes(this.searchChineseString.toLowerCase()))
+    },
+    wordList () {
+      return  _(this.valueList).map(point=>point.englishDescription.split(/[^a-zA-Z0-9-]+/))
+        .flatten().filter(word=>word.length > 6).map(word=>word.toLowerCase()).concat(this.preList).uniq().sortBy().value()
     }
   },
   mounted () {
@@ -407,6 +421,20 @@ export default {
     this.$nextTick(()=>{
       if (!_.isEmpty(this.styleList)) {
         this.useStyle = true
+      }
+    })
+    let that = this
+    $('#pointDescriptionEnglish').areacomplete({
+      wordCount: 1,
+      mode: 'inner',
+      on: {
+        query (text, cb) {
+          if(/[A-Z]/.test(text[0])){
+            cb(_.filter(that.wordList, word=>word.toLowerCase().indexOf(text.toLowerCase()) == 0).map(word=>_.upperFirst(word)))
+          } else {
+            cb(_.filter(that.wordList, word=>word.toLowerCase().indexOf(text.toLowerCase()) == 0))
+          }
+        }
       }
     })
   },
@@ -887,4 +915,23 @@ export default {
     padding: 10px 20px
   .point-option .el-select--mini
     width: 100%
+
+ul.auto-list
+  position: absolute
+  margin: 0
+  padding: 0
+  border: 1px solid rgba(0, 0, 0, 0.125)
+  border-radius: 4px
+  background-color: white
+  list-style: none
+  z-index: 100
+  font-size: 14px
+ul.auto-list > li:hover, ul.auto-list > li[data-selected=true]
+	background-color: cornflowerblue
+ul.auto-list > li
+  cursor: default
+  padding: 4px
+mark
+  background-color: transparent
+  font-weight: bold
 </style>

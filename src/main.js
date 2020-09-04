@@ -19,6 +19,7 @@ Vue.use(ElementUI)
 Vue.use(VueKonva)
 window._ = _
 window.$ = $
+window.jQuery = $
 
 Vue.config.productionTip = false
 

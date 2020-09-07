@@ -42,6 +42,14 @@
   </div>
 </template>
 <script>
+
+function geneVuexValue (property) {
+  return {
+    get () { return this.$store.state[property] },
+    set (newVal) { this.$store.commit('updateValue', {key: property, value: newVal}) }
+  }
+}
+
 export default {
   name:'BaseHeader',
   props:{
@@ -51,6 +59,7 @@ export default {
     return {}
   },
   computed:{
+    viewSetting: geneVuexValue('viewSetting'),
     displayUsername () {
       return this.$store.state.username
     },
@@ -63,6 +72,7 @@ export default {
     this.$store.commit('updateValue', {key: 'username', value: userData.name})
     this.$store.commit('updateValue', {key: 'authority', value: userData.authority})
     this.$store.commit('updateValue', {key: 'otsId', value: userData.otsId})
+    this.viewSetting = JSON.parse(localStorage.getItem('viewSetting'))
   },
   methods:{
     handleSelect (index) {

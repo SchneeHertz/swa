@@ -17,7 +17,8 @@ export default new Vuex.Store({
     caseTestitemList: [],
     existCaseInfo: {},
     methodBaseData: {},
-    conditionList: {}
+    conditionList: {},
+    viewSetting: {}
   },
   mutations: {
     updateValue (state, payload) {

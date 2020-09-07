@@ -10,10 +10,10 @@
   >
     <div class="item-group" :key="el.id" v-for="(el, index) in realValue">
       <div class="item">
-        <div class="item-description">{{el.index}}. {{el.englishDescription}}</div>
+        <div class="item-description">{{el.index}}. {{language ? el[language] : el.englishDescription}}</div>
         <el-button type="text" class="close-circle-button" icon="el-third-icon-close" @click="removePoint(realValue, index)" plain />
       </div>
-      <group-nest class="item-sub" :list="el.elements" />
+      <group-nest class="item-sub" :list="el.elements" :language="language"/>
     </div>
   </draggable>
 </template>
@@ -36,7 +36,8 @@ export default {
       required: false,
       type: Array,
       default: null
-    }
+    },
+    language: String
   },
   computed: {
     dragOptions() {

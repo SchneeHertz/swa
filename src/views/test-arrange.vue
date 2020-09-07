@@ -26,7 +26,7 @@
                 :key="point.id"
                 class="point-list-item"
               >
-                {{point.index}}. {{point.englishDescription}}
+                {{point.index}}. {{viewSetting.language ? point[viewSetting.language] : point.englishDescription}}
               </div>
             </draggable>
           </overlay-scrollbars>
@@ -71,6 +71,7 @@
               v-for="group in pointGroupList"
               :key="group.id"
               :class="{'isSelectedGroup': selectRegulationGroupList.includes(group.id)}"
+              :style="{width: viewSetting.column == 1 ? '43em' : viewSetting.column == 2 ? '21em': '21em'}"
             >
               <template #header>
                 <el-input
@@ -94,9 +95,12 @@
                 </el-select>
                 <el-button type="text" class="close-circle-button" icon="el-third-icon-close" @click="removeGroup(group.id)" plain/>
               </template>
-              <group-nest v-model="group.list" />
+              <group-nest v-model="group.list" :language="viewSetting.language"/>
             </el-card>
-            <el-card class="add-group-card">
+            <el-card
+              class="add-group-card"
+              :style="{width: viewSetting.column == 1 ? '43em' : viewSetting.column == 2 ? '21em': '21em'}"
+            >
               <el-tooltip effect="dark" content="排序" placement="top">
                 <el-button type="primary" class="bigicon add-button" icon="el-third-icon-reload" circle @click="reSortGroupList"></el-button>
               </el-tooltip>
@@ -292,6 +296,7 @@ export default {
     shapeList: geneVuexValue('shapeList'),
     pointRelation: geneVuexValue('konvaRelation'),
     methodBaseData: geneVuexValue('methodBaseData'),
+    viewSetting: geneVuexValue('viewSetting'),
     displayRegulation: {
       get () {
         return this.selectMethod.regulationList || []
@@ -995,7 +1000,6 @@ export default {
 .isSelectedGroup
   box-shadow: 0px 0px 2px 2px rgba(0,128,255,0.6)
 .add-group-card
-  width: 21em
   height: 6em
   display: inline-block
   margin: 4px
@@ -1040,7 +1044,6 @@ export default {
       height: calc(100vh - 2em)
     .el-card.group-card
       margin: 4px 6px
-      width: 21em
       display: inline-block
       vertical-align: top
     .el-card__header

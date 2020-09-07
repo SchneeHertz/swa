@@ -23,7 +23,8 @@ const routes = [
   {
     path: '/case-info',
     name: 'CaseInfo',
-    component: () => import('../views/case-info.vue')
+    component: () => import('../views/case-info.vue'),
+    props: (route) => ({ case: route.query.case })
   },
   {
     path: '/point-list',

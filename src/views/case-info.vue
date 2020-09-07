@@ -106,6 +106,7 @@
 <script>
 import BaseHeader from '@/components/BaseHeader.vue'
 const OTSHOST = '10.168.128.44/OTS_UAT'
+// const OTSHOST = 'cnots.sgs.net/OTS'
 
 function geneVuexValue (property) {
   return {
@@ -119,14 +120,17 @@ export default {
   components: {
     BaseHeader
   },
+  props: {
+    case: String
+  },
   data () {
     return {
       loadOTSTestitemLoading: false,
-      selectedTestitemList: {},
-      conditionList: {}
+      selectedTestitemList: {}
     }
   },
   computed: {
+    conditionList: geneVuexValue('conditionList'),
     caseNumber: geneVuexValue('caseNumber'),
     caseTestitemList: geneVuexValue('caseTestitemList'),
     existCaseInfo: geneVuexValue('existCaseInfo'),
@@ -175,6 +179,12 @@ export default {
   mounted () {
     if (_.isEmpty(this.conditionList)) {
       this.loadConditionList()
+      .then(()=>{
+        if (this.case) {
+          this.caseNumber = this.case
+          this.loadAllData()
+        }
+      })
     }
   },
   methods: {
@@ -258,7 +268,21 @@ export default {
         }
         if (_.isArray(result.methodBaseData) && !_.isEmpty(result.methodBaseData)) {
           this.methodBaseData = result.methodBaseData
+          this.refreshDescription(this.methodBaseData)
         }
+      })
+    },
+    refreshDescription (methodBaseData) {
+      _.forIn(methodBaseData, methodG=>{
+        _.forIn(methodG.list, listGroup=>{
+          _.forIn(listGroup.list, point=>{
+            let foundSourcePoint = _.find(this.valueList, {id: point.id})
+            if (foundSourcePoint) {
+              point.englishDescription = foundSourcePoint.englishDescription
+              point.chineseDescription = foundSourcePoint.chineseDescription
+            }
+          })
+        })
       })
     },
     loadCaseTestitem () {

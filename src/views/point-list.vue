@@ -917,6 +917,7 @@ export default {
     width: 100%
 
 ul.auto-list
+  display: none
   position: absolute
   margin: 0
   padding: 0

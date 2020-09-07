@@ -15,7 +15,7 @@ const getCaseData = async (ctx) => {
   } else {
     ctx.body = {
       success: false,
-      info: '参数错误'
+      info: 'Case号错误'
     }
   }
 }
@@ -33,7 +33,7 @@ const saveCaseData = async (ctx) => {
   } else {
     ctx.body = {
       success: false,
-      info: '参数错误'
+      info: 'Case号错误'
     }
   }
 }

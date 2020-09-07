@@ -44,6 +44,7 @@ const getUserHistoryCase = (duration, userData) => {
     .get('case')
     .filter(c=>new Date() - new Date(c.date) < duration)
     .sortBy('date')
+    .reverse()
     .value()
 }
 

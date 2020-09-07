@@ -1,4 +1,5 @@
 const db = require('../models/caseData')
+const us = require('../models/userStore')
 const _ = require('lodash')
 const jwt = require('jsonwebtoken')
 
@@ -45,7 +46,18 @@ const getUserData = (ctx) =>{
   }
 }
 
+const getUserHistoryCase = async (ctx) => {
+  let duration = ctx.request.body.duration
+  let userData = getUserData(ctx)
+  let result = us.getUserHistoryCase(duration, userData)
+  ctx.body = {
+    success: true,
+    result: result
+  }
+}
+
 module.exports = {
   getCaseData,
-  saveCaseData
+  saveCaseData,
+  getUserHistoryCase
 }

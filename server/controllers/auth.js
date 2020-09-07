@@ -29,7 +29,8 @@ const userAuth = async (ctx) => {
           const userToken = {
             name: findUser.name,
             authority: findUser.authority,
-            otsId: findUser.otsId
+            otsId: findUser.otsId,
+            id: findUser.id
           }
           const secret = config.jwt_seed
           const token = jwt.sign(userToken,secret)

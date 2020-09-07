@@ -18,4 +18,6 @@ router.post('/saveUserGroup', generalData.saveUserGroup)
 router.post('/getCaseData', caseData.getCaseData)
 router.post('/saveCaseData', caseData.saveCaseData)
 
+router.post('/getUserHistoryCase', caseData.getUserHistoryCase)
+
 module.exports = router

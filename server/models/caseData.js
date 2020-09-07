@@ -4,6 +4,7 @@ const path = require('path')
 const _ = require('lodash')
 const fs = require('fs')
 
+const userStore = require('./userStore')
 
 const prepareCaseData = (caseNumber)=>{
   let dir = `../../dbs/caseData/${caseNumber.slice(0, 9)}`
@@ -20,6 +21,7 @@ const saveCaseData = (caseNumber, data, userData)=>{
   _.forIn(data, (value, key)=>{
     db.set(key, value).write()
   })
+  userStore.updateUserHistoryCase(caseNumber, userData)
   db.get('log').push({
     user: userData.name,
     date: new Date().toLocaleString()

@@ -273,30 +273,35 @@ export default {
         caseNumber: this.caseNumber,
         list: ['taskList', 'valueList', 'methodBaseData']
       })
-      .then(({data: {result}})=>{
-        if (_.isArray(result.valueList) && !_.isEmpty(result.valueList)) {
-          this.pointList = result.valueList
-        }
-        if (_.isArray(result.methodBaseData) && !_.isEmpty(result.methodBaseData)) {
-          this.methodBaseData = result.methodBaseData
-          this.refreshDescription(this.methodBaseData)
-        }
-        if (_.isArray(result.taskList) && !_.isEmpty(result.taskList)) {
-          this.$confirm('之前已保存TaskList，载入已保存的TaskList，还是重新生成TaskList', '确认信息', {
-            distinguishCancelAndClose: true,
-            confirmButtonText: '读取已保存的TaskList',
-            cancelButtonText: '重新生成TaskList'
-          })
-          .then(() => {
-            this.taskList = result.taskList
-          })
-          .catch(action => {
-            if (action == 'cancel') {
-              this.geneTaskList()
-            }
-          })
+      .then(res=>{
+        if (res.data.success) {
+          let result = res.data.result
+          if (_.isArray(result.valueList) && !_.isEmpty(result.valueList)) {
+            this.pointList = result.valueList
+          }
+          if (_.isArray(result.methodBaseData) && !_.isEmpty(result.methodBaseData)) {
+            this.methodBaseData = result.methodBaseData
+            this.refreshDescription(this.methodBaseData)
+          }
+          if (_.isArray(result.taskList) && !_.isEmpty(result.taskList)) {
+            this.$confirm('之前已保存TaskList，载入已保存的TaskList，还是重新生成TaskList', '确认信息', {
+              distinguishCancelAndClose: true,
+              confirmButtonText: '读取已保存的TaskList',
+              cancelButtonText: '重新生成TaskList'
+            })
+            .then(() => {
+              this.taskList = result.taskList
+            })
+            .catch(action => {
+              if (action == 'cancel') {
+                this.geneTaskList()
+              }
+            })
+          } else {
+            this.geneTaskList()
+          }
         } else {
-          this.geneTaskList()
+          this.$message({type: 'error', message: res.data.info, showClose: true})
         }
       })
     },

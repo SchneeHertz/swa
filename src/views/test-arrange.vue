@@ -379,45 +379,52 @@ export default {
         caseNumber: this.caseNumber,
         list: ['methodBaseData', 'konvaGroupList', 'valueList', 'shapeList', 'konvaRelation', 'caseCondition', 'caseTestitem']
       })
-      .then(({data: {result}})=>{
-        if (_.isArray(result.konvaGroupList) && !_.isEmpty(result.konvaGroupList)) {
-          this.konvaGroupList = result.konvaGroupList.map(i=>{
-            i.list.map(e=>{e.sceneFunc = sceneFunc; e.dragBoundFunc = dragBoundFunc; return e})
-            i.dragBoundFunc = (pos) => {
-              let width =  window.innerWidth*0.4 - i.mainPart.x - 80
-              let height = window.innerHeight - 80 - i.mainPart.y - 50
-              return {
-                x: pos.x < - i.mainPart.x ? - i.mainPart.x : pos.x > width ? width : pos.x,
-                y: pos.y < - i.mainPart.y ? - i.mainPart.y : pos.y > height ? height : pos.y,
+      .then(res=>{
+        if (res.data.success) {
+          let result = res.data.result
+          if (_.isArray(result.konvaGroupList) && !_.isEmpty(result.konvaGroupList)) {
+            this.konvaGroupList = result.konvaGroupList.map(i=>{
+              i.list.map(e=>{e.sceneFunc = sceneFunc; e.dragBoundFunc = dragBoundFunc; return e})
+              i.dragBoundFunc = (pos) => {
+                let width =  window.innerWidth*0.4 - i.mainPart.x - 80
+                let height = window.innerHeight - 80 - i.mainPart.y - 50
+                return {
+                  x: pos.x < - i.mainPart.x ? - i.mainPart.x : pos.x > width ? width : pos.x,
+                  y: pos.y < - i.mainPart.y ? - i.mainPart.y : pos.y > height ? height : pos.y,
+                }
               }
-            }
-            return i
-          })
-        }
-        if (_.isArray(result.shapeList) && !_.isEmpty(result.shapeList)) {
-          this.shapeList = result.shapeList.map(e=>{e.sceneFunc = sceneFunc; e.dragBoundFunc = dragBoundFunc; return e})
-        }
-        if (_.isArray(result.valueList) && !_.isEmpty(result.valueList)) {
-          this.pointList = result.valueList
-        }
-        if (_.isArray(result.methodBaseData) && !_.isEmpty(result.methodBaseData)) {
-          this.methodBaseData = result.methodBaseData
-          this.refreshDescription(this.methodBaseData)
-          if (this.selectMethod.id) {
-            this.handleSelectMethod(this.selectMethod.id)
+              return i
+            })
           }
+          if (_.isArray(result.shapeList) && !_.isEmpty(result.shapeList)) {
+            this.shapeList = result.shapeList.map(e=>{e.sceneFunc = sceneFunc; e.dragBoundFunc = dragBoundFunc; return e})
+          }
+          if (_.isArray(result.valueList) && !_.isEmpty(result.valueList)) {
+            this.pointList = result.valueList
+          }
+          if (_.isArray(result.methodBaseData) && !_.isEmpty(result.methodBaseData)) {
+            this.methodBaseData = result.methodBaseData
+            this.refreshDescription(this.methodBaseData)
+            if (this.selectMethod.id) {
+              this.handleSelectMethod(this.selectMethod.id)
+            }
+          }
+          if (_.isArray(result.konvaRelation) && !_.isEmpty(result.konvaRelation)) {
+            this.pointRelation = result.konvaRelation
+          }
+          if (_.isArray(result.caseTestitem) && !_.isEmpty(result.caseTestitem)) {
+            this.caseTestitemList = result.caseTestitem
+          }
+          if (result.caseCondition) {
+            _.forIn(result.caseCondition, group=>{
+              _.forIn(group, indCondition=>{
+                this.$set(this.existCaseInfo, indCondition.id, indCondition.value)
+              })
+            })
+          }
+        } else {
+          this.$message({type: 'error', message: res.data.info, showClose: true})
         }
-        if (_.isArray(result.konvaRelation) && !_.isEmpty(result.konvaRelation)) {
-          this.pointRelation = result.konvaRelation
-        }
-        if (_.isArray(result.caseTestitem) && !_.isEmpty(result.caseTestitem)) {
-          this.caseTestitemList = result.caseTestitem
-        }
-        _.forIn(result.caseCondition, group=>{
-          _.forIn(group, indCondition=>{
-            this.$set(this.existCaseInfo, indCondition.id, indCondition.value)
-          })
-        })
       })
       .finally(()=>{
         this.loadTasklistLoading = false

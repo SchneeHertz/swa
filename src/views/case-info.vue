@@ -193,16 +193,23 @@ export default {
         caseNumber: this.caseNumber,
         list: ['caseCondition', 'caseTestitem']
       })
-      .then(({data: {result}})=>{
-        if (_.isArray(result.caseTestitem) && !_.isEmpty(result.caseTestitem)) {
-          this.caseTestitemList = result.caseTestitem
+      .then(res=>{
+        if (res.data.success) {
+          let result = res.data.result
+          if (_.isArray(result.caseTestitem) && !_.isEmpty(result.caseTestitem)) {
+            this.caseTestitemList = result.caseTestitem
+          }
+          if (result.caseCondition) {
+            _.forIn(result.caseCondition['simpleCaseConditionList'], condition=>{
+              this.$set(_.find(this.simpleCaseConditionList, {id: condition.id}), 'value', condition.value)
+            })
+            _.forIn(result.caseCondition['afterwardCaseConditionList'], condition=>{
+              this.$set(_.find(this.afterwardCaseConditionList, {id: condition.id}), 'value', condition.value)
+            })
+          }
+        } else {
+          this.$message({type: 'error', message: res.data.info, showClose: true})
         }
-        _.forIn(result.caseCondition['simpleCaseConditionList'], condition=>{
-          this.$set(_.find(this.simpleCaseConditionList, {id: condition.id}), 'value', condition.value)
-        })
-        _.forIn(result.caseCondition['afterwardCaseConditionList'], condition=>{
-          this.$set(_.find(this.afterwardCaseConditionList, {id: condition.id}), 'value', condition.value)
-        })
       })
     },
     loadAllData () {
@@ -228,47 +235,54 @@ export default {
         caseNumber: this.caseNumber,
         list: ['caseCondition', 'caseTestitem', 'konvaGroupList', 'valueList', 'shapeList', 'konvaRelation', 'methodBaseData']
       })
-      .then(({data: {result}})=>{
-        if (_.isArray(result.caseTestitem) && !_.isEmpty(result.caseTestitem)) {
-          this.caseTestitemList = result.caseTestitem
-        }
-        _.forIn(result.caseCondition['simpleCaseConditionList'], condition=>{
-          this.$set(_.find(this.simpleCaseConditionList, {id: condition.id}), 'value', condition.value)
-        })
-        _.forIn(result.caseCondition['afterwardCaseConditionList'], condition=>{
-          this.$set(_.find(this.afterwardCaseConditionList, {id: condition.id}), 'value', condition.value)
-        })
-        _.forIn(result.caseCondition, group=>{
-          _.forIn(group, indCondition=>{
-            this.$set(this.existCaseInfo, indCondition.id, indCondition.value)
-          })
-        })
-        if (_.isArray(result.konvaGroupList) && !_.isEmpty(result.konvaGroupList)) {
-          this.konvaGroupList = result.konvaGroupList.map(i=>{
-            i.list.map(e=>{e.sceneFunc = sceneFunc; e.dragBoundFunc = dragBoundFunc; return e})
-            i.dragBoundFunc = (pos) => {
-              let width =  window.innerWidth*0.4 - i.mainPart.x - 80
-              let height = window.innerHeight - 80 - i.mainPart.y - 50
-              return {
-                x: pos.x < - i.mainPart.x ? - i.mainPart.x : pos.x > width ? width : pos.x,
-                y: pos.y < - i.mainPart.y ? - i.mainPart.y : pos.y > height ? height : pos.y,
+      .then(res=>{
+        if (res.data.success) {
+          let result = res.data.result
+          if (_.isArray(result.caseTestitem) && !_.isEmpty(result.caseTestitem)) {
+            this.caseTestitemList = result.caseTestitem
+          }
+          if (result.caseCondition) {
+            _.forIn(result.caseCondition['simpleCaseConditionList'], condition=>{
+              this.$set(_.find(this.simpleCaseConditionList, {id: condition.id}), 'value', condition.value)
+            })
+            _.forIn(result.caseCondition['afterwardCaseConditionList'], condition=>{
+              this.$set(_.find(this.afterwardCaseConditionList, {id: condition.id}), 'value', condition.value)
+            })
+            _.forIn(result.caseCondition, group=>{
+              _.forIn(group, indCondition=>{
+                this.$set(this.existCaseInfo, indCondition.id, indCondition.value)
+              })
+            })
+          }
+          if (_.isArray(result.konvaGroupList) && !_.isEmpty(result.konvaGroupList)) {
+            this.konvaGroupList = result.konvaGroupList.map(i=>{
+              i.list.map(e=>{e.sceneFunc = sceneFunc; e.dragBoundFunc = dragBoundFunc; return e})
+              i.dragBoundFunc = (pos) => {
+                let width =  window.innerWidth*0.4 - i.mainPart.x - 80
+                let height = window.innerHeight - 80 - i.mainPart.y - 50
+                return {
+                  x: pos.x < - i.mainPart.x ? - i.mainPart.x : pos.x > width ? width : pos.x,
+                  y: pos.y < - i.mainPart.y ? - i.mainPart.y : pos.y > height ? height : pos.y,
+                }
               }
-            }
-            return i
-          })
-        }
-        if (_.isArray(result.valueList) && !_.isEmpty(result.valueList)) {
-          this.valueList = result.valueList
-        }
-        if (_.isArray(result.shapeList) && !_.isEmpty(result.shapeList)) {
-          this.shapeList = result.shapeList.map(e=>{e.sceneFunc = sceneFunc; e.dragBoundFunc = dragBoundFunc; return e})
-        }
-        if (_.isArray(result.konvaRelation) && !_.isEmpty(result.konvaRelation)) {
-          this.konvaRelation = result.konvaRelation
-        }
-        if (_.isArray(result.methodBaseData) && !_.isEmpty(result.methodBaseData)) {
-          this.methodBaseData = result.methodBaseData
-          this.refreshDescription(this.methodBaseData)
+              return i
+            })
+          }
+          if (_.isArray(result.valueList) && !_.isEmpty(result.valueList)) {
+            this.valueList = result.valueList
+          }
+          if (_.isArray(result.shapeList) && !_.isEmpty(result.shapeList)) {
+            this.shapeList = result.shapeList.map(e=>{e.sceneFunc = sceneFunc; e.dragBoundFunc = dragBoundFunc; return e})
+          }
+          if (_.isArray(result.konvaRelation) && !_.isEmpty(result.konvaRelation)) {
+            this.konvaRelation = result.konvaRelation
+          }
+          if (_.isArray(result.methodBaseData) && !_.isEmpty(result.methodBaseData)) {
+            this.methodBaseData = result.methodBaseData
+            this.refreshDescription(this.methodBaseData)
+          }
+        } else {
+          this.$message({type: 'error', message: res.data.info, showClose: true})
         }
       })
     },

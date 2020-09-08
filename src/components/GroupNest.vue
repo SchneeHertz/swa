@@ -66,8 +66,8 @@ export default {
 .ghost
   opacity: 0.5
 .close-circle-button
-  padding: 1px
-  margin: -2px -2px
+  padding: 2px
+  margin: -1px -2px
   float: right
 </style>
 

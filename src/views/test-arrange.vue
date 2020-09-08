@@ -84,6 +84,7 @@
                   v-model="displaySubclauseVal[group.id]"
                   @change="$forceUpdate()"
                   placeholder="Sub Clause"
+                  :style="{width: viewSetting.column == 1 ? '36em' : viewSetting.column == 2 ? '15.5em': '15.5em'}"
                 >
                   <el-option :value="undefined" lable=""></el-option>
                   <el-option
@@ -1004,7 +1005,7 @@ export default {
 .add-group-card
   height: 6em
   display: inline-block
-  margin: 4px
+  margin: 4px 6px
   text-align: center
 .add-group-card .add-button
   position: relative
@@ -1053,13 +1054,12 @@ export default {
       .group-index
         display: inline-block
         width: 3.2em
+        top: 1px
         .el-input__inner
           padding: 0 5px
           text-align: center
           font-weight: bold
           font-size: 14px
-      .el-select
-        width: 15.5em
       .close-circle-button
         padding: 2px
         margin: 3px 0

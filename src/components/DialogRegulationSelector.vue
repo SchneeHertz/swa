@@ -15,10 +15,14 @@
         :active-text="regulation.grouped ? `${regulation.name} - ${regulation.method.name}` : regulation.name"
       ></el-switch>
       <el-divider v-if="showDivider"></el-divider>
-      <el-tooltip effect="dark" content="开启即代替默认测试项目" placement="top">
+      <el-tooltip
+        effect="dark"
+        content="开启即代替默认测试项目"
+        placement="top"
+        v-for="regulation in data.regulationListForClient"
+        :key="regulation.id"
+      >
         <el-switch
-          v-for="regulation in data.regulationListForClient"
-          :key="regulation.id"
           class="regulation-switch"
           v-model="regulation.switchTo"
           :active-text="`${regulation.client.join(',')} - ${regulation.name}`"

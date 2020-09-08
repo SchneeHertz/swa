@@ -202,6 +202,7 @@
                 <template #default>
                   <el-select
                     v-model="selectClient"
+                    multiple
                     size="mini"
                   >
                     <el-option
@@ -280,7 +281,7 @@ export default {
       batchSubclauseVal: '',
       dialogVisible: false,
       mixByStyle: false,
-      selectClient: undefined,
+      selectClient: [],
       searchString: undefined,
       loadTasklistLoading: false,
       copyedList: [],
@@ -328,7 +329,7 @@ export default {
     clientList () {
       return _.chain(this.methodBaseData).map(e=>e.regulationListForClient)
         .flatten().compact().map(e=>e.client)
-        .flatten().compact().uniq().sortBy().unshift(undefined).value()
+        .flatten().compact().uniq().sortBy().value()
     },
     displayMethodBaseData () {
       if (this.hideEmptyMethod) {
@@ -556,9 +557,10 @@ export default {
     confirmAutoSolve () {
       _.forIn(this.methodBaseData, methodGroup=>{
         _.forIn(methodGroup.regulationListForClient, regulation=>{
-          if ( (this.selectClient && _.includes(regulation.client, this.selectClient)) || regulation.switchTo ) {
+          if ( (_.uniq(this.selectClient.concat(regulation.client)).length < _.uniq(this.selectClient).concat(_.uniq(regulation.client)).length)
+          || regulation.switchTo ) {
             let foundGeneralRegulationIndex = _.findIndex(methodGroup.regulationList, {code: regulation.code})
-            foundGeneralRegulationIndex ? methodGroup.regulationList.splice(foundGeneralRegulationIndex, 1, regulation) : ''
+            foundGeneralRegulationIndex != -1 ? methodGroup.regulationList.splice(foundGeneralRegulationIndex, 1, regulation) : ''
           }
         })
       })

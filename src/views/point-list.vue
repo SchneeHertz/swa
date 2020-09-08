@@ -34,6 +34,7 @@
                     :autosize="{ minRows: 2, maxRows: 4}"
                     ref="pointDescriptionEnglish"
                     id="pointDescriptionEnglish"
+                    @blur="fixAreaComplete"
                   ></el-input>
                 </el-col>
                 <el-col :span="12">
@@ -545,6 +546,9 @@ export default {
       .finally(()=>{
         this.loadPointListLoading = false
       })
+    },
+    fixAreaComplete () {
+      this.$set(this.selectPoint, 'englishDescription', $('#pointDescriptionEnglish')[0].value)
     },
     addPoint (assign) {
       let id = _id()

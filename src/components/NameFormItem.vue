@@ -74,7 +74,8 @@ export default {
 </style>
 
 <style lang="stylus">
-.name-select__body .el-input__inner
-  border-bottom-left-radius: 0
-  border-top-left-radius: 0
+.name-select__body
+  .el-input__inner, .el-textarea__inner
+    border-bottom-left-radius: 0
+    border-top-left-radius: 0
 </style>

@@ -8,6 +8,28 @@
             <el-input v-model="caseNumber" class="case-number" size="small" @keyup.enter.native="loadPointList">
               <template #prepend>Case:</template>
             </el-input>
+            <el-popover
+              trigger="click"
+              width="1200"
+            >
+              <el-table
+                :data="previewTable.list"
+                height="90vh"
+                border
+                stripe
+              >
+                <el-table-column
+                 v-for="(key, i) in previewTable.column"
+                 :key="key"
+                 :label="i == 0 ? '#' : i == 1 ? '英文' : i == 2 ? '中文' : key"
+                 :fixed="i < 3 ? true : false"
+                 :width="i == 0 ? 50 : i == 1 || i == 2 ? 200 : 100"
+                >
+                  <template #default="scope">{{Array.isArray(scope.row[key]) ? scope.row[key].join(', ') : scope.row[key]}}</template>
+                </el-table-column>
+              </el-table>
+              <el-button size="small" slot="reference" @click="genePreviewTable">预览</el-button>
+            </el-popover>
             <div class="point-function-button">
               <el-switch v-model="useStyle" active-text="Style" @change="handleStyleSwitchChange"></el-switch>
             </div>
@@ -282,7 +304,8 @@ export default {
         'interlayer', 'wire jacket', 'backing', 'sewn-in label', 'corrugated', 'laminated', 'electrolytic capacitor',  'surfaced', 'lettering',
         'chassis', 'blister', 'instruction', 'sticker', 'clothes',
         'transparent', 'translucent', 'multi-color', 'iridescent', 'silvery', 'apricot', 'purple', 'off-white'
-      ]
+      ],
+      previewTable: {}
     }
   },
   computed: {
@@ -443,6 +466,21 @@ export default {
 
   },
   methods: {
+    genePreviewTable () {
+      let tempList = []
+      _.forIn(this.valueList, point=>{
+        let tempCondition = {}
+        _.forIn(point.condition, (value, id)=>{
+          let key = _.find([...this.simpleConditionList, ...this.afterwardConditionList], {id: id}).name
+          tempCondition[key] = value
+        })
+        tempList.push(_.assign({}, _.pick(point, ['index', 'englishDescription', 'chineseDescription', 'style']), tempCondition))
+      })
+      this.previewTable = {
+        list: tempList,
+        column: _(tempList.map(point=>_.keys(point))).flatten().compact().uniq().value()
+      }
+    }, 
     autoCorrect () {
       this.$set(this.selectPoint, 'englishDescription', _.upperFirst(this.selectPoint['englishDescription']))
     },
@@ -879,7 +917,7 @@ export default {
     width: 17em
   .point-function-button
     display: inline-block
-    width: calc(100% - 16em)
+    width: calc(100% - 18em)
     margin-bottom: -6px
     .el-switch
       float: right

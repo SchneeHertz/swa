@@ -105,8 +105,8 @@
 
 <script>
 import BaseHeader from '@/components/BaseHeader.vue'
-const OTSHOST = '10.168.128.44/OTS_UAT'
-// const OTSHOST = 'cnots.sgs.net/OTS'
+// const OTSHOST = '10.168.128.44/OTS_UAT'
+const OTSHOST = 'cnots.sgs.net/OTS'
 
 function geneVuexValue (property) {
   return {
@@ -185,6 +185,11 @@ export default {
           this.loadAllData()
         }
       })
+    } else {
+      if (this.case) {
+        this.caseNumber = this.case
+        this.loadAllData()
+      }
     }
   },
   methods: {

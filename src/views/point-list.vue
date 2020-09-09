@@ -52,7 +52,6 @@
                     placeholder="英文描述"
                     class="point-description point-form-line"
                     v-model="selectPoint['englishDescription']"
-                    @change="autoCorrect"
                     :autosize="{ minRows: 2, maxRows: 4}"
                     ref="pointDescriptionEnglish"
                     id="pointDescriptionEnglish"
@@ -480,9 +479,6 @@ export default {
         list: tempList,
         column: _(tempList.map(point=>_.keys(point))).flatten().compact().uniq().value()
       }
-    }, 
-    autoCorrect () {
-      this.$set(this.selectPoint, 'englishDescription', _.upperFirst(this.selectPoint['englishDescription']))
     },
     handleCellClick (row, column) {
       if (_.isEmpty(this.konvaGroupList) && _.isEmpty(this.shapeList)) {
@@ -586,7 +582,7 @@ export default {
       })
     },
     fixAreaComplete () {
-      this.$set(this.selectPoint, 'englishDescription', $('#pointDescriptionEnglish')[0].value)
+      this.$set(this.selectPoint, 'englishDescription', _.upperFirst($('#pointDescriptionEnglish')[0].value))
     },
     addPoint (assign) {
       let id = _id()
@@ -596,7 +592,10 @@ export default {
       let addObj = {}
       if (_.isEmpty(assign)) {
         addObj = _.assign({}, _.cloneDeep(this.selectPoint), {id: id, index: index})
-        this.selectPoint = {condition: _.cloneDeep(this.selectPoint.condition)}
+        this.selectPoint = {
+          condition: _.pick(_.cloneDeep(this.selectPoint.condition), this.simpleConditionList.map(c=>c.id)),
+          style:_.cloneDeep(this.selectPoint.style)
+        }
       } else {
         addObj = _.assign({}, assign, {id: id, index: index})
         this.selectPoint = addObj

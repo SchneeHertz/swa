@@ -590,7 +590,6 @@ export default {
             point.groupBy = []
             let splitByStatus = false
             let regulationList = point.regulation
-            // let regulationList = point.regulation.map(e=>_.find(methodObj.regulationList, {id: e}))
             if (this.mixByStyle) {
               if (!_.isEmpty(point.style)) {
                 point.groupBy.push({
@@ -617,6 +616,7 @@ export default {
             if (splitByStatus) {
               point.groupBy.push({
                 status: point.condition[STATUSCONDITIONID]
+                // material: _.first(point.condition[MATERIALCONDTION])
               })
             }
           })
@@ -649,7 +649,11 @@ export default {
                 } else {
                   let inwith = false
                   _.forIn(group, parentPoint=>{
-                    if (parentPoint.condition['weightType'] == 'Enough' && parentPoint.elements.length < 3) {
+                    if (
+                      parentPoint.condition['weightType'] == 'Enough' 
+                      && !(parentPoint.condition[STATUSCONDITIONID] == 'Coating' && point.condition[STATUSCONDITIONID] != 'Coating')
+                      && parentPoint.elements.length < 2
+                    ) {
                       parentPoint.elements.push(_.cloneDeep(point))
                       point.minorType = 'withed'
                       inwith = true
@@ -664,8 +668,9 @@ export default {
                 point.minorType = 'main'
               }
             })
-            // regulationList = regulationList.map(e=>_.find(methodObj.regulationList, {id: e}))
-            let finalMethodGroupList = _.chunk(_.filter(group, point=>point.minorType == 'main' || point.minorType == 'unWithed'), minMix)
+            // let finalMethodGroupList = _.chunk(_.filter(group, point=>point.minorType == 'main' || point.minorType == 'unWithed'), minMix)
+            let groupByStatus = _.groupBy(_.filter(group, point=>point.minorType == 'main' || point.minorType == 'unWithed'), point=>point.condition[STATUSCONDITIONID])
+            let finalMethodGroupList = _.flatten(_.values(groupByStatus).map(g=>_.chunk(g, minMix)))
             let startIndex = methodObj.list.length + 1
             let idList = []
             _.forIn(finalMethodGroupList, pointGroup=>{

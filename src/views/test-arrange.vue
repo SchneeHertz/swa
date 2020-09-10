@@ -533,11 +533,13 @@ export default {
     addGroup (count = 1) {
       for (let i = 0; i < count; i++) {
         let index = this.findMinIndex(this.pointGroupList.map(e=>e.index))
+        let id = _id()
         this.pointGroupList.push({
-          id: _id(),
+          id: id,
           index: index,
           list: []
         })
+        this.selectRegulation.list.push(id)
       }
     },
     addTextGroup () {
@@ -550,6 +552,12 @@ export default {
       let foundGroup = _.findIndex(this.pointGroupList, {id: id})
       if (foundGroup != -1) {
         this.pointGroupList.splice(foundGroup, 1)
+        _.forIn(this.selectMethod.regulationList, regulation=>{
+          let foundId = _.findIndex(regulation.list, o=>o == id)
+          if (foundId != -1) {
+            regulation.list.splice(foundId, 1)
+          }
+        })
       }
     },
     showSolveDialog () {

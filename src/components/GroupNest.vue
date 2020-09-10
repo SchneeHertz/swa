@@ -8,12 +8,12 @@
     :value="value"
     @input="emitter"
   >
-    <div class="item-group" :key="el.id" v-for="(el, index) in realValue">
+    <div class="item-group" :key="el.id" v-for="(el, index) in realValue" @dblclick.stop="handleDbClick(el.id)">
       <div class="item">
         <div class="item-description">{{el.index}}. {{language ? el[language] : el.englishDescription}}</div>
         <el-button type="text" class="close-circle-button" icon="el-third-icon-close" @click="removePoint(realValue, index)" plain />
       </div>
-      <group-nest class="item-sub" :list="el.elements" :language="language"/>
+      <group-nest class="item-sub" :sub="true" :list="el.elements" :language="language" @dbl-children="handleDblChildren"/>
     </div>
   </draggable>
 </template>
@@ -37,7 +37,12 @@ export default {
       type: Array,
       default: null
     },
-    language: String
+    language: String,
+    sub: {
+      required: false,
+      type: Boolean,
+      default: false
+    }
   },
   computed: {
     dragOptions() {
@@ -57,6 +62,27 @@ export default {
     },
     removePoint (list, index) {
       list.splice(index, 1)
+    },
+    handleDbClick (id) {
+      if (this.sub) {
+        this.$emit('dbl-children', id)
+      } else {
+        let findGroup = _.findIndex(this.realValue, {id: id})
+        if (findGroup > 0) {
+          let group = this.realValue.splice(findGroup, 1)
+          this.realValue[findGroup - 1].elements.push(...group)
+        }
+      }
+    },
+    handleDblChildren (id) {
+      _.forIn(this.realValue, (group, index)=>{
+        let findElement = _.findIndex(group.elements, {id: id})
+        if (findElement != -1) {
+          let element = group.elements.splice(findElement, 1)
+          this.realValue.splice(index+1, 0, ...element)
+          return false
+        }
+      })
     }
   }
 }
@@ -90,6 +116,4 @@ export default {
       display: inline-block
   .item-sub 
     margin: 0 0 0 2em
-.item-group+.item-group
-  margin-top: 4px
 </style>

@@ -19,7 +19,7 @@
           ></el-tree>
         </overlay-scrollbars>
       </el-col>
-      <el-col :span="13" class="task-main">
+      <el-col :span="12" class="task-main">
         <div class="task-header">
           <div class="task-header-info">Case: {{selectTask.taskInfo.CaseNumber}}</div>
           <div class="task-header-info">Report: {{selectTask.taskInfo.ReportNumber}}</div>
@@ -30,16 +30,24 @@
         <div class="task-remark">
           <NameFormItem class="card-line" prependWidth="8em">
             <template #prepend>English Remark:</template>
-            <el-input type="textarea" v-model="selectTask.taskObj.EnglishRemark"></el-input>
+            <el-input
+              type="textarea"
+              v-model="selectTask.taskObj.EnglishRemark"
+              @change="updatePatch('EnglishRemark')"
+            ></el-input>
           </NameFormItem>
           <NameFormItem class="card-line" prependWidth="8em">
             <template #prepend>Chinese Remark:</template>
-            <el-input type="textarea" v-model="selectTask.taskObj.ChineseRemark"></el-input>
+            <el-input
+              type="textarea"
+              v-model="selectTask.taskObj.ChineseRemark"
+              @change="updatePatch('ChineseRemark')"
+            ></el-input>
           </NameFormItem>
         </div>
         <overlay-scrollbars class="task-body">
           <el-row
-            v-for="component in selectTask.taskObj.ComponentArray"
+            v-for="(component, index) in selectTask.taskObj.ComponentArray"
             :key="component.ComponentNo"
             class="component-block"
           >
@@ -50,6 +58,7 @@
                   v-model="component.SubClass"
                   size="mini"
                   class="component-select"
+                  @change="updatePatch('SubClass', index)"
                 >
                   <el-option
                     v-for="sc in selectTask.regulation.subclause"
@@ -65,6 +74,7 @@
                 type="textarea"
                 v-model="component.EnglishDescription"
                 :autosize="{minRows: 2, maxRows: 6}"
+                @change="updatePatch('EnglishDescription', index)"
               ></el-input>
             </el-col>
             <el-col :span="12">
@@ -72,18 +82,43 @@
                 type="textarea"
                 v-model="component.ChineseDescription"
                 :autosize="{minRows: 2, maxRows: 6}"
+                @change="updatePatch('ChineseDescription', index)"
               ></el-input>
             </el-col>
           </el-row>
         </overlay-scrollbars>
       </el-col>
-      <el-col :span="5"></el-col>
+      <el-col :span="6">        
+        <overlay-scrollbars class="patch-pane">
+          <el-card
+            v-for="patch in patchList"
+            :key="patch.type+patch.CaseTestItemID+patch.TestMethodID+patch.id"
+            class="patch-card"
+            shadow="never"
+          >
+            <template #header>
+              {{patch.type}}
+              <el-button type="text" class="close-circle-button" icon="el-third-icon-close" @click="removePatch(patch)" plain/>
+            </template>
+            <div class="card-line">
+              <label class="card-label">项目: <span>{{patch.info.regulation}}</span></label>
+            </div>
+            <div class="card-line">
+              <label class="card-label">方法: <span>{{patch.info.method}}</span></label>
+            </div>
+            <div class="card-line">
+              <label class="card-label">序号: <span>{{patch.info.index == undefined ? '' : patch.info.index+1}}</span></label>
+            </div>
+            <div class="card-line" v-html="patch.html"></div>
+          </el-card>
+        </overlay-scrollbars>
+      </el-col>
       <div class="bottom-function-btn">
         <el-tooltip effect="dark" content="加载" placement="top">
           <el-button type="primary" class="bigicon" icon="el-third-icon-cloud-download" circle @click="loadTaskList"></el-button>
         </el-tooltip>
-        <el-tooltip effect="dark" content="保存" placement="top">
-          <el-button type="success" class="bigicon" icon="el-third-icon-save" circle @click="saveTaskList"></el-button>
+        <el-tooltip effect="dark" content="保存修改列表" placement="top">
+          <el-button type="success" class="bigicon" icon="el-third-icon-save" circle @click="savePatchList"></el-button>
         </el-tooltip>
         <el-tooltip effect="dark" content="导出" placement="top">
           <el-button type="primary" class="bigicon" icon="el-third-icon-export" circle @click="showExportDialog"></el-button>
@@ -145,8 +180,10 @@
 import BaseHeader from '@/components/BaseHeader.vue'
 import NameFormItem from '@/components/NameFormItem.vue'
 import {generate as _id } from 'shortid'
-const OTSHOST = '10.168.128.44/OTS_UAT'
-// const OTSHOST = 'cnots.sgs.net/OTS'
+import DiffMatchPatch from 'diff-match-patch'
+
+// const OTSHOST = '10.168.128.44/OTS_UAT'
+const OTSHOST = 'cnots.sgs.net/OTS'
 
 function geneVuexValue (property) {
   return {
@@ -226,7 +263,6 @@ export default {
     return {
       exportLog: [],
       taskList: [],
-      selectTaskId: undefined,
       dialogVisible: false,
       exportPercentage: {
         value: 0
@@ -234,7 +270,10 @@ export default {
       tableSelectTask: undefined,
       exportLoading: {
         value: false
-      }
+      },
+      selectTask: {taskInfo: {}, method: {}, regulation: {method:{}}, taskObj: {}, pointIdList: []},
+      taskListBackup: [],
+      patchList: []
     }
   },
   computed: {
@@ -257,9 +296,6 @@ export default {
         })
       })
       return taskTree
-    },
-    selectTask () {
-      return _.find(this.taskList, {id: this.selectTaskId}) || {taskInfo: {}, method: {}, regulation: {method:{}}, taskObj: {}, pointIdList: []}
     }
   },
   mounted () {
@@ -271,7 +307,7 @@ export default {
     loadTaskList () {
       this.$http.post('/data/getCaseData', {
         caseNumber: this.caseNumber,
-        list: ['taskList', 'valueList', 'methodBaseData']
+        list: ['patchList', 'valueList', 'methodBaseData']
       })
       .then(res=>{
         if (res.data.success) {
@@ -283,23 +319,12 @@ export default {
             this.methodBaseData = result.methodBaseData
             this.refreshDescription(this.methodBaseData)
           }
-          if (_.isArray(result.taskList) && !_.isEmpty(result.taskList)) {
-            this.$confirm('之前已保存TaskList，载入已保存的TaskList，还是重新生成TaskList', '确认信息', {
-              distinguishCancelAndClose: true,
-              confirmButtonText: '读取已保存的TaskList',
-              cancelButtonText: '重新生成TaskList'
-            })
-            .then(() => {
-              this.taskList = result.taskList
-            })
-            .catch(action => {
-              if (action == 'cancel') {
-                this.geneTaskList()
-              }
-            })
-          } else {
-            this.geneTaskList()
+          if (_.isArray(result.patchList) && !_.isEmpty(result.patchList)) {
+            this.patchList = result.patchList
           }
+          this.geneTaskList()
+          this.applyPatch(this.patchList)
+          this.selectTask = {taskInfo: {}, method: {}, regulation: {method:{}}, taskObj: {}, pointIdList: []}
         } else {
           this.$message({type: 'error', message: res.data.info, showClose: true})
         }
@@ -349,7 +374,8 @@ export default {
                 EnglishDescription: foundPoint.description.englishDescription,
                 ChineseDescription: foundPoint.description.chineseDescription,
                 IsDataTransfer: true,
-                IsShowInReport: true
+                IsShowInReport: true,
+                id: pointId
               }
               if (regulation.shareSolution) {
                 tempComponent.ShareID = pointId
@@ -407,6 +433,7 @@ export default {
       })
       taskList = _.filter(taskList, t=>!_.isEmpty(t))
       this.taskList = _.flatten(taskList)
+      this.taskListBackup = _.cloneDeep(this.taskList)
       return taskList
     },
     resolvePointTree (point) {
@@ -418,17 +445,169 @@ export default {
       }
       return [{englishDescription: point.englishDescription, chineseDescription: point.chineseDescription}, innerArray]
     },
+    updatePatch (key, index) {
+      let backupTask = _.find(this.taskListBackup, task=>{
+        return task.taskInfo.CaseTestItemID == this.selectTask.taskInfo.CaseTestItemID &&task.taskInfo.TestMethodID == this.selectTask.taskInfo.TestMethodID
+      })
+      let diff_patch
+      let foundPatch
+      switch (key) {
+        case 'EnglishRemark':
+        case 'ChineseRemark':
+          diff_patch = this.diffString(backupTask.taskObj[key], this.selectTask.taskObj[key])
+          foundPatch = _.find(this.patchList, {
+            type: key,
+            CaseTestItemID: this.selectTask.taskInfo.CaseTestItemID,
+            TestMethodID: this.selectTask.taskInfo.TestMethodID
+          })
+          if (foundPatch) {
+            _.merge(foundPatch, diff_patch)
+          } else {
+            this.patchList.push(_.merge({
+              type: key,
+              CaseTestItemID: this.selectTask.taskInfo.CaseTestItemID,
+              TestMethodID: this.selectTask.taskInfo.TestMethodID,
+              info: {
+                regulation: this.selectTask.taskInfo.TestItemDescription,
+                method: this.selectTask.taskInfo.TestMethodName,
+              }
+            }, diff_patch))
+          }
+          break
+        case 'EnglishDescription':
+        case 'ChineseDescription':
+          diff_patch = this.diffString(backupTask.taskObj.ComponentArray[index][key], this.selectTask.taskObj.ComponentArray[index][key])
+          foundPatch = _.find(this.patchList, {
+            type: key,
+            CaseTestItemID: this.selectTask.taskInfo.CaseTestItemID,
+            TestMethodID: this.selectTask.taskInfo.TestMethodID,
+            id:this.selectTask.taskObj.ComponentArray[index].id
+          })
+          if (foundPatch) {
+            _.merge(foundPatch, diff_patch)
+          } else {
+            this.patchList.push(_.merge({
+              type: key,
+              CaseTestItemID: this.selectTask.taskInfo.CaseTestItemID,
+              TestMethodID: this.selectTask.taskInfo.TestMethodID,
+              id: this.selectTask.taskObj.ComponentArray[index].id,
+              info: {
+                regulation: this.selectTask.taskInfo.TestItemDescription,
+                method: this.selectTask.taskInfo.TestMethodName,
+                index: index
+              }
+            }, diff_patch))
+          }
+          break
+        case 'SubClass':
+          let subClauseBefore = backupTask.taskObj.ComponentArray[index][key]
+          let subClauseBeforeName = subClauseBefore  ? _.find(this.selectTask.regulation.subclause, {code: subClauseBefore}).name : ''
+          let subClauseAfter = this.selectTask.taskObj.ComponentArray[index][key]
+          let subClauseAfterName = subClauseAfter  ? _.find(this.selectTask.regulation.subclause, {code: subClauseAfter}).name : ''
+          diff_patch = {
+            subClause: subClauseAfter,
+            html: `<del style="background:#ffe6e6;">${subClauseBeforeName}</del><ins style="background:#e6ffe6;">${subClauseAfterName}</ins>`
+          }
+          foundPatch = _.find(this.patchList, {
+            type: key,
+            CaseTestItemID: this.selectTask.taskInfo.CaseTestItemID,
+            TestMethodID: this.selectTask.taskInfo.TestMethodID,
+            id:this.selectTask.taskObj.ComponentArray[index].id
+          })
+          if (foundPatch) {
+            _.merge(foundPatch, diff_patch)
+          } else {
+            this.patchList.push(_.merge({
+              type: key,
+              CaseTestItemID: this.selectTask.taskInfo.CaseTestItemID,
+              TestMethodID: this.selectTask.taskInfo.TestMethodID,
+              id: this.selectTask.taskObj.ComponentArray[index].id,
+              info: {
+                regulation: this.selectTask.taskInfo.TestItemDescription,
+                method: this.selectTask.taskInfo.TestMethodName,
+                index: index
+              }
+            }, diff_patch))
+          }
+          break
+      }
+    },
+    diffString (strOld, strNew) {
+      let dmp = new DiffMatchPatch()
+      let diff = dmp.diff_main(strOld, strNew)
+      dmp.diff_cleanupSemantic(diff)
+      let patch = dmp.patch_make(strOld, diff)
+      let html = dmp.diff_prettyHtml(diff)
+      return {diff: diff, patch: patch, html: html}
+    },
+    applyPatch (patchList) {
+      let dmp = new DiffMatchPatch()
+      _.forIn(patchList, patch=>{
+        let foundTask = _.find(this.taskList, task=>{
+          return task.taskInfo.CaseTestItemID == patch.CaseTestItemID && task.taskInfo.TestMethodID == patch.TestMethodID
+        })
+        let foundGroup
+        if (foundTask) {
+          switch (patch.type) {
+            case 'EnglishRemark':
+            case 'ChineseRemark':
+              this.$set(foundTask.taskObj, patch.type, dmp.patch_apply(patch.patch, foundTask.taskObj[patch.type])[0])
+              break
+            case 'EnglishDescription':
+            case 'ChineseDescription':
+              foundGroup = _.find(foundTask.taskObj.ComponentArray, {id: patch.id})
+              if (foundGroup) {
+                this.$set(foundGroup, patch.type, dmp.patch_apply(patch.patch, foundGroup[patch.type])[0])
+              }
+              break
+            case 'SubClass':
+              foundGroup = _.find(foundTask.taskObj.ComponentArray, {id: patch.id})
+              if (foundGroup) {
+                this.$set(foundGroup, patch.type, patch.subClause)
+              }
+              break
+          }
+        }
+      })
+    },
+    removePatch (patch) {
+      let foundTask = _.find(this.taskList, task=>{
+        return task.taskInfo.CaseTestItemID == patch.CaseTestItemID && task.taskInfo.TestMethodID == patch.TestMethodID
+      })
+      let foundBackupTask = _.find(this.taskListBackup, task=>{
+        return task.taskInfo.CaseTestItemID == patch.CaseTestItemID && task.taskInfo.TestMethodID == patch.TestMethodID
+      })
+      switch (patch.type) {
+        case 'EnglishRemark':
+        case 'ChineseRemark':
+          this.$set(foundTask.taskObj, patch.type, foundBackupTask.taskObj[patch.type])
+          break
+        case 'EnglishDescription':
+        case 'ChineseDescription':
+        case 'SubClass':
+          let foundGroup = _.find(foundTask.taskObj.ComponentArray, {id: patch.id})
+          let foundBackupGroup = _.find(foundBackupTask.taskObj.ComponentArray, {id: patch.id})
+          if (foundGroup && foundBackupGroup) {
+            this.$set(foundGroup, patch.type, foundBackupGroup[patch.type])
+          }
+          break
+      }
+      this.patchList.splice(_.findIndex(this.patchList, patch), 1)
+    },
     addLog (log) {
       this.exportLog.push(log)
     },
     handleNodeClick (data) {
-      this.selectTaskId = data.id
+      let foundTask = _.find(this.taskList, {id: data.id})
+      if (foundTask) {
+        this.selectTask = foundTask
+      }
     },
-    saveTaskList () {
+    savePatchList () {
       this.$http.post('/data/saveCaseData', {
         caseNumber: this.caseNumber,
         data: {
-          taskList: this.taskList
+          patchList: this.patchList
         }
       })
       .then(res=>{
@@ -482,13 +661,25 @@ export default {
   .card-line
     margin: 4px 2px
 .task-body
-  height: calc(100vh - 14em )
+  height: calc(100vh - 12.5em )
   .component-block
     border: solid 1px rgba(0,0,0,0.125)
     border-radius: 4px
     margin: 4px 2px 8px 2px
     .component-select
       width: 100%
+
+.patch-pane
+  height: calc(100vh - 5em)
+.patch-card
+  .card-line
+    margin: 4px 0
+    font-size: 14px
+  .card-label
+    color: grey
+  .card-label span 
+    color #2c3e50
+
 .export-log
   max-height: 28vh
   .success-log
@@ -513,6 +704,20 @@ export default {
 .task-main
   .el-input__inner
     background-color: rgba(0,0,0,0.01)
+
+.patch-card
+  margin: 4px 2px
+  .el-card__header
+    padding: 8px 12px
+    font-size: 15px
+    background-color: rgba(0,0,0,0.04)
+    .close-circle-button
+      padding: 2px
+      margin: -2px 0
+      float: right
+  .el-card__body
+    padding: 10px
+
 .export-dialog
   margin: 0 auto
   .el-dialog__body

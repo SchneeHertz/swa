@@ -19,6 +19,7 @@
     "lowdb": "^1.0.0"
   },
   "devDependencies": {
+    "diff-match-patch": "^1.0.5",
     "@vue/cli-plugin-babel": "~4.3.0",
     "@vue/cli-plugin-router": "~4.3.0",
     "@vue/cli-plugin-vuex": "~4.3.0",

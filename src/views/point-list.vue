@@ -10,6 +10,7 @@
             </el-input>
             <el-popover
               trigger="click"
+              v-model="showPreviewTable"
               width="1200"
             >
               <el-table
@@ -17,6 +18,7 @@
                 height="90vh"
                 border
                 stripe
+                @row-click="handleSelectPreviewRow"
               >
                 <el-table-column
                  v-for="(key, i) in previewTable.column"
@@ -24,6 +26,9 @@
                  :label="i == 0 ? '#' : i == 1 ? '英文' : i == 2 ? '中文' : key"
                  :fixed="i < 3 ? true : false"
                  :width="i == 0 ? 50 : i == 1 || i == 2 ? 200 : 100"
+                 sortable
+                 :sort-by="key"
+                 resizable
                 >
                   <template #default="scope">{{Array.isArray(scope.row[key]) ? scope.row[key].join(', ') : scope.row[key]}}</template>
                 </el-table-column>
@@ -304,7 +309,8 @@ export default {
         'chassis', 'blister', 'instruction', 'sticker', 'clothes',
         'transparent', 'translucent', 'multi-color', 'iridescent', 'silvery', 'apricot', 'purple', 'off-white'
       ],
-      previewTable: {}
+      previewTable: {},
+      showPreviewTable: false
     }
   },
   computed: {
@@ -473,12 +479,32 @@ export default {
           let key = _.find([...this.simpleConditionList, ...this.afterwardConditionList], {id: id}).name
           tempCondition[key] = value
         })
-        tempList.push(_.assign({}, _.pick(point, ['index', 'englishDescription', 'chineseDescription', 'style']), tempCondition))
+        tempList.push(_.assign({}, _.pick(point, ['index', 'englishDescription', 'chineseDescription', 'style', 'id']), tempCondition))
+      })
+      let column = _(tempList.map(point=>_.keys(point))).flatten().compact().uniq().without('id').value()
+      _.forIn(tempList, point=>{
+        _.forIn(column, key=>{
+          if (!point[key]) {
+            point[key] = '-'
+          }
+          if (key == 'index') {
+            point[key] = + point[key]
+          }
+        })
       })
       this.previewTable = {
         list: tempList,
-        column: _(tempList.map(point=>_.keys(point))).flatten().compact().uniq().value()
+        column: column
       }
+    },
+    handleSelectPreviewRow (row, column) {
+      this.selectPoint = _.cloneDeep(_.find(this.valueList, {id: row.id}))
+      this.showPreviewTable = false
+      this.$refs.tablepointlist.setCurrentRow(_.find(this.valueList, {id: row.id}))
+      _.forIn(this.valueList, point=>{
+        this.$set(this.findRectData(point.id), 'strokeEnabled', false)
+      })
+      this.$set(this.findRectData(row.id), 'strokeEnabled', true)
     },
     handleCellClick (row, column) {
       if (_.isEmpty(this.konvaGroupList) && _.isEmpty(this.shapeList)) {

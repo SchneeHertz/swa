@@ -84,7 +84,7 @@
                   v-model="displaySubclauseVal[group.id]"
                   @change="$forceUpdate()"
                   placeholder="Sub Clause"
-                  :style="{width: viewSetting.column == 1 ? '36em' : viewSetting.column == 2 ? '15.5em': '15.5em'}"
+                  :style="{width: viewSetting.column == 1 ? '36em' : viewSetting.column == 2 ? '14.5em': '14.5em'}"
                 >
                   <el-option :value="undefined" lable=""></el-option>
                   <el-option
@@ -95,6 +95,7 @@
                   ></el-option>
                 </el-select>
                 <el-button type="text" class="close-circle-button" icon="el-third-icon-close" @click="removeGroup(group.id)" plain/>
+                <el-button type="text" class="close-circle-button" icon="el-third-icon-block" @click="splitGroup(group.id)" plain/>
               </template>
               <group-nest v-model="group.list" :language="viewSetting.language"/>
             </el-card>
@@ -547,6 +548,28 @@ export default {
     },
     reSortGroupList () {
       this.pointGroupList = _.sortBy(this.pointGroupList, 'index')
+      _.forIn(this.pointGroupList, (group, index)=>{
+        group.index = + index + 1
+      })
+      _.forIn(this.selectMethod.regulationList, regulation=>{
+        regulation.list = _.filter(this.pointGroupList.map(g=>g.id), id=>regulation.list.includes(id))
+      })
+    },
+    splitGroup (id) {
+      let foundGroup = _.find(this.pointGroupList, {id: id})
+      let foundGroupIndex = _.findIndex(this.pointGroupList, {id: id})
+      let newId = _id()
+      let index = this.findMinIndex(this.pointGroupList.map(e=>e.index))
+      this.pointGroupList.splice(foundGroupIndex + 1, 0, {
+        id: newId,
+        index: index,
+        list: []
+      })
+      _.forIn(this.selectMethod.regulationList, regulation=>{
+        if (regulation.list.includes(id)) {
+          regulation.list.push(newId)
+        }
+      })
     },
     removeGroup (id) {
       let foundGroup = _.findIndex(this.pointGroupList, {id: id})

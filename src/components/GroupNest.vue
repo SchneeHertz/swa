@@ -79,7 +79,7 @@ export default {
         let findElement = _.findIndex(group.elements, {id: id})
         if (findElement != -1) {
           let element = group.elements.splice(findElement, 1)
-          this.realValue.splice(index+1, 0, ...element)
+          this.realValue.splice(+ index + 1, 0, ...element)
           return false
         }
       })
@@ -101,8 +101,8 @@ export default {
 .item-container:not(.item-sub)
   min-height: 2em
 .item-container
-  .item-container
-    max-width: 20em
+  // .item-container
+  //   max-width: 20em
   .item
     font-size: 15px
     padding: 6px

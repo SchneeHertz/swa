@@ -278,7 +278,7 @@ export default {
   },
   computed: {
     caseNumber: geneVuexValue('caseNumber'),
-    pointList: geneVuexValue('valueList'),
+    pointList: geneVuexValue('pointList'),
     methodBaseData: geneVuexValue('methodBaseData'),
     displayTaskList () {
       let taskTree = []
@@ -307,13 +307,13 @@ export default {
     loadTaskList () {
       this.$http.post('/data/getCaseData', {
         caseNumber: this.caseNumber,
-        list: ['patchList', 'valueList', 'methodBaseData']
+        list: ['patchList', 'pointList', 'methodBaseData']
       })
       .then(res=>{
         if (res.data.success) {
           let result = res.data.result
-          if (_.isArray(result.valueList) && !_.isEmpty(result.valueList)) {
-            this.pointList = result.valueList
+          if (_.isArray(result.pointList) && !_.isEmpty(result.pointList)) {
+            this.pointList = result.pointList
           }
           if (_.isArray(result.methodBaseData) && !_.isEmpty(result.methodBaseData)) {
             this.methodBaseData = result.methodBaseData

@@ -295,7 +295,7 @@ export default {
     caseTestitemList: geneVuexValue('caseTestitemList'),
     existCaseInfo: geneVuexValue('existCaseInfo'),
     konvaGroupList: geneVuexValue('konvaGroupList'),
-    pointList: geneVuexValue('valueList'),
+    pointList: geneVuexValue('pointList'),
     shapeList: geneVuexValue('shapeList'),
     pointRelation: geneVuexValue('konvaRelation'),
     methodBaseData: geneVuexValue('methodBaseData'),
@@ -385,7 +385,7 @@ export default {
       }
       return this.$http.post('/data/getCaseData', {
         caseNumber: this.caseNumber,
-        list: ['methodBaseData', 'konvaGroupList', 'valueList', 'shapeList', 'konvaRelation', 'caseCondition', 'caseTestitem']
+        list: ['methodBaseData', 'konvaGroupList', 'pointList', 'shapeList', 'konvaRelation', 'caseCondition', 'caseTestitem']
       })
       .then(res=>{
         if (res.data.success) {
@@ -407,8 +407,8 @@ export default {
           if (_.isArray(result.shapeList) && !_.isEmpty(result.shapeList)) {
             this.shapeList = result.shapeList.map(e=>{e.sceneFunc = sceneFunc; e.dragBoundFunc = dragBoundFunc; return e})
           }
-          if (_.isArray(result.valueList) && !_.isEmpty(result.valueList)) {
-            this.pointList = result.valueList
+          if (_.isArray(result.pointList) && !_.isEmpty(result.pointList)) {
+            this.pointList = result.pointList
           }
           if (_.isArray(result.methodBaseData) && !_.isEmpty(result.methodBaseData)) {
             this.methodBaseData = result.methodBaseData

@@ -135,7 +135,7 @@ export default {
     caseTestitemList: geneVuexValue('caseTestitemList'),
     existCaseInfo: geneVuexValue('existCaseInfo'),
     konvaGroupList: geneVuexValue('konvaGroupList'),
-    valueList: geneVuexValue('valueList'),
+    pointList: geneVuexValue('pointList'),
     shapeList: geneVuexValue('shapeList'),
     konvaRelation: geneVuexValue('konvaRelation'),
     methodBaseData: geneVuexValue('methodBaseData'),
@@ -238,7 +238,7 @@ export default {
       }
       return this.$http.post('/data/getCaseData', {
         caseNumber: this.caseNumber,
-        list: ['caseCondition', 'caseTestitem', 'konvaGroupList', 'valueList', 'shapeList', 'konvaRelation', 'methodBaseData']
+        list: ['caseCondition', 'caseTestitem', 'konvaGroupList', 'pointList', 'shapeList', 'konvaRelation', 'methodBaseData']
       })
       .then(res=>{
         if (res.data.success) {
@@ -273,8 +273,8 @@ export default {
               return i
             })
           }
-          if (_.isArray(result.valueList) && !_.isEmpty(result.valueList)) {
-            this.valueList = result.valueList
+          if (_.isArray(result.pointList) && !_.isEmpty(result.pointList)) {
+            this.pointList = result.pointList
           }
           if (_.isArray(result.shapeList) && !_.isEmpty(result.shapeList)) {
             this.shapeList = result.shapeList.map(e=>{e.sceneFunc = sceneFunc; e.dragBoundFunc = dragBoundFunc; return e})
@@ -295,7 +295,7 @@ export default {
       _.forIn(methodBaseData, methodG=>{
         _.forIn(methodG.list, listGroup=>{
           _.forIn(listGroup.list, point=>{
-            let foundSourcePoint = _.find(this.valueList, {id: point.id})
+            let foundSourcePoint = _.find(this.pointList, {id: point.id})
             if (foundSourcePoint) {
               point.englishDescription = foundSourcePoint.englishDescription
               point.chineseDescription = foundSourcePoint.chineseDescription

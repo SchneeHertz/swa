@@ -10,7 +10,7 @@ export default new Vuex.Store({
     authority: undefined,
     otsId: undefined,
     konvaGroupList: [],
-    valueList: [],
+    pointList: [],
     shapeList: [],
     konvaRelation: [],
     caseNumber: undefined,

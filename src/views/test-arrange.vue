@@ -523,13 +523,13 @@ export default {
     },
     findMinIndex (array) {
       let result
-      _.forOwn(_.sortBy(array, e=>+e), (v,i)=>{
+      _.forOwn(_(array).map(e=>parseInt(e)).sortBy().uniq().value(), (v,i)=>{
         if (+v != +i+1) {
           result = +i+1
           return false
         }
       })
-      return result ? result : array.length+1
+      return result ? result : _(array).map(e=>parseInt(e)).sortBy().pop() + 1
     },
     addGroup (count = 1) {
       for (let i = 0; i < count; i++) {

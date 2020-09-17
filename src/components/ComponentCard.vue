@@ -1,12 +1,20 @@
 <template>
   <div class="point-card component-card" 
-    :class="[shadow ? 'is-' + shadow + '-shadow' : 'is-always-shadow', {'select-point-card': isSelected}]"
+    :class="[shadow ? 'is-' + shadow + '-shadow' : 'is-always-shadow']"
     :style="{width: width}"
   >
-    <div
-      class="point-card__header"
-      @click="handlePointCard($event)"
-    >
+    <div class="point-card__header">
+      <span class="title-index">{{data.index ? data.index: nextIndex}}</span>
+      <el-select
+        v-model="data.mainPart"
+        placeholder=""
+        size="mini"
+        class="title-main-select"
+        :disabled="!enableMainPartSelect"
+      >
+        <el-option label="" :value="undefined"></el-option>
+        <el-option label="主体" value="main"></el-option>
+      </el-select>
       <slot name="header"></slot>
       <div class="mini-circle-btn">
         <el-button type="success" icon="el-third-icon-file-copy" circle plain @click="handleCopyButton"></el-button>
@@ -14,106 +22,103 @@
       </div>
     </div>
     <div class="point-card__body">
-      <el-input
-        type="textarea"
-        placeholder="英文描述"
-        class="point-description"
-        v-model="data['englishDescription']"
-        :autosize="{ minRows: 2, maxRows: 4}"
-        @focus="$emit('focus-point')"
-        @blur="$emit('blur-point')"
-        :id="`input-${data.id}`"
-      ></el-input>
-      <el-input
-        type="textarea"
-        placeholder="中文描述"
-        class="point-description"
-        v-model="data['chineseDescription']"
-        :autosize="{minRows: 2, maxRows: 4}"
-        @focus="$emit('focus-point')"
-        @blur="$emit('blur-point')"
-      ></el-input>
-      <NameFormItem class="point-option" prependWidth="4em" v-show="useStyle">
-        <template #prepend>Style</template>
-        <template #default>
-          <el-select
-            v-model="data['style']"
-            allow-create
-            filterable
-            multiple
-            size="mini"
-          >
-            <el-option
-              v-for="op in styleList"
-              :key="op"
-              :value="op"
-            ></el-option>
-          </el-select>
-        </template>
-      </NameFormItem>
-      <NameFormItem class="point-option"
-        v-for="indForm in simpleConditionList"
-        :key="indForm.id"
+      <overlay-scrollbars
+        :options="{overflowBehavior: {x: 'hidden'}}"
+        class="point-form-body"
       >
-        <template #prepend>{{indForm.name}}</template>
-        <template #default>
-          <el-select
-            v-model="data.condition[indForm.id]"
-            filterable
-            default-first-option
-            @focus="$emit('focus-point')"
-            @blur="$emit('blur-point')"
-            size="mini"
-            :multiple="indForm.cat == 'multiple'"
-          >
-            <el-tooltip 
-              effect="dark"
-              :content="op.remark"
-              placement="right"
-              v-for="op in indForm.list"
-              :key="op.value"
-              :open-delay="500"
+        <el-input
+          type="textarea"
+          placeholder="英文描述"
+          class="point-description"
+          v-model="data['englishDescription']"
+          :autosize="{ minRows: 2, maxRows: 4}"
+          :id="`input-${data.id}`"
+          ref="pointDescriptionEnglish"
+          @blur="fixAreaComplete"
+        ></el-input>
+        <el-input
+          type="textarea"
+          placeholder="中文描述"
+          class="point-description"
+          v-model="data['chineseDescription']"
+          :autosize="{minRows: 2, maxRows: 4}"
+        ></el-input>
+        <NameFormItem class="point-option" prependWidth="4em" v-show="useStyle">
+          <template #prepend>Style</template>
+          <template #default>
+            <el-select
+              v-model="data['style']"
+              allow-create
+              filterable
+              multiple
+              size="mini"
             >
               <el-option
-                :label="op.value"
-                :value="op.value"
+                v-for="op in styleList"
+                :key="op"
+                :value="op"
               ></el-option>
-            </el-tooltip>
-          </el-select>
-        </template>
-      </NameFormItem>
-      <NameFormItem class="point-option"
-        v-for="indForm in displayAfterwardConditionList"
-        :key="indForm.id"
-      >
-        <template #prepend>{{indForm.name}}</template>
-        <template #default>
-          <el-select
-            v-model="data.condition[indForm.id]"
-            filterable
-            default-first-option
-            @focus="$emit('focus-point')"
-            @blur="$emit('blur-point')"
-            size="mini"
-            :multiple="indForm.cat == 'multiple'"
-          >
-            <el-tooltip 
-              effect="dark"
-              :content="op.remark"
-              placement="right"
-              v-for="op in indForm.list"
-              :key="op.value"
-              :open-delay="500"
+            </el-select>
+          </template>
+        </NameFormItem>
+        <NameFormItem class="point-option"
+          v-for="indForm in simpleConditionList"
+          :key="indForm.id"
+        >
+          <template #prepend>{{indForm.name}}</template>
+          <template #default>
+            <el-select
+              v-model="data.condition[indForm.id]"
+              filterable
+              size="mini"
+              :multiple="indForm.cat == 'multiple'"
             >
-              <el-option
-                :label="op.value"
-                :value="op.value"
-              ></el-option>
-            </el-tooltip>
-          </el-select>
-        </template>
-      </NameFormItem>
-      <slot></slot>
+              <el-tooltip 
+                effect="dark"
+                :content="op.remark"
+                placement="right"
+                v-for="op in indForm.list"
+                :key="op.value"
+                :open-delay="500"
+              >
+                <el-option
+                  :label="op.value"
+                  :value="op.value"
+                ></el-option>
+              </el-tooltip>
+            </el-select>
+          </template>
+        </NameFormItem>
+        <NameFormItem class="point-option"
+          v-for="indForm in displayAfterwardConditionList"
+          :key="indForm.id"
+        >
+          <template #prepend>{{indForm.name}}</template>
+          <template #default>
+            <el-select
+              v-model="data.condition[indForm.id]"
+              filterable
+              size="mini"
+              :multiple="indForm.cat == 'multiple'"
+            >
+              <el-tooltip 
+                effect="dark"
+                :content="op.remark"
+                placement="right"
+                v-for="op in indForm.list"
+                :key="op.value"
+                :open-delay="500"
+              >
+                <el-option
+                  :label="op.value"
+                  :value="op.value"
+                ></el-option>
+              </el-tooltip>
+            </el-select>
+          </template>
+        </NameFormItem>
+        <slot></slot>
+      </overlay-scrollbars>
     </div>
   </div>
 </template>
@@ -132,15 +137,16 @@ export default {
     simpleConditionList: Array,
     afterwardConditionList: Array,
     testitemIdList: Array,
-    focusId: String,
     data: {
       type: Object,
       default: ()=>({})
     },
-    isSelected: Boolean,
     materialObj: Object,
     useStyle: Boolean,
-    styleList: Array
+    styleList: Array,
+    wordList: Array,
+    nextIndex: String,
+    enableMainPartSelect: Boolean
   },
   data () {
     return {
@@ -245,6 +251,25 @@ export default {
       return tempList
     },
   },
+  mounted () {
+    let that = this
+    $(`#input-${that.data.id}`).areacomplete({
+      wordCount: 1,
+      mode: 'outer',
+      on: {
+        query (text, cb) {
+          if(/[A-Z]/.test(text[0])){
+            cb(_.filter(that.wordList, word=>word.toLowerCase().indexOf(text.toLowerCase()) == 0).map(word=>_.upperFirst(word)))
+          } else {
+            cb(_.filter(that.wordList, word=>word.toLowerCase().indexOf(text.toLowerCase()) == 0))
+          }
+        }
+      }
+    })
+  },
+  beforeDestroy () {
+    $(`#input-${this.data.id}`).destroyAreacomplete(`input-${this.data.id}`)
+  },
   methods:{
     handleDeleteButton () {
       this.$emit('delete-point')
@@ -252,11 +277,9 @@ export default {
     handleCopyButton () {
       this.$emit('copy-point')
     },
-    handlePointCard (e) {
-      if (e.target.classList.contains('point-card__header')){
-        this.$emit('select-point')
-      }
-    }
+    fixAreaComplete () {
+      this.$set(this.data, 'englishDescription', _.upperFirst($(`#input-${this.data.id}`)[0].value))
+    },
   }
 }
 </script>
@@ -270,21 +293,25 @@ export default {
   overflow: hidden
   color: #303133
   transition: 0.3s
+  white-space: normal
 .is-always-shadow, .is-hover-shadow:focus, .is-hover-shadow:hover
   box-shadow: 0 2px 12px 0 rgba(0,0,0,0.1)
-// .select-point-card
-//   box-shadow: 0px 0px 2px 2px rgba(0,128,255,0.6)
 .point-card__header
-  padding: 8px 16px
+  padding: 4px 10px
   border-bottom: 1px solid #EBEEF5
   box-sizing: border-box
-.mini-circle-btn
-  float: right
-  .el-button
-    padding: 1px
-    margin: 0 1px
+  .title-index
+    margin-right: 10px
+  .mini-circle-btn
+    float: right
+    margin: 4px 0
+    .el-button
+      padding: 1px
+      margin: 0 1px
 .point-card__body
   padding: 8px 16px
+  .point-form-body
+    height: 29vh
 .point-card__body .point-description, .point-card__body .point-option
   margin: 2px 0
 </style>

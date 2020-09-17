@@ -12,6 +12,7 @@ _.mixin(LodashId)
 db.defaults({
   materialList: {"material": [], "materialCondition": []},
   methodList: [],
+  complexList: [],
   condition: {"single": [], "multiple": [], "afterward": [], "special": []},
   regulation: []
 }).write()
@@ -112,6 +113,28 @@ const saveCondition = (conditionList) => {
   db.set('condition', existConditionList).write()
 }
 
+const getComplexList = () => {
+  return db.get('complexList').value()
+}
+
+const saveComplexList = (complexList) => {
+  let existComplexList = db.get('complexList').value()
+  _.forIn(complexList, complex=>{
+    switch (complex.modify) {
+      case 'add':
+      case 'modify':
+        delete complex.modify
+        _.upsert(existComplexList, complex)
+        break
+      case 'delete':
+        delete complex.modify
+        _.removeById(existComplexList, complex.id)
+        break
+    }
+  })
+  db.set('complexList', existComplexList).write()
+}
+
 module.exports = {
   getMaterialList,
   saveMaterialList,
@@ -122,4 +145,6 @@ module.exports = {
   saveRegulation,
   getCondition,
   saveCondition,
+  getComplexList,
+  saveComplexList,
 }

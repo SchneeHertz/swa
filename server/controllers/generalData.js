@@ -103,6 +103,29 @@ const saveCondition = async (ctx) => {
   }
 }
 
+const getComplexList = async (ctx) => {
+  ctx.body = {
+    success: true,
+    complexList: db.getComplexList()
+  }
+}
+
+const saveComplexList = async (ctx) => {
+  if (isAdmin(ctx)) {
+    const complexList = ctx.request.body.complexList
+    db.saveComplexList(complexList)
+    ctx.body = {
+      success: true,
+      info: '保存成功'
+    }
+  } else  {
+    ctx.body = {
+      success: false,
+      info: '无操作权限'
+    }
+  }
+}
+
 const testAuth = async (ctx) => {
   ctx.body = {}
 }
@@ -152,6 +175,8 @@ module.exports = {
   saveRegulation,
   getCondition,
   saveCondition,
+  getComplexList,
+  saveComplexList,
   testAuth,
   getUserGroup,
   saveUserGroup

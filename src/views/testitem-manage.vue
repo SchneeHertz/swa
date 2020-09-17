@@ -16,6 +16,10 @@
             <i class="el-third-icon-gold"></i>
             <span slot="title">材质</span>
           </el-menu-item>
+          <el-menu-item index="complex">
+            <i class="el-third-icon-cluster"></i>
+            <span slot="title">复合类型</span>
+          </el-menu-item>
           <el-menu-item index="method">
             <i class="el-third-icon-experiment"></i>
             <span slot="title">测试方法</span>
@@ -112,6 +116,24 @@
           </el-tooltip>
           <el-tooltip effect="dark" content="保存" placement="top">
             <el-button type="success" class="bigicon" icon="el-third-icon-save" circle @click="saveMaterial"></el-button>
+          </el-tooltip>
+        </div>
+      </el-main>
+      <el-main v-if="activePage === 'complex'" class="complex-pane">
+        <div class="inner-tabs-list inner-tabs-list-complex">
+          <ComplexCard
+            v-for="complex in complexList"
+            :key="complex.id"
+            :data="complex"
+            width="48%"
+          ></ComplexCard>
+        </div>
+        <div class="bottom-function-btn">
+          <el-tooltip effect="dark" content="新增" placement="top">
+            <el-button type="primary" class="bigicon" icon="el-third-icon-plus" circle @click="addComplex"></el-button>
+          </el-tooltip>
+          <el-tooltip effect="dark" content="保存" placement="top">
+            <el-button type="success" class="bigicon" icon="el-third-icon-save" circle @click="saveComplex"></el-button>
           </el-tooltip>
         </div>
       </el-main>
@@ -420,6 +442,7 @@ import ConditionCardSingle from '@/components/ConditionCardSingle.vue'
 import ConditionCardAfterward from '@/components/ConditionCardAfterward.vue'
 import MaterialCard from '@/components/MaterialCard.vue'
 import MaterialConditionCard from '@/components/MaterialConditionCard.vue'
+import ComplexCard from '@/components/ComplexCard.vue'
 import MethodCard from '@/components/MethodCard.vue'
 import SubClauseCard from '@/components/SubClauseCard.vue'
 import NameFormItem from '@/components/NameFormItem.vue'
@@ -436,6 +459,7 @@ export default {
     ConditionCardAfterward,
     MaterialCard,
     MaterialConditionCard,
+    ComplexCard,
     MethodCard,
     SubClauseCard,
     NameFormItem,
@@ -464,6 +488,7 @@ export default {
       dialogMethodVisible: false,
       dialogMethodId: undefined,
       pageMethodList: 1,
+      complexList: []
     }
   },
   computed: {
@@ -612,6 +637,7 @@ export default {
     this.loadMethodList()
     this.loadRegulationList()
     this.loadConditionList()
+    this.loadComplexList()
   },
   methods: {
     loadConditionList () {
@@ -630,6 +656,12 @@ export default {
       return this.$http.get('/data/getMethodList')
       .then(res=>{
         this.methodList = _.sortBy(res.data.methodList, 'name')
+      })
+    },
+    loadComplexList () {
+      return this.$http.get('/data/getComplexList')
+      .then(res=>{
+        this.complexList = _.sortBy(res.data.complexList, 'name')
       })
     },
     loadRegulationList () {
@@ -717,6 +749,28 @@ export default {
         if(res.data.success){
           this.$message({type: 'success', message: res.data.info, showClose: true})
           this.loadMaterialList()
+        } else {
+          this.$message({type: 'warning', message: res.data.info, showClose: true})
+        }
+      })
+      .catch(() => {
+        this.$message({type: 'warning', message: '未知错误', showClose: true})
+      })
+    },
+    addComplex () {
+      this.complexList.unshift({
+        id: _id(),
+        modify: 'add'
+      })
+    },
+    saveComplex () {
+      this.$http.post('/data/saveComplexList', {
+        complexList: _.filter(this.complexList, 'modify')
+      })
+      .then(res=>{
+        if(res.data.success){
+          this.$message({type: 'success', message: res.data.info, showClose: true})
+          this.loadComplexList()
         } else {
           this.$message({type: 'warning', message: res.data.info, showClose: true})
         }
@@ -914,7 +968,7 @@ export default {
 .inner-tabs-list
   overflow: auto
   height: 85vh
-.inner-tabs-list-method
+.inner-tabs-list-method, .inner-tabs-list-complex
   height: 90vh
 .testitem-filter
   height: 15vh

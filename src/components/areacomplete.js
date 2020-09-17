@@ -26,6 +26,14 @@
             }
         })
     }
+    $.fn.destroyAreacomplete = function(id){
+        for (let i of Object.keys(_data)) {
+            if (_data[i].ta.id == id){
+                _data[i].clone.remove()
+                _data[i].list.remove()
+            }
+        }
+    }
 
     // var browser =  {isChrome: $.browser.webkit }
 
@@ -228,7 +236,7 @@
             'overflow-x' : 'hidden',
             'line-height' :  $(data.ta).css('line-height'),
             'overflow-y' : 'hidden',
-            'z-index' : -10					
+            'z-index' : -10
         })
         
         //console.log("createClone: ta width=",$(data.ta).css("width")," ta clientWidth=",data.ta.clientWidth, "scrollWidth=",data.ta.scrollWidth," offsetWidth=",data.ta.offsetWidth," jquery.width=",$(data.ta).width());

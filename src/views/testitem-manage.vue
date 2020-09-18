@@ -271,7 +271,7 @@
                   >
                     <template #prepend>OTS 编号</template>
                   </el-input>
-                  <NameFormItem class="card-line" prependWidth="80px">
+                  <NameFormItem class="card-line" prependWidth="90px">
                     <template #prepend>分组</template>
                     <template #default>
                       <el-select
@@ -290,7 +290,7 @@
                       </el-select>
                     </template>
                   </NameFormItem>
-                  <NameFormItem class="card-line" prependWidth="80px">
+                  <NameFormItem class="card-line" prependWidth="90px">
                     <template #prepend>客户</template>
                     <template #default>
                       <el-select
@@ -309,16 +309,21 @@
                       </el-select>
                     </template>
                   </NameFormItem>
-                  <NameFormItem class="card-line" prependWidth="80px">
-                    <template #prepend><span title="涂层与底材分开测试">按状态分开</span></template>
+                  <NameFormItem class="card-line" prependWidth="90px">
+                    <template #prepend>需要合并</template>
                     <template #default>
                       <el-select
-                        v-model="selectRegulation.splitByStatus"
+                        v-model="selectRegulation.includeComplex"
                         class="one-line-select"
                         @change="updateRegulationStatus"
+                        multiple
                       >
-                        <el-option label="是" :value="true"></el-option>
-                        <el-option label="否" :value="false"></el-option>
+                        <el-option
+                          v-for="complex in complexList"
+                          :key="complex.id"
+                          :label="complex.name"
+                          :value="complex.id"
+                        />
                       </el-select>
                     </template>
                   </NameFormItem>
@@ -833,7 +838,6 @@ export default {
       this.regulationList.unshift(
         _.assign(_.cloneDeep(this.selectRegulation), {
           id: geneId,
-          followId: this.selectRegulation.id,
           modify: 'add'
         })
       )
@@ -1008,7 +1012,7 @@ export default {
   vertical-align: top
 .regulation-info-pane .el-input-group__prepend
   text-align: center
-  width: 80px
+  width: 90px
 .one-line-select
   width: 100%
 </style>

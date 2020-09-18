@@ -36,6 +36,9 @@
       <div class="card-line">
         <label class="card-label">默认测试: <span>{{data.defaultTest ? '是' : '否'}}</span></label>
       </div>
+      <div class="card-line">
+        <label class="card-label">不可With: <span>{{data.disableWith ? '是' : '否'}}</span></label>
+      </div>
       <div
         v-for="condition in methodData.condition"
         :key="condition.id"
@@ -79,6 +82,15 @@
         <template #prepend>默认测试</template>
         <template #default>
           <el-select v-model="dialogData.defaultTest">
+            <el-option :value="true" label="是"></el-option>
+            <el-option :value="false" label="否"></el-option>
+          </el-select>
+        </template>
+      </NameFormItem>
+      <NameFormItem class="card-line" prependWidth="60px">
+        <template #prepend>不可with</template>
+        <template #default>
+          <el-select v-model="dialogData.disableWith">
             <el-option :value="true" label="是"></el-option>
             <el-option :value="false" label="否"></el-option>
           </el-select>

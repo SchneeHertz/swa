@@ -287,17 +287,15 @@ export default {
       searchString: undefined,
       loadTasklistLoading: false,
       copyedList: [],
-      hideEmptyMethod: false
+      hideEmptyMethod: false,
+      complexList: []
     }
   },
   computed: {
     caseNumber: geneVuexValue('caseNumber'),
     caseTestitemList: geneVuexValue('caseTestitemList'),
     existCaseInfo: geneVuexValue('existCaseInfo'),
-    konvaGroupList: geneVuexValue('konvaGroupList'),
     pointList: geneVuexValue('pointList'),
-    shapeList: geneVuexValue('shapeList'),
-    pointRelation: geneVuexValue('konvaRelation'),
     methodBaseData: geneVuexValue('methodBaseData'),
     viewSetting: geneVuexValue('viewSetting'),
     displayRegulation: {
@@ -349,6 +347,7 @@ export default {
         this.geneMethodList()
       }
     })
+    this.loadComplexList()
   },
   methods: {
     loadMaterialList () {
@@ -363,50 +362,21 @@ export default {
         this.methodList = _.sortBy(res.data.methodList, 'name')
       })
     },
+    loadComplexList () {
+      return this.$http.get('/data/getComplexList')
+      .then(res=>{
+        this.complexList = _.sortBy(res.data.complexList, 'name')
+      })
+    },
     loadTasklist () {
       this.loadTasklistLoading = true
-      let sceneFunc = (context, shape)=>{
-        context.beginPath()
-        context.rect(0, 0, shape.width(), shape.height())
-        context.font = '1.5em Arial'
-        context.textAlign = 'center'
-        context.textBaseline = 'middle'
-        context.fillText(shape.name(), shape.width()*0.5, shape.height()*0.5)
-        context.closePath()
-        context.fillStrokeShape(shape)
-      }
-      let dragBoundFunc = (pos) => {
-        let width =  window.innerWidth*0.4 - 80
-        let height = window.innerHeight - 80 - 50
-        return {
-          x: pos.x < 0 ? 0 : pos.x > width ? width : pos.x,
-          y: pos.y < 0 ? 0 : pos.y > height ? height : pos.y,
-        }
-      }
       return this.$http.post('/data/getCaseData', {
         caseNumber: this.caseNumber,
-        list: ['methodBaseData', 'konvaGroupList', 'pointList', 'shapeList', 'konvaRelation', 'caseCondition', 'caseTestitem']
+        list: ['methodBaseData', 'pointList', 'caseCondition', 'caseTestitem']
       })
       .then(res=>{
         if (res.data.success) {
           let result = res.data.result
-          if (_.isArray(result.konvaGroupList) && !_.isEmpty(result.konvaGroupList)) {
-            this.konvaGroupList = result.konvaGroupList.map(i=>{
-              i.list.map(e=>{e.sceneFunc = sceneFunc; e.dragBoundFunc = dragBoundFunc; return e})
-              i.dragBoundFunc = (pos) => {
-                let width =  window.innerWidth*0.4 - i.mainPart.x - 80
-                let height = window.innerHeight - 80 - i.mainPart.y - 50
-                return {
-                  x: pos.x < - i.mainPart.x ? - i.mainPart.x : pos.x > width ? width : pos.x,
-                  y: pos.y < - i.mainPart.y ? - i.mainPart.y : pos.y > height ? height : pos.y,
-                }
-              }
-              return i
-            })
-          }
-          if (_.isArray(result.shapeList) && !_.isEmpty(result.shapeList)) {
-            this.shapeList = result.shapeList.map(e=>{e.sceneFunc = sceneFunc; e.dragBoundFunc = dragBoundFunc; return e})
-          }
           if (_.isArray(result.pointList) && !_.isEmpty(result.pointList)) {
             this.pointList = result.pointList
           }
@@ -416,9 +386,6 @@ export default {
             if (this.selectMethod.id) {
               this.handleSelectMethod(this.selectMethod.id)
             }
-          }
-          if (_.isArray(result.konvaRelation) && !_.isEmpty(result.konvaRelation)) {
-            this.pointRelation = result.konvaRelation
           }
           if (_.isArray(result.caseTestitem) && !_.isEmpty(result.caseTestitem)) {
             this.caseTestitemList = result.caseTestitem
@@ -601,25 +568,18 @@ export default {
     },
     autoSolve () {
       let startTime = new Date()
-      const STATUSCONDITIONID = 'n0l2O8mir'
-      const ACCESSIBLECONDTION = '1yrtsYdd12'
       const MATERIALCONDTION = 'material'
-      let sortedPointList = _.sortBy(this.pointList, (point)=>{
-        return ["Accessible and mouthable", "Unmouthable but accessible ", "Cover by fabric and mouthable", "Inaccessible and unmouthable"].indexOf(point.condition['ACCESSIBLECONDTION'])
-      }, (point)=>{
-        return _.get(point.condition, 'material[0]')
-      })
-      let pointList = this.resolvePointList(sortedPointList)
+      let pointList = this.resolvePointList(_.cloneDeep(this.pointList))
       let pointHashObj = {}
       let pointPicked = {}
       _.forIn(this.methodBaseData, methodObj=>{
         let filterByMethodList = this.pointFilterByConditionList(pointList, methodObj.condition)
         let filterByRegulationList = this.pointTagRegulation(filterByMethodList, methodObj.regulationList, pointPicked)
-        let groupedList = _.groupBy(_.filter(filterByRegulationList, point=>{return !_.isEmpty(point.regulation)}), point=>JSON.stringify(point.regulation.map(r=>r.id)))
+        let filterPointList = _(filterByRegulationList).values().flatten().filter(point=>!_.isEmpty(point.regulation)).value()
+        let groupedList = _.groupBy(filterPointList, point=>JSON.stringify(point.regulation.map(r=>r.id)))
         _.forIn(groupedList, group=>{
           _.forIn(group, point=>{
             point.groupBy = []
-            let splitByStatus = false
             let regulationList = point.regulation
             if (this.mixByStyle) {
               if (!_.isEmpty(point.style)) {
@@ -629,9 +589,6 @@ export default {
               }
             }
             _.forIn(regulationList, regulation=>{
-              if (regulation.splitByStatus) {
-                splitByStatus = true
-              }
               _.forIn(regulation.subclause, subclause=>{
                 if (this.checkConditionListPass({point: point, conditionList:subclause.condition, methodId:methodObj.id, group: regulation.method.group})) {
                   point.groupBy.push({
@@ -644,12 +601,9 @@ export default {
                 }
               })
             })
-            if (splitByStatus) {
-              point.groupBy.push({
-                status: point.condition[STATUSCONDITIONID]
-                // material: _.first(point.condition[MATERIALCONDTION])
-              })
-            }
+            point.groupBy.push({
+              material: JSON.stringify(_.sortBy(point.condition[MATERIALCONDTION]))
+            })
           })
         })
         let groupedList2 = []
@@ -671,37 +625,26 @@ export default {
             let minMix = _.min(_.head(group).maxMixArray)
             _.forIn(group, point=>{
               regulationList = point.regulation
-              if (minMix > 1 && point.condition['weightType'] != 'Enough') {
-                let parentId = this.findParentId(this.pointRelation, point.id)
-                let foundParent = _.find(group, {id: parentId})
-                if (foundParent) {
-                  point.minorType = 'parentWithed'
-                  foundParent.elements.push(_.cloneDeep(point))
-                } else {
-                  let inwith = false
-                  _.forIn(group, parentPoint=>{
-                    if (
-                      parentPoint.condition['weightType'] == 'Enough' 
-                      && !(parentPoint.condition[STATUSCONDITIONID] == 'Coating' && point.condition[STATUSCONDITIONID] != 'Coating')
-                      && parentPoint.elements.length < 2
-                    ) {
-                      parentPoint.elements.push(_.cloneDeep(point))
-                      point.minorType = 'withed'
-                      inwith = true
-                      return false
-                    }
-                  })
-                  if (!inwith) {
-                    point.minorType = 'unWithed'
+              if (!point.disableWith  && point.condition['weightType'] != 'Enough') {
+                let inwith = false
+                _.forIn(group, parentPoint=>{
+                  if (parentPoint.condition['weightType'] == 'Enough' && parentPoint.elements.length < 2) {
+                    parentPoint.elements.push(_.cloneDeep(point))
+                    point.minorType = 'withed'
+                    inwith = true
+                    return false
                   }
+                })
+                if (!inwith) {
+                  point.minorType = 'unWithed'
                 }
               } else {
                 point.minorType = 'main'
               }
             })
-            // let finalMethodGroupList = _.chunk(_.filter(group, point=>point.minorType == 'main' || point.minorType == 'unWithed'), minMix)
-            let groupByStatus = _.groupBy(_.filter(group, point=>point.minorType == 'main' || point.minorType == 'unWithed'), point=>point.condition[STATUSCONDITIONID])
-            let finalMethodGroupList = _.flatten(_.values(groupByStatus).map(g=>_.chunk(g, minMix)))
+            let finalMethodGroupList = _.chunk(_.filter(group, point=>point.minorType == 'main' || point.minorType == 'unWithed'), minMix)
+            // let groupByStatus = _.groupBy(_.filter(group, point=>point.minorType == 'main' || point.minorType == 'unWithed'), point=>point.condition[STATUSCONDITIONID])
+            // let finalMethodGroupList = _.flatten(_.values(groupByStatus).map(g=>_.chunk(g, minMix)))
             let startIndex = methodObj.list.length + 1
             let idList = []
             _.forIn(finalMethodGroupList, pointGroup=>{
@@ -721,7 +664,7 @@ export default {
                 if (!subclauseValList[key]) {
                   subclauseValList[key] = []
                 }
-                if (key != 'status') {
+                if (!['material', 'style'].includes(key)) {
                   subclauseValList[key].push({[id]: code})
                 }
               })
@@ -779,6 +722,11 @@ export default {
     },
     resolvePointList (pointList) {
       let tempList = []
+      let groupedList = {
+        ind: [],
+        split: [],
+        merge: []
+      }
       _.forIn(_.cloneDeep(pointList), point=>{
         let materialValArray = []
         _.forIn(_.get(point, 'condition.material', []), material=>{
@@ -799,7 +747,44 @@ export default {
         })        
         tempList.push(point)
       })
-      return tempList
+      let resolveComplexGroupId = []
+      _.forIn(tempList, point=>{
+        if (point.complexGroupId) {
+          if (!resolveComplexGroupId.includes(point.complexGroupId)) {
+            let group =  _.filter(tempList, {complexGroupId: point.complexGroupId})
+            let mainPart = _.find(group, {mainPart: 'main'})
+            let complex = _.find(this.complexList, {id: point.complexId})
+            if (mainPart && complex) {
+              resolveComplexGroupId.push(point.complexGroupId)
+              switch (complex.complexType) {
+                case 'M-PP':
+                  groupedList.merge.push(mainPart)
+                  _.forIn(group, part=>{
+                    if (part.mainPart != 'main') {
+                      groupedList.split.push(part)
+                    }
+                  })
+                  break
+                case 'MPP-MPP':
+                  groupedList.merge.push(_.assign({}, mainPart, {elements: _.without(group, mainPart)}))
+                  groupedList.split = [...groupedList.split, ...group]
+                  break
+                case 'MPP-MPMP':
+                  groupedList.merge.push(_.assign({}, mainPart, {elements: _.without(group, mainPart)}))
+                  _.forIn(group, part=>{
+                    if (part.mainPart != 'main') {
+                      groupedList.split.push(_.assign({}, mainPart, {elements:[part]}))
+                    }
+                  })
+                  break
+              }
+            }
+          }
+        } else {
+          groupedList.ind.push(point)
+        }
+      })
+      return groupedList
     },
     checkConditionListPass ({point, conditionList, methodId, group}) {
       if (_.isEmpty(conditionList)) {
@@ -856,13 +841,13 @@ export default {
                 if (condition.valueLogic == 'and') {
                   return _.difference(condition.value, pointValue).length == 0
                 } else if (condition.valueLogic == 'or') {
-                  return _.uniq(condition.value.concat(pointValue)).length < _.uniq(condition.value).concat(_.uniq(pointValue)).length
+                  return _.difference(condition.value, pointValue).length < condition.value.length
                 }
               } else if (condition.logic == 'no') {
                 if (condition.valueLogic == 'and') {
                   return _.difference(condition.value, pointValue).length > 0
                 } else if (condition.valueLogic == 'or') {
-                  return !(_.difference(condition.value, pointValue).length == 0)
+                  return _.difference(condition.value, pointValue).length == condition.value.length
                 }
               }
               break
@@ -870,44 +855,61 @@ export default {
         })
     },
     pointFilterByConditionList(pointList, conditionList) {
-      let tempList = []
-      _.forIn(pointList, point=>{
-        if (this.checkConditionListPass({point:point, conditionList: conditionList})){
-          tempList.push(point)
-        }
+      let tempList = {}
+      _.forIn(pointList, (group, key)=>{
+        tempList[key] = _.filter(group, point=>this.checkConditionListPass({point:point, conditionList: conditionList}))
       })
       return tempList
     },
     pointTagRegulation (pointList, regulationList, pointPicked) {
       pointList = _.cloneDeep(pointList)
-      _.forIn(pointList, point=>{
-        point.regulation = []
-        point.maxMixArray = []
-        point.elements = []
-        _.forIn(regulationList, regulation=>{
-          if (regulation.method.defaultTest && this.checkConditionListPass({point:point, conditionList: regulation.condition})) {
-            let checked = true
-            if (_.isArray(pointPicked[point.id])) {
+      _.forIn(pointList, (group, key)=>{
+        _.forIn(group, point=>{
+          point.regulation = []
+          point.maxMixArray = []
+          point.elements ? '' : point.elements = []
+          _.forIn(regulationList, regulation=>{
+            if (regulation.method.defaultTest && this.checkConditionListPass({point:point, conditionList: regulation.condition})) {
+              let checked = true
+              let forComplexCheck = true
+              switch (key) {
+                case 'split':
+                  if (_.get(regulation, 'includeComplex', []).includes(point.complexId)) {
+                    forComplexCheck = false
+                  } else {
+                    forComplexCheck = true
+                  }
+                  break
+                case 'merge':
+                  if (_.get(regulation, 'includeComplex', []).includes(point.complexId)) {
+                    forComplexCheck = true
+                  } else {
+                    forComplexCheck = false
+                  }
+              }
+              if (!_.isArray(pointPicked[point.id])) {
+                pointPicked[point.id] = []
+              }
               if (_.some(pointPicked[point.id], sign=>{
                   return sign.regulationId == regulation.id &&  sign.group == regulation.method.group
-                })
+                }) || !forComplexCheck
               ) {
                   checked = false
               } else {
                 pointPicked[point.id].push({regulationId: regulation.id, group: regulation.method.group})
               }
-            } else {
-              pointPicked[point.id] = []
-              pointPicked[point.id].push({regulationId: regulation.id, group: regulation.method.group})
-            }
-            if (checked) {
-              point.regulation.push(regulation)
-              point.maxMixArray.push(regulation.method.maxMix)
-              if (_.get(regulation, 'caseInfo.isIndTest')) {
-                point.maxMixArray.push(1)
+              if (checked) {
+                point.regulation.push(regulation)
+                point.maxMixArray.push(regulation.method.maxMix)
+                if (_.get(regulation, 'caseInfo.isIndTest')) {
+                  point.maxMixArray.push(1)
+                }
+                if (regulation.method.disableWith) {
+                  point.disableWith = true
+                }
               }
             }
-          }
+          })
         })
       })
       return pointList

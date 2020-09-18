@@ -153,13 +153,13 @@ export default {
               if (innerCd.valueLogic == 'and') {
                 return _.difference(innerCd.value, foundMapValue).length == 0
               } else if (innerCd.valueLogic == 'or') {
-                return _.uniq(innerCd.value.concat(foundMapValue)).length < _.uniq(innerCd.value).concat(_.uniq(foundMapValue)).length
+                return _.difference(innerCd.value, foundMapValue).length < innerCd.value.length
               }
             } else if (innerCd.logic == 'no') {
               if (innerCd.valueLogic == 'and') {
                 return _.difference(innerCd.value, foundMapValue).length > 0
               } else if (innerCd.valueLogic == 'or') {
-                return !(_.difference(innerCd.value, foundMapValue).length == 0)
+                return _.difference(innerCd.value, foundMapValue).length == innerCd.value.length
               }
             }
           } else {

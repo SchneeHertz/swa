@@ -184,13 +184,13 @@ export default {
                 if (innerCd.valueLogic == 'and') {
                   return _.difference(innerCd.value, this.testitemIdList).length == 0
                 } else if (innerCd.valueLogic == 'or') {
-                  return _.uniq(innerCd.value.concat(this.testitemIdList)).length < _.uniq(innerCd.value).concat(_.uniq(this.testitemIdList)).length
+                  return _.difference(innerCd.value, this.testitemIdList).length < innerCd.value.length
                 }
               } else if (innerCd.logic == 'no') {
                 if (innerCd.valueLogic == 'and') {
                   return _.difference(innerCd.value, this.testitemIdList).length > 0
                 } else if (innerCd.valueLogic == 'or') {
-                  return !(_.difference(innerCd.value, this.testitemIdList).length == 0)
+                  return _.difference(innerCd.value, this.testitemIdList).length == innerCd.value.length
                 }
               }
               break
@@ -230,13 +230,13 @@ export default {
                 if (innerCd.valueLogic == 'and') {
                   return _.difference(innerCd.value, pointValue).length == 0
                 } else if (innerCd.valueLogic == 'or') {
-                  return _.uniq(innerCd.value.concat(pointValue)).length < _.uniq(innerCd.value).concat(_.uniq(pointValue)).length
+                  return _.difference(innerCd.value, pointValue).length < innerCd.value.length
                 }
               } else if (innerCd.logic == 'no') {
                 if (innerCd.valueLogic == 'and') {
                   return _.difference(innerCd.value, pointValue).length > 0
                 } else if (innerCd.valueLogic == 'or') {
-                  return !(_.difference(innerCd.value, pointValue).length == 0)
+                  return _.difference(innerCd.value, pointValue).length == innerCd.value.length
                 }
               }
               break

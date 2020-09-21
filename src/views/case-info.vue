@@ -134,10 +134,7 @@ export default {
     caseNumber: geneVuexValue('caseNumber'),
     caseTestitemList: geneVuexValue('caseTestitemList'),
     existCaseInfo: geneVuexValue('existCaseInfo'),
-    konvaGroupList: geneVuexValue('konvaGroupList'),
     pointList: geneVuexValue('pointList'),
-    shapeList: geneVuexValue('shapeList'),
-    konvaRelation: geneVuexValue('konvaRelation'),
     methodBaseData: geneVuexValue('methodBaseData'),
     simpleCaseConditionList () {
       return _.chain(this.conditionList).pick(['single', 'multiple', 'special']).values().flatten().filter('caseRank').sortBy('rank').value()
@@ -218,27 +215,9 @@ export default {
       })
     },
     loadAllData () {
-      let sceneFunc = (context, shape)=>{
-        context.beginPath()
-        context.rect(0, 0, shape.width(), shape.height())
-        context.font = '1.5em Arial'
-        context.textAlign = 'center'
-        context.textBaseline = 'middle'
-        context.fillText(shape.name(), shape.width()*0.5, shape.height()*0.5)
-        context.closePath()
-        context.fillStrokeShape(shape)
-      }
-      let dragBoundFunc = (pos) => {
-        let width =  window.innerWidth*0.4 - 80
-        let height = window.innerHeight - 80 - 50
-        return {
-          x: pos.x < 0 ? 0 : pos.x > width ? width : pos.x,
-          y: pos.y < 0 ? 0 : pos.y > height ? height : pos.y,
-        }
-      }
       return this.$http.post('/data/getCaseData', {
         caseNumber: this.caseNumber,
-        list: ['caseCondition', 'caseTestitem', 'konvaGroupList', 'pointList', 'shapeList', 'konvaRelation', 'methodBaseData']
+        list: ['caseCondition', 'caseTestitem', 'pointList', 'methodBaseData']
       })
       .then(res=>{
         if (res.data.success) {
@@ -259,28 +238,8 @@ export default {
               })
             })
           }
-          if (_.isArray(result.konvaGroupList) && !_.isEmpty(result.konvaGroupList)) {
-            this.konvaGroupList = result.konvaGroupList.map(i=>{
-              i.list.map(e=>{e.sceneFunc = sceneFunc; e.dragBoundFunc = dragBoundFunc; return e})
-              i.dragBoundFunc = (pos) => {
-                let width =  window.innerWidth*0.4 - i.mainPart.x - 80
-                let height = window.innerHeight - 80 - i.mainPart.y - 50
-                return {
-                  x: pos.x < - i.mainPart.x ? - i.mainPart.x : pos.x > width ? width : pos.x,
-                  y: pos.y < - i.mainPart.y ? - i.mainPart.y : pos.y > height ? height : pos.y,
-                }
-              }
-              return i
-            })
-          }
           if (_.isArray(result.pointList) && !_.isEmpty(result.pointList)) {
             this.pointList = result.pointList
-          }
-          if (_.isArray(result.shapeList) && !_.isEmpty(result.shapeList)) {
-            this.shapeList = result.shapeList.map(e=>{e.sceneFunc = sceneFunc; e.dragBoundFunc = dragBoundFunc; return e})
-          }
-          if (_.isArray(result.konvaRelation) && !_.isEmpty(result.konvaRelation)) {
-            this.konvaRelation = result.konvaRelation
           }
           if (_.isArray(result.methodBaseData) && !_.isEmpty(result.methodBaseData)) {
             this.methodBaseData = result.methodBaseData

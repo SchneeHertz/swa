@@ -139,7 +139,7 @@
               :class="{'active-method': selectMethod.id == method.id}"
               @click="handleSelectMethod(method.id)"
             >
-              {{method.name}}
+              <div class="method-name">{{method.name}}</div>
               <i class="method-icon el-third-icon-container" title="Paste" @click="pasteList(method)"/>
               <i class="method-icon el-third-icon-file-copy" title="Copy" @click="copyList(method.list)"/>
             </div>
@@ -535,6 +535,7 @@ export default {
       _.forIn(this.selectMethod.regulationList, regulation=>{
         if (regulation.list.includes(id)) {
           regulation.list.push(newId)
+          regulation.subclauseVal[newId] = regulation.subclauseVal[id]
         }
       })
     },
@@ -1028,15 +1029,20 @@ export default {
   border-radius: 4px
   background-color: #fbfbfb
   font-size: 15px
+.point-list-item
   cursor: move
 .method-function
   margin: 1px
 .method-list-item
   padding: 8px 6px
-  cursor: pointer
+  cursor: inherit
+  .method-name
+    display: inline-block
+    width: 16em
 .method-icon
   float: right
-  margin: 0 4px
+  margin: 0 3px
+  cursor: pointer
 
 .isSelectedGroup
   box-shadow: 0px 0px 2px 2px rgba(0,128,255,0.6)

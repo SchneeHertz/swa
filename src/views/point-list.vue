@@ -198,10 +198,6 @@ export default {
   },
   data () {
     return {
-      configKonva: {
-        width: window.innerWidth*0.4,
-        height: window.innerHeight - 80
-      },
       conditionList: {},
       loadPointListLoading: false,
       materialObj: {},
@@ -299,6 +295,7 @@ export default {
             this.enableMainPartSelect = false
           } else {
             this.selectPointGroup = [_.cloneDeep(foundPoint)]
+            this.complexId = undefined
             this.enableMainPartSelect = true
           }
         }
@@ -538,9 +535,6 @@ export default {
   padding: 1px
   margin: 0 1px
 
-.konva-list
-  border-left: 1px solid rgb(220, 223, 230)
-  border-bottom: 1px solid rgb(220, 223, 230)
 .bottom-function-btn
   position: absolute
   bottom: 1em

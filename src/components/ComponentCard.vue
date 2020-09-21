@@ -266,6 +266,7 @@ export default {
         }
       }
     })
+    this.$refs.pointDescriptionEnglish.focus()
   },
   beforeDestroy () {
     $(`#input-${this.data.id}`).destroyAreacomplete(`input-${this.data.id}`)

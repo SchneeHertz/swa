@@ -41,7 +41,7 @@
                 <div class="footer-button-group">
                   <el-button size="small" type="success" plain @click="addPoint()">增加组到列表</el-button>
                   <el-button size="small" type="success" plain @click="modifyPoint">修改</el-button>
-                  <el-button size="small" type="primary" plain @click="resetPointForm">重置</el-button>
+                  <el-button size="small" type="primary" plain @click="resetPointForm(false)">重置</el-button>
                   <el-button size="small" type="primary" plain @click="addPart">增加点到组</el-button>
                 </div>
                 <el-select
@@ -372,7 +372,7 @@ export default {
         this.selectPointGroup.splice(pointSet, 1)
       }
       if (_.isEmpty(this.selectPointGroup)) {
-        this.resetPointForm()
+        this.resetPointForm(false)
       }
     },
     addPart () {
@@ -384,14 +384,16 @@ export default {
       let partCount = 1
       let complexGroupId = _id()
       let tempList = []
+      let mainPoint = {}
       _.forIn(this.selectPointGroup, part=>{
         if (part.mainPart == 'main') {
-          tempList.push(_.assign({}, part, {
+          mainPoint = _.assign({}, part, {
             id: _id(),
             index: index + 'M',
             complexId: this.complexId,
             complexGroupId: complexGroupId
-          }))
+          })
+          tempList.push(mainPoint)
           mainCount++
         } else {
           tempList.push(_.assign({}, part, {
@@ -406,14 +408,14 @@ export default {
       if (this.complexId){
         if (mainCount == 1) {
           this.pointList = [...this.pointList, ...tempList]
-          this.resetPointForm()
+          this.resetPointForm(true, mainPoint)
         } else {
           this.$message({type: 'warning', message: '缺少主体或主体数量大于1', showClose: true})
         }
       } else {
         if (this.selectPointGroup.length == 1) {
           this.pointList.push(_.assign({}, this.selectPointGroup[0], {id: _id(), index: index}))
-          this.resetPointForm()
+          this.resetPointForm(true, this.selectPointGroup[0])
         } else {
           this.$message({type: 'warning', message: '请选择复合类型', showClose: true})
         }
@@ -426,10 +428,14 @@ export default {
           this.$set(this.pointList, foundPoint, _.assign(this.pointList[foundPoint], _.cloneDeep(selectPoint)))
         }
       })
-      this.resetPointForm()
+      this.resetPointForm(false)
     },
-    resetPointForm () {
-      this.selectPointGroup = [{id: _id(), condition: {}}]
+    resetPointForm (repeat, point={}) {
+      if (repeat) {
+        this.selectPointGroup = [{id: _id(), condition: _.cloneDeep(point)['condition']}]
+      } else {
+        this.selectPointGroup = [{id: _id(), condition: {}}]
+      }
       this.complexId = undefined
       this.enableMainPartSelect = true
     },
@@ -494,7 +500,7 @@ export default {
           return false
         }
       })
-      return result ? result : _(array).map(e=>parseInt(e)).sortBy().pop() + 1
+      return result ? result : _(array).map(e=>parseInt(e)).sortBy().pop() || 0 + 1
     },
   }
 }

@@ -34,31 +34,76 @@
         <el-col :span="14" class="group-list">
           <div class="group-function">
             <el-row>
-              <el-col :span="8">
+              <el-col :span="16">
                 <el-tooltip effect="dark" content="清空选中的方法内的测试组" placement="bottom">
                   <el-button size="mini" type="danger" plain 
                     @click="emptyGroupList"
                   >清空组</el-button>
                 </el-tooltip>
+                <el-popover
+                  v-model="showRegulationPointCount"
+                  trigger="manual"
+                >
+                  <overlay-scrollbars :options="{scrollbars: {autoHide: 'scroll'}}" class="regulation-point-count">
+                    <el-table
+                      v-for="(table, type) in displayCheckTable"
+                      :key="type"
+                      :data="table"
+                      size="mini"
+                      border
+                      stripe
+                      class="count-table"
+                    >
+                      <el-table-column :label="type" width="100">
+                        <template #default="scope">
+                          {{scope.row[type].join(' & ')}}
+                        </template>
+                      </el-table-column>
+                      <el-table-column 
+                        v-for="label in ContactList"
+                        :key="label"
+                        :label="label"
+                        width="120"
+                      >
+                        <template #default="scope">
+                          <div :style="{color: scope.row[label] && scope.row[label]['select'] ?
+                                                  scope.row[label]['select'] > scope.row[label]['all'] ?
+                                                    'red'
+                                                    : scope.row[label]['select'] == scope.row[label]['all'] ?
+                                                      'limegreen'
+                                                      : 'black' 
+                                                  : 'black', 'text-align': 'center'}">
+                            <span>{{scope.row[label] ? scope.row[label]['select'] ? scope.row[label]['select'] : 0 : ''}}</span>
+                            <span>{{scope.row[label] ? scope.row[label]['all'] ? `(${scope.row[label]['all']})` : `(${scope.row[label]})` : ''}}</span>
+                          </div>
+                        </template>
+                      </el-table-column>
+                    </el-table>
+                  </overlay-scrollbars>
+                  <el-button
+                    size="mini"
+                    slot="reference"
+                    icon="el-icon-menu"
+                    @click="showRegulationPointCount = !showRegulationPointCount"
+                  ></el-button>
+                </el-popover>
               </el-col>
-              <el-col :span="16">
-                <NameFormItem prependWidth="60px">
-                  <template #prepend>批量选择 Subclause</template>
-                  <el-select 
-                    size="mini" 
-                    v-model="batchSubclauseVal"
-                    @change="batchSubclause"
-                    class="batch-subclause"
-                  >
-                    <el-option :value="undefined" lable=""></el-option>
-                    <el-option
-                      v-for="subclause in displaySubclause"
-                      :key="subclause.id"
-                      :value="subclause.code"
-                      :label="subclause.name"
-                    ></el-option>
-                  </el-select>
-                </NameFormItem>
+              <el-col :span="8">
+                <el-select 
+                  size="mini" 
+                  v-model="batchSubclauseVal"
+                  @change="batchSubclause"
+                  class="batch-subclause"
+                  placeholder="Sub Clause"
+                >
+                  <el-option :value="undefined" lable=""></el-option>
+                  <el-option
+                    v-for="subclause in displaySubclause"
+                    :key="subclause.id"
+                    :value="subclause.code"
+                    :label="subclause.name"
+                  ></el-option>
+                </el-select>
               </el-col>
             </el-row>
           </div>
@@ -288,7 +333,9 @@ export default {
       loadTasklistLoading: false,
       copyedList: [],
       hideEmptyMethod: false,
-      complexList: []
+      complexList: [],
+      showRegulationPointCount: false,
+      conditionList: {},
     }
   },
   computed: {
@@ -337,9 +384,83 @@ export default {
       } else {
         return this.methodBaseData
       }
+    },
+    ContactList () {
+      const ACCESSIBLE = '1yrtsYdd12'
+      let foundCondition =  _.find(this.conditionList['single'], {id: ACCESSIBLE})
+      return _.get(foundCondition, 'list', []).map(o=>o.value)
+    },
+    displayCheckTable () {
+      if (this.showRegulationPointCount) {
+        const ACCESSIBLE = '1yrtsYdd12'
+        const MATERIAL = 'material'
+        const PARTTYPE = '_a12VsWvQ'
+        let groupList = _(_.filter(this.selectMethod.list, o=>this.selectRegulation.list.includes(o.id))).map(o=>o.list).flatten().value()
+        let popElement = (groupList) => {
+          let tempList = []
+          let check = false
+          _.forIn(groupList, group=>{
+            if (_.isEmpty(group.elements)) {
+              tempList.push(group)
+            } else {
+              tempList.push(group, ...group.elements)
+              group.elements = []
+              check = true
+            }
+          })
+          if (check) {
+            return popElement(tempList)
+          } else {
+            return tempList
+          }
+        }
+        let selectPointList = popElement(_.cloneDeep(groupList))
+        let geneCountObj = (list) => {
+          let tempObj = {}
+          _.forIn(list, point=>{
+            let partType = point.condition[PARTTYPE]
+            if (!tempObj[partType]) {
+              tempObj[partType] = []
+            }
+            let material = point.condition[MATERIAL]
+            let accessible = point.condition[ACCESSIBLE]
+            let findExist = _.find(tempObj[partType], {[partType]: material})
+            if (!findExist) {
+              tempObj[partType].push({
+                [partType]: material,
+                [accessible]: 1
+              })
+            } else {
+              findExist[accessible] ? findExist[accessible]++ : findExist[accessible] = 1
+            }
+          })
+          return tempObj
+        }
+        let selectCount = geneCountObj(selectPointList)
+        let pointCount = geneCountObj(this.pointList)
+        _.forIn(pointCount, (table, partType)=>{
+          if (selectCount[partType]) {
+            _.forIn(table, row=>{
+              let findSelect = _.find(selectCount[partType], {[partType]: row[partType]})
+              _.assignWith(row, findSelect, (obj, src)=>{
+                if (!_.isArray(obj)) {
+                  return {
+                    all: obj,
+                    select: src
+                  }
+                }
+              })
+            })
+          }
+        })
+        return pointCount
+      } else {
+        return {}
+      }
     }
   },
   mounted () {
+    this.loadConditionList()
     this.loadMaterialList()
     this.loadMethodList()
     .then(()=>{
@@ -350,6 +471,12 @@ export default {
     this.loadComplexList()
   },
   methods: {
+    loadConditionList () {
+      return this.$http.get('/data/getCondition')
+      .then(res=>{
+        this.conditionList = res.data.conditionList
+      })
+    },
     loadMaterialList () {
       return this.$http.get('/data/getMaterialList')
       .then(res=>{
@@ -496,7 +623,7 @@ export default {
           return false
         }
       })
-      return result ? result : _(array).map(e=>parseInt(e)).sortBy().pop() + 1
+      return result ? result : _(array).map(e=>parseInt(e)).sortBy().pop() || 0 + 1
     },
     addGroup (count = 1) {
       for (let i = 0; i < count; i++) {
@@ -1044,6 +1171,8 @@ export default {
   margin: 0 3px
   cursor: pointer
 
+.regulation-point-count
+  max-height: 90vh
 .isSelectedGroup
   box-shadow: 0px 0px 2px 2px rgba(0,128,255,0.6)
 .add-group-card
@@ -1079,6 +1208,8 @@ export default {
 </style>
 
 <style lang="stylus">
+.count-table
+  margin-bottom: 10px
 .point-list
   .el-input-group__prepend
     padding: 0 10px

@@ -46,14 +46,7 @@ export default {
         password: '',
         email: ''
       },
-      mailtoLink: ''
     }
-  },
-  mounted () {
-    this.$http.get('/auth/get-mailto-link')
-    .then(res=>{
-      this.mailtoLink = res.data.info
-    })
   },
   methods:{
     toLoginPage () {
@@ -88,11 +81,6 @@ export default {
               message: res.data.info
             })
             this.$router.push('/')
-            let a = document.createElement("a")
-            document.body.appendChild(a)
-            a.href = encodeURI(`mailto:${this.mailtoLink}?subject=Sampling Web App Permission Request&body=Account ${this.user.email} is registered, please review.`)
-            a.click()
-            document.body.removeChild(a)
           }else{
             this.$message.error(res.data.info)
           }

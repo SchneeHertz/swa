@@ -2,6 +2,7 @@ const _ = require('lodash')
 const config = require('../../config')
 const jwt = require('jsonwebtoken')
 const user = require('../models/user')
+const nodemailer = require("nodemailer")
 
 const accountRegister = async (ctx) => {
   const name = ctx.request.body.name
@@ -15,7 +16,12 @@ const accountRegister = async (ctx) => {
     authority: 'none',
     pwUpdate: Date.now()
   }
-  ctx.body = user.insertUser(account)
+  let registerResult = user.insertUser(account)
+  if (registerResult.success) {
+    let receives = _.filter(user.getUserGroup(), e=>e.authority === 'admin').map(e=>e.email)
+    await sendMail(account, receives)
+  }
+  ctx.body = registerResult
 }
 
 const userAuth = async (ctx) => {
@@ -95,17 +101,25 @@ const changePassword = async (ctx) =>{
   }
 }
 
-const getMailtoLink = async (ctx) =>{
-  let mails = _.filter(user.getUserGroup(), e=>e.authority === 'admin').map(e=>e.email)
-  ctx.body = {
-    success: true,
-    info: mails.join(';')
-  }
+const sendMail = async (account, receivers) => {
+  let transporter = nodemailer.createTransport({
+    host: "smtp-atl.sgs.net",
+    port: 25,
+    secure: false,
+    tls: {
+        rejectUnauthorized: false
+    }
+  })
+  await transporter.sendMail({
+    from: account.email,
+    to: receivers.join(', '),
+    subject: 'Sampling Web App Permission Request',
+    text:  `Account ${account.email} is registered, please review.`
+  })
 }
 
 module.exports = {
   accountRegister,
   userAuth,
-  changePassword,
-  getMailtoLink
+  changePassword
 }

@@ -16,7 +16,8 @@
     "koa2-cors": "^2.0.6",
     "lodash": "^4.17.19",
     "lodash-id": "^0.14.0",
-    "lowdb": "^1.0.0"
+    "lowdb": "^1.0.0",
+    "nodemailer": "^6.4.11"
   },
   "devDependencies": {
     "diff-match-patch": "^1.0.5",

@@ -114,7 +114,7 @@ const sendMail = async (account, receivers) => {
     from: account.email,
     to: receivers.join(', '),
     subject: 'Sampling Web App Permission Request',
-    text:  `Account ${account.email} is registered, please review.`
+    html:  `<p>Account ${account.email} is registered, please review.</p>`
   })
 }
 

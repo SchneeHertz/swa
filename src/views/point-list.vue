@@ -280,6 +280,9 @@ export default {
         this.useStyle = true
       }
     })
+    if (this.caseNumber) {
+      this.preLoad()
+    }
   },
   watch: {
 
@@ -322,6 +325,29 @@ export default {
       return this.$http.get('/data/getComplexList')
       .then(res=>{
         this.complexList = _.sortBy(res.data.complexList, 'name')
+      })
+    },
+    preLoad () {
+      return this.$http.post('/data/getCaseData', {
+        caseNumber: this.caseNumber,
+        list: ['caseCondition', 'caseTestitem']
+      })
+      .then(res=>{
+        if (res.data.success) {
+          let result = res.data.result
+          if (_.isArray(result.caseTestitem) && !_.isEmpty(result.caseTestitem)) {
+            this.caseTestitemList = result.caseTestitem
+          }
+          if (result.caseCondition) {
+            _.forIn(result.caseCondition, group=>{
+              _.forIn(group, indCondition=>{
+                this.$set(this.existCaseInfo, indCondition.id, indCondition.value)
+              })
+            })
+          }
+        } else {
+          this.$message({type: 'error', message: res.data.info, showClose: true})
+        }
       })
     },
     loadPointList () {
@@ -519,7 +545,7 @@ export default {
           return false
         }
       })
-      return result ? result : _(array).map(e=>parseInt(e)).sortBy().pop() || 0 + 1
+      return result ? result : (_(array).map(e=>parseInt(e)).sortBy().pop() || 0) + 1
     },
   }
 }

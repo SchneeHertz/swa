@@ -174,20 +174,17 @@ export default {
     }
   },
   mounted () {
-    if (_.isEmpty(this.conditionList)) {
-      this.loadConditionList()
-      .then(()=>{
-        if (this.case) {
-          this.caseNumber = this.case
-          this.loadAllData()
-        }
-      })
-    } else {
+    this.loadConditionList()
+    .then(()=>{
       if (this.case) {
         this.caseNumber = this.case
         this.loadAllData()
+      } else {
+        if (this.caseNumber) {
+          this.loadExistCaseData()
+        }
       }
-    }
+    })
   },
   methods: {
     loadExistCaseData () {

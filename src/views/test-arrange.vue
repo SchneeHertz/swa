@@ -165,10 +165,10 @@
         </el-col>
         <el-col :span="6">
           <div class="method-function">
-            <el-tooltip effect="dark" content="从测试项目重新生成列表，并代替原来的列表" placement="bottom">
+            <el-tooltip effect="dark" content="从测试项目重新生成列表，并代替现在的列表" placement="bottom">
               <el-button size="mini" type="danger" plain 
                 @click="reGeneMethodList" 
-              >重新生成空列表</el-button>
+              >重置</el-button>
             </el-tooltip>
             <el-switch
               class="method-switch"
@@ -462,13 +462,18 @@ export default {
   mounted () {
     this.loadConditionList()
     this.loadMaterialList()
+    this.loadComplexList()
     this.loadMethodList()
     .then(()=>{
-      if (_.isEmpty(this.methodBaseData)) {
-        this.geneMethodList()
+      if (this.caseNumber) {
+        this.preLoad()
+        .then(()=>{
+          if (_.isEmpty(this.methodBaseData)) {
+            this.geneMethodList()
+          }
+        })
       }
     })
-    this.loadComplexList()
   },
   methods: {
     loadConditionList () {
@@ -493,6 +498,32 @@ export default {
       return this.$http.get('/data/getComplexList')
       .then(res=>{
         this.complexList = _.sortBy(res.data.complexList, 'name')
+      })
+    },
+    preLoad () {
+      return this.$http.post('/data/getCaseData', {
+        caseNumber: this.caseNumber,
+        list: ['pointList', 'caseCondition', 'caseTestitem']
+      })
+      .then(res=>{
+        if (res.data.success) {
+          let result = res.data.result
+          if (_.isArray(result.pointList) && !_.isEmpty(result.pointList)) {
+            this.pointList = result.pointList
+          }
+          if (_.isArray(result.caseTestitem) && !_.isEmpty(result.caseTestitem)) {
+            this.caseTestitemList = result.caseTestitem
+          }
+          if (result.caseCondition) {
+            _.forIn(result.caseCondition, group=>{
+              _.forIn(group, indCondition=>{
+                this.$set(this.existCaseInfo, indCondition.id, indCondition.value)
+              })
+            })
+          }
+        } else {
+          this.$message({type: 'error', message: res.data.info, showClose: true})
+        }
       })
     },
     loadTasklist () {
@@ -623,7 +654,7 @@ export default {
           return false
         }
       })
-      return result ? result : _(array).map(e=>parseInt(e)).sortBy().pop() || 0 + 1
+      return result ? result : (_(array).map(e=>parseInt(e)).sortBy().pop() || 0) + 1
     },
     addGroup (count = 1) {
       for (let i = 0; i < count; i++) {

@@ -123,6 +123,9 @@
         <el-tooltip effect="dark" content="导出" placement="top">
           <el-button type="primary" class="bigicon" icon="el-third-icon-export" circle @click="showExportDialog"></el-button>
         </el-tooltip>
+        <el-tooltip effect="dark" content="完成" placement="top">
+          <el-button type="warning" class="bigicon" icon="el-third-icon-check" circle @click="finishCase"></el-button>
+        </el-tooltip>
       </div>
     </el-row>
     <el-dialog
@@ -280,6 +283,9 @@ export default {
     caseNumber: geneVuexValue('caseNumber'),
     pointList: geneVuexValue('pointList'),
     methodBaseData: geneVuexValue('methodBaseData'),
+    caseTestitemList: geneVuexValue('caseTestitemList'),
+    existCaseInfo: geneVuexValue('existCaseInfo'),
+    conditionList: geneVuexValue('conditionList'),
     displayTaskList () {
       let taskTree = []
       _.forIn(_.groupBy(this.taskList, task=>{
@@ -631,6 +637,15 @@ export default {
       this.$set(this.exportLoading, 'value', true)
       exportData(this.tableSelectTask)
     },
+    finishCase () {
+      this.caseNumber = undefined
+      this.pointList= []
+      this.methodBaseData = []
+      this.caseTestitemList = []
+      this.existCaseInfo = {}
+      this.conditionList = {}
+      this.$router.push('/case-info')
+    }
   }
 }
 </script>

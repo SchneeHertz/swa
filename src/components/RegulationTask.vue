@@ -25,6 +25,7 @@
       <el-button-group class="function-button-group">
         <el-button size="mini" @click="selectAll">全选</el-button>
         <el-button size="mini" @click="selectNone">清空</el-button>
+        <el-button size="mini" class="solve-button" icon="el-third-icon-robot" @click="triggerSolve"></el-button>
       </el-button-group>
       <el-switch
         class="share-switch"
@@ -59,6 +60,9 @@ export default {
     },
     selectNone () {
       this.data.list = []
+    },
+    triggerSolve () {
+      this.$emit('solve-ind')
     }
   }
 }
@@ -87,6 +91,9 @@ export default {
   width:100%
 .function-button-group
   margin-top: 1px
+.solve-button
+  padding-top: 5px
+  padding-bottom: 5px
 .share-switch
   margin-top: 5px
   float: right

@@ -202,6 +202,7 @@
                 :selected="selectRegulation.id == regulation.id && selectRegulation.method.id == regulation.method.id && selectRegulation.method.group == regulation.method.group"
                 @regulation-select="handleSelectRegulation(regulation.id, regulation.method.id, regulation.method.group)"
                 width="97%"
+                @solve-ind="autoSolveInd(selectMethod, regulation)"
               ></RegulationTask>
             </draggable>
           </overlay-scrollbars>
@@ -613,6 +614,7 @@ export default {
           _.cloneDeep(_.find(this.methodList, {id: id})),
           {
             regulationList: regulationList,
+            regulationBackup: _.cloneDeep(regulationList),
             regulationListForClient: regulationListForClient,
             list: []
           }
@@ -715,8 +717,7 @@ export default {
     confirmAutoSolve () {
       _.forIn(this.methodBaseData, methodGroup=>{
         _.forIn(methodGroup.regulationListForClient, regulation=>{
-          if ( (_.uniq(this.selectClient.concat(regulation.client)).length < _.uniq(this.selectClient).concat(_.uniq(regulation.client)).length)
-          || regulation.switchTo ) {
+          if ( (_.difference(this.selectClient, regulation.client).length < this.selectClient.length) || regulation.switchTo ) {
             let foundGeneralRegulationIndex = _.findIndex(methodGroup.regulationList, {code: regulation.code})
             foundGeneralRegulationIndex != -1 ? methodGroup.regulationList.splice(foundGeneralRegulationIndex, 1, regulation) : ''
           }
@@ -733,7 +734,7 @@ export default {
       let pointPicked = {}
       _.forIn(this.methodBaseData, methodObj=>{
         let filterByMethodList = this.pointFilterByConditionList(pointList, methodObj.condition)
-        let filterByRegulationList = this.pointTagRegulation(filterByMethodList, methodObj.regulationList, pointPicked)
+        let filterByRegulationList = this.pointTagRegulation(filterByMethodList, methodObj.regulationList, pointPicked, false)
         let filterPointList = _(filterByRegulationList).values().flatten().filter(point=>!_.isEmpty(point.regulation)).value()
         let groupedList = _.groupBy(filterPointList, point=>JSON.stringify(point.regulation.map(r=>r.id)))
         _.forIn(groupedList, group=>{
@@ -804,7 +805,7 @@ export default {
             let finalMethodGroupList = _.chunk(_.filter(group, point=>point.minorType == 'main' || point.minorType == 'unWithed'), minMix)
             // let groupByStatus = _.groupBy(_.filter(group, point=>point.minorType == 'main' || point.minorType == 'unWithed'), point=>point.condition[STATUSCONDITIONID])
             // let finalMethodGroupList = _.flatten(_.values(groupByStatus).map(g=>_.chunk(g, minMix)))
-            let startIndex = methodObj.list.length + 1
+            let startIndex = (_.max(methodObj.list.map(g=>g.index)) || 0) + 1
             let idList = []
             _.forIn(finalMethodGroupList, pointGroup=>{
               let id = _id()
@@ -829,7 +830,7 @@ export default {
               })
             })
             _.forIn(regulationList, regulation=>{
-              regulation.list = regulation.list.concat(idList)
+              regulation.list = _.uniq(regulation.list.concat(idList))
               if (subclauseValList[regulation.id + '_' + regulation.method.group]) {
                 regulation.subclauseVal = _.assign(regulation.subclauseVal, ...subclauseValList[regulation.id + '_' + regulation.method.group])
               }
@@ -877,7 +878,120 @@ export default {
       })
       this.hideEmptyMethod = true
       console.log(`used time: ${new Date() - startTime}ms`)
-      console.log(pointPicked)
+    },
+    autoSolveInd (selectMethod, selectRegulation) {
+      let startTime = new Date()
+      const MATERIALCONDTION = 'material'
+      let filterClientRegulation  = _.filter(selectMethod.regulationListForClient, {code: selectRegulation.code})
+      _.forIn(filterClientRegulation, regulation=>{
+        if (_.difference(this.selectClient, regulation.client).length < this.selectClient.length) {
+          _.assign(selectRegulation, regulation)
+          return false
+        }
+      })
+      let pointList = this.resolvePointList(_.cloneDeep(this.pointList))
+      let filterByMethodList = this.pointFilterByConditionList(pointList, selectMethod.condition)
+      let filterByRegulationList = this.pointTagRegulation(filterByMethodList, [selectRegulation], {}, true)
+      let filterPointList = _(filterByRegulationList).values().flatten().filter(point=>!_.isEmpty(point.regulation)).value()
+      _.forIn(filterPointList, point=>{
+        point.groupBy = []
+        let regulationList = point.regulation
+        if (this.mixByStyle) {
+          if (!_.isEmpty(point.style)) {
+            point.groupBy.push({
+              style: _.sortBy(point.style)
+            })
+          }
+        }
+        _.forIn(regulationList, regulation=>{
+          _.forIn(regulation.subclause, subclause=>{
+            if (this.checkConditionListPass({point: point, conditionList:subclause.condition, methodId:selectMethod.id, group: regulation.method.group})) {
+              point.groupBy.push({
+                [regulation.id + '_' + regulation.method.group]: subclause.code
+              })
+              if (subclause.maxMix) {
+                point.maxMixArray.push(subclause.maxMix)
+              }
+              return false
+            }
+          })
+        })
+        point.groupBy.push({
+          material: JSON.stringify(_.sortBy(point.condition[MATERIALCONDTION]))
+        })
+      })
+      let groupList = _.groupBy(filterPointList, point=>{
+        return JSON.stringify(
+          _.sortBy(point.groupBy, o=>{
+            return _.head(_.keys(o))
+          })
+        )
+      })
+      let pointHashObj = {}
+      _.forIn(selectMethod.list, group=>{
+        let pointHash = _.flatten(this.geneGroupId(group.list)).join('')
+        pointHashObj[pointHash] = group.id
+      })
+      _.forIn(groupList, group=>{
+        let regulationList
+        let subclauseValList = {}
+        let minMix = _.min(_.head(group).maxMixArray)
+        _.forIn(group, point=>{
+          regulationList = point.regulation
+          if (!point.disableWith  && point.condition['weightType'] != 'Enough') {
+            let inwith = false
+            _.forIn(group, parentPoint=>{
+              if (parentPoint.condition['weightType'] == 'Enough' && parentPoint.elements.length < 2) {
+                parentPoint.elements.push(_.cloneDeep(point))
+                point.minorType = 'withed'
+                inwith = true
+                return false
+              }
+            })
+            if (!inwith) {
+              point.minorType = 'unWithed'
+            }
+          } else {
+            point.minorType = 'main'
+          }
+        })
+        let finalMethodGroupList = _.chunk(_.filter(group, point=>point.minorType == 'main' || point.minorType == 'unWithed'), minMix)
+        let startIndex = (_.max(selectMethod.list.map(g=>g.index)) || 0) + 1
+        let idList = []
+        _.forIn(finalMethodGroupList, pointGroup=>{
+          let id
+          let pointHash = _.flatten(this.geneGroupId(pointGroup)).join('')
+          if (pointHashObj[pointHash]) {
+            id = pointHashObj[pointHash]
+          } else {
+            id = _id()
+            selectMethod.list.push({
+              id: id,
+              index: startIndex,
+              list: pointGroup
+            })
+            startIndex += 1
+          }
+          idList.push(id)
+          _.forIn(_.head(pointGroup).groupBy, groupObj=>{
+            let key = _.head(_.keys(groupObj))
+            let code = _.head(_.values(groupObj))
+            if (!subclauseValList[key]) {
+              subclauseValList[key] = []
+            }
+            if (!['material', 'style'].includes(key)) {
+              subclauseValList[key].push({[id]: code})
+            }
+          })
+        })
+        _.forIn(regulationList, regulation=>{
+          regulation.list = _.uniq(regulation.list.concat(idList))
+          if (subclauseValList[regulation.id + '_' + regulation.method.group]) {
+            regulation.subclauseVal = _.assign(regulation.subclauseVal, ...subclauseValList[regulation.id + '_' + regulation.method.group])
+          }
+        })
+      })
+      console.log(`used time: ${new Date() - startTime}ms`)
     },
     resolvePointList (pointList) {
       let tempList = []
@@ -1020,7 +1134,7 @@ export default {
       })
       return tempList
     },
-    pointTagRegulation (pointList, regulationList, pointPicked) {
+    pointTagRegulation (pointList, regulationList, pointPicked, forceTest) {
       pointList = _.cloneDeep(pointList)
       _.forIn(pointList, (group, key)=>{
         _.forIn(group, point=>{
@@ -1028,7 +1142,7 @@ export default {
           point.maxMixArray = []
           point.elements ? '' : point.elements = []
           _.forIn(regulationList, regulation=>{
-            if (regulation.method.defaultTest && this.checkConditionListPass({point:point, conditionList: regulation.condition})) {
+            if ((forceTest || regulation.method.defaultTest) && this.checkConditionListPass({point:point, conditionList: regulation.condition})) {
               let checked = true
               let forComplexCheck = true
               switch (key) {
@@ -1072,28 +1186,6 @@ export default {
         })
       })
       return pointList
-    },
-    findParentId (relationList, id) {
-      let result
-      for (let relation of relationList) {
-        if (result) {
-          break
-        }
-        if (_.some(relation.children, r=>r.id == id)) {
-          result = relation.id
-          break
-        } else {
-          if (_.isArray(relation.children)) {
-            result = this.findParentId(relation.children, id)
-          }
-        }
-      }
-      if (result && !_.some(relationList, r=> r.id == result)) {
-        do {
-          result = this.findParentId(relationList, result)
-        } while (result && !_.some(relationList, r=> r.id == result))
-      }
-      return result
     },
     geneGroupId (group) {
       let result = []

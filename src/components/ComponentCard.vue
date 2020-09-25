@@ -245,7 +245,10 @@ export default {
         if (isCheck) {
           tempList.push(condition)
         } else {
-          // if (this.data.condition[condition.id] ) this.$set(this.data.condition, condition.id, undefined)
+          if (this.data.condition[condition.id] ) {
+            // this.$set(this.data.condition, condition.id, undefined)
+            delete this.data.condition[condition.id]
+          }
         }
       })
       return tempList

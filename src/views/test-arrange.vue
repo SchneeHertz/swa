@@ -614,7 +614,7 @@ export default {
           _.cloneDeep(_.find(this.methodList, {id: id})),
           {
             regulationList: regulationList,
-            regulationBackup: _.cloneDeep(regulationList),
+            regulationListBackup: _.cloneDeep(regulationList),
             regulationListForClient: regulationListForClient,
             list: []
           }
@@ -628,6 +628,7 @@ export default {
           this.geneMethodList()
           this.selectRegulation = {}
           this.selectMethod = {}
+          this.hideEmptyMethod = false
         },
         {question: '确认从测试项目重新生成列表，并代替原来的列表?', success: '操作完成', cancel: '已取消'}
       )
@@ -646,7 +647,7 @@ export default {
       })
     },
     clonePoint (point) {
-      return _.merge(_.cloneDeep(point), {elements: []})
+      return _.assign(_.cloneDeep(point), {elements: []})
     },
     findMinIndex (array) {
       let result
@@ -882,6 +883,8 @@ export default {
     autoSolveInd (selectMethod, selectRegulation) {
       let startTime = new Date()
       const MATERIALCONDTION = 'material'
+      let backupRegulation =_.cloneDeep(_.find(selectMethod.regulationListBackup, {code: selectRegulation.code}))
+      _.assign(selectRegulation, backupRegulation)
       let filterClientRegulation  = _.filter(selectMethod.regulationListForClient, {code: selectRegulation.code})
       _.forIn(filterClientRegulation, regulation=>{
         if (_.difference(this.selectClient, regulation.client).length < this.selectClient.length) {
@@ -1013,7 +1016,7 @@ export default {
           })
           materialValArray.push(mtempObj)
         })
-        _.mergeWith(point.condition, ...materialValArray, (obj,src)=>{
+        _.assignWith(point.condition, ...materialValArray, (obj,src)=>{
           if (_.isArray(obj)) {
             return _.uniq(_.compact(obj.concat(src)))
           }

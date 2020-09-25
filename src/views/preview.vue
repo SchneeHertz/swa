@@ -351,13 +351,13 @@ export default {
           let pointList = []
           _.forIn(group.list, point=>{
             pointList.push(
-              _.mergeWith(
+              _.assignWith(
                 ..._.flattenDeep(this.resolvePointTree(point)),
                 (obj, src)=>[obj, src].join(' w/ ')
               )
             )
           })
-          group.description = _.mergeWith(...pointList, (obj, src)=>[obj, src].join(' + '))
+          group.description = _.assignWith(...pointList, (obj, src)=>[obj, src].join(' + '))
         })
         let methodPointList = methodGroup.list.map(p=>p.id)
         _.forIn(methodGroup.regulationList, regulation=>{
@@ -461,9 +461,9 @@ export default {
             TestMethodID: this.selectTask.taskInfo.TestMethodID
           })
           if (foundPatch) {
-            _.merge(foundPatch, diff_patch)
+            _.assign(foundPatch, diff_patch)
           } else {
-            this.patchList.push(_.merge({
+            this.patchList.push(_.assign({
               type: key,
               CaseTestItemID: this.selectTask.taskInfo.CaseTestItemID,
               TestMethodID: this.selectTask.taskInfo.TestMethodID,
@@ -484,9 +484,9 @@ export default {
             id:this.selectTask.taskObj.ComponentArray[index].id
           })
           if (foundPatch) {
-            _.merge(foundPatch, diff_patch)
+            _.assign(foundPatch, diff_patch)
           } else {
-            this.patchList.push(_.merge({
+            this.patchList.push(_.assign({
               type: key,
               CaseTestItemID: this.selectTask.taskInfo.CaseTestItemID,
               TestMethodID: this.selectTask.taskInfo.TestMethodID,
@@ -515,9 +515,9 @@ export default {
             id:this.selectTask.taskObj.ComponentArray[index].id
           })
           if (foundPatch) {
-            _.merge(foundPatch, diff_patch)
+            _.assign(foundPatch, diff_patch)
           } else {
-            this.patchList.push(_.merge({
+            this.patchList.push(_.assign({
               type: key,
               CaseTestItemID: this.selectTask.taskInfo.CaseTestItemID,
               TestMethodID: this.selectTask.taskInfo.TestMethodID,

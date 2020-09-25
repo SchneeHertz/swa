@@ -167,7 +167,7 @@ export default {
         })
         materialValArray.push(mtempObj)
       })
-      let result =  _.mergeWith({}, ...materialValArray, (obj,src)=>{
+      let result =  _.assignWith({}, ...materialValArray, (obj,src)=>{
         if (_.isArray(obj)) {
           return _.uniq(_.compact(obj.concat(src)))
         }

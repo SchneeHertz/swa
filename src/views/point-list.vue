@@ -9,7 +9,8 @@
               <template #prepend>Case:</template>
             </el-input>
             <div class="point-function-button">
-              <el-switch v-model="useStyle" active-text="Style" @change="handleStyleSwitchChange"></el-switch>
+              <el-switch v-model="useStyle" active-text="Style" @change="handleStyleSwitchChange" class="style-switch"></el-switch>
+              <el-button type="primary" size="small" class="export-button" plain @click="exportPointList">导出列表</el-button>
             </div>
           </div>
           <div class="point-edit-area">
@@ -179,6 +180,7 @@ import BaseHeader from '@/components/BaseHeader.vue'
 import NameFormItem from '@/components/NameFormItem.vue'
 import ComponentCard from '@/components/ComponentCard.vue'
 import '@/components/areacomplete.js'
+import XlsxPopulate from 'xlsx-populate'
 
 import {generate as _id } from 'shortid'
 
@@ -252,8 +254,9 @@ export default {
       _.forIn(this.pointList, point=>{
         let tempPoint ={}
         let tempCondition = []
+        let conditionList = [...this.simpleConditionList, ...this.afterwardConditionList]
         _.forIn(point.condition, (value, id)=>{
-          let foundCondition = _.find([...this.simpleConditionList, ...this.afterwardConditionList], {id: id})
+          let foundCondition = _.find(conditionList, {id: id})
           if (foundCondition) {
             let key = foundCondition.name
             if (['材质', '接触类型', '样品部位', '够重'].includes(key)) {
@@ -267,6 +270,7 @@ export default {
       })
       _.forIn(tempList, point=>{
         point['材质'] = point['材质'] ? point['材质'].join(', ') : '-'
+        point['style'] = point['style'] ? point['style'].join(', ') : ''
       })
       return tempList
     },
@@ -422,9 +426,9 @@ export default {
         }
       })
     },
-    addPoint () {
+    addPoint (index) {
       this.checkDuplicate()
-      let index = this.findMinIndex(this.pointList.map(e=>e.index)) + ''
+      index = index || (this.findMinIndex(this.pointList.map(e=>e.index)) + '')
       let mainCount = 0
       let partCount = 1
       let complexGroupId = _id()
@@ -467,12 +471,21 @@ export default {
       }
     },
     modifyPoint () {
-      _.forIn(this.selectPointGroup, selectPoint=>{
-        let foundPoint  = _.findIndex(this.pointList, {id: selectPoint.id})
-        if (foundPoint != -1) {
-          this.$set(this.pointList, foundPoint, _.assign(this.pointList[foundPoint], _.cloneDeep(selectPoint)))
-        }
-      })
+      let existComplexGroupId = _.get(this.selectPointGroup[0], 'complexGroupId')
+      let existId = _.get(this.selectPointGroup[0], 'id')
+      let existIndex
+      if (existComplexGroupId) {
+        let foundExistPoint = _.find(this.pointList, {complexGroupId: existComplexGroupId})
+        existIndex = parseInt(foundExistPoint.index) + ''
+        this.pointList = _.filter(this.pointList, p=>{
+          return p.complexGroupId != existComplexGroupId
+        })
+      } else {
+        let foundExistPointIndex = _.findIndex(this.pointList, {id: existId})
+        existIndex = parseInt(this.pointList[foundExistPointIndex].index) + ''
+        this.pointList.splice(foundExistPointIndex, 1)
+      }
+      this.addPoint(existIndex)
       this.resetPointForm(false)
     },
     resetPointForm (repeat, point={}) {
@@ -538,15 +551,46 @@ export default {
       }
     },
     findMinIndex (array) {
-      let result
-      _.forOwn(_(array).map(e=>parseInt(e)).sortBy().uniq().value(), (v,i)=>{
-        if (+v != +i+1) {
-          result = +i+1
-          return false
-        }
-      })
-      return result ? result : (_(array).map(e=>parseInt(e)).sortBy().pop() || 0) + 1
+      return (_(array).map(e=>parseInt(e)).sortBy().pop() || 0) + 1
     },
+    exportPointList () {
+      XlsxPopulate.fromBlankAsync()
+      .then(workbook=>{
+        let sheet = workbook.sheet(0)
+        let titleList = ['index', 'englishDescription', 'chineseDescription', 'style', '样品部位', '接触类型', '材质', '够重', 'other']
+        let tableData = [titleList]
+        _.forIn(this.previewList, point=>{
+          let row = []
+          _.forIn(titleList, key=>{
+            row.push(_.get(point, key, ''))
+          })
+          tableData.push(row)
+        })
+        sheet.cell(1, 1).value(tableData)
+        sheet.column(1).width(7)
+        sheet.column(2).width(40)
+        sheet.column(3).width(40)
+        sheet.column(4).width(15)
+        sheet.column(5).width(15)
+        sheet.column(6).width(15)
+        sheet.column(7).width(15)
+        sheet.column(8).width(15)
+        sheet.column(9).width(40)
+        sheet.range(1,1,1,9).style({'fill': 'ffebcd', 'bold': true})
+        sheet.usedRange().style({'fontFamily': 'Arial', 'wrapText': true, 'borderStyle': 'thin', 'borderColor': '606060'})
+        workbook.outputAsync()
+        .then((blob)=>{
+            let url = window.URL.createObjectURL(blob)
+            let a = document.createElement("a")
+            document.body.appendChild(a)
+            a.href = url
+            a.download = this.caseNumber +' pointlist.xlsx'
+            a.click()
+            window.URL.revokeObjectURL(url)
+            document.body.removeChild(a)
+        })
+      })
+    }
   }
 }
 </script>
@@ -560,10 +604,12 @@ export default {
     width: 17em
   .point-function-button
     display: inline-block
-    width: calc(100% - 18em)
     margin-bottom: -6px
-    .el-switch
-      float: right
+    float: right
+    .style-switch
+      margin-right: 10px
+    .export-button
+      margin: 0 10px
 
 .point-edit-area
   .select-point-group

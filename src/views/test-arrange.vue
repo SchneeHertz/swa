@@ -650,14 +650,7 @@ export default {
       return _.assign(_.cloneDeep(point), {elements: []})
     },
     findMinIndex (array) {
-      let result
-      _.forOwn(_(array).map(e=>parseInt(e)).sortBy().uniq().value(), (v,i)=>{
-        if (+v != +i+1) {
-          result = +i+1
-          return false
-        }
-      })
-      return result ? result : (_(array).map(e=>parseInt(e)).sortBy().pop() || 0) + 1
+      return (_(array).map(e=>parseInt(e)).sortBy().pop() || 0) + 1
     },
     addGroup (count = 1) {
       for (let i = 0; i < count; i++) {

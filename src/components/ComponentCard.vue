@@ -4,7 +4,7 @@
     :style="{width: width}"
   >
     <div class="point-card__header">
-      <span class="title-index">{{data.index ? data.index: nextIndex}}</span>
+      <span class="title-index">{{data.index ? data.index: ''}}</span>
       <el-select
         v-model="data.mainPart"
         placeholder=""

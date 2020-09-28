@@ -2,7 +2,7 @@ const _ = require('lodash')
 const config = require('../../config')
 const jwt = require('jsonwebtoken')
 const user = require('../models/user')
-const nodemailer = require("nodemailer")
+const nodemailer = require('nodemailer')
 
 const accountRegister = async (ctx) => {
   const name = ctx.request.body.name
@@ -11,7 +11,7 @@ const accountRegister = async (ctx) => {
 
   let account = {
     name: name,
-    password: password,
+    password: user.decodeString(password),
     email: email,
     authority: 'none',
     pwUpdate: Date.now()
@@ -29,7 +29,7 @@ const userAuth = async (ctx) => {
   const password = ctx.request.body.password
   let findUser = user.getUserData(name)
   if (findUser) {
-    if (findUser.password === password) {
+    if (findUser.password === user.decodeString(password)) {
       if (findUser.pwUpdate && Date.now() - findUser.pwUpdate < 31536000000) {
         if (findUser.authority === 'user' || findUser.authority === 'admin') {
           const userToken = {
@@ -39,7 +39,7 @@ const userAuth = async (ctx) => {
             id: findUser.id
           }
           const secret = config.jwt_seed
-          const token = jwt.sign(userToken,secret)
+          const token = jwt.sign(userToken, secret, { expiresIn: '12h' })
           ctx.body = {
             success: true,
             token: token,
@@ -60,13 +60,13 @@ const userAuth = async (ctx) => {
     } else {
       ctx.body = {
         success: false,
-        info: '登录失败，密码错误'
+        info: '登录失败，用户名或密码错误'
       }
     }
   } else {
     ctx.body = {
       success: false,
-      info: '用户名错误或用户不存在'
+      info: '登录失败，用户名或密码错误'
     }
   }
 }
@@ -77,10 +77,10 @@ const changePassword = async (ctx) =>{
   const password = ctx.request.body.password
   let findUser = user.getUserData(name)
   if (findUser) {
-    if (findUser.password === oldpassword) {
+    if (findUser.password === user.decodeString(oldpassword)) {
       user.changePassword({
         name: name,
-        password: password,
+        password: user.decodeString(password),
         pwUpdate: Date.now()
       })
       ctx.body = {
@@ -107,7 +107,7 @@ const sendMail = async (account, receivers) => {
     port: 25,
     secure: false,
     tls: {
-        rejectUnauthorized: false
+      rejectUnauthorized: false
     }
   })
   await transporter.sendMail({
@@ -118,8 +118,15 @@ const sendMail = async (account, receivers) => {
   })
 }
 
+const getPublicKey = async (ctx) => {
+  ctx.body = {
+    publicKey: user.getPublicKey()
+  }
+}
+
 module.exports = {
   accountRegister,
   userAuth,
-  changePassword
+  changePassword,
+  getPublicKey
 }

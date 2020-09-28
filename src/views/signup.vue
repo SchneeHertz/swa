@@ -37,6 +37,8 @@
 </template>
 
 <script>
+import JSEncrypt from 'jsencrypt'
+
 export default {
   data () {
     return {
@@ -46,7 +48,14 @@ export default {
         password: '',
         email: ''
       },
+      publicKey: undefined
     }
+  },
+  mounted () {
+    this.$http.get('/auth/getPublicKey')
+    .then(res=>{
+      this.publicKey = res.data.publicKey
+    })
   },
   methods:{
     toLoginPage () {
@@ -57,6 +66,11 @@ export default {
     },
     toem(){
       this.$refs.email.focus()
+    },
+    encryptPassword (password) {
+      let encrypt = new JSEncrypt()
+      encrypt.setPublicKey(this.publicKey)
+      return encrypt.encrypt(password)
     },
     checkPassword () {
       if (this.user.name.match(/^.{4,20}$/) && this.user.password.match(/^(?=.*\d)(?=.*[a-z])(?=.*[A-Z]).{12,20}$/) && this.user.email.match(/^\S+@\S+\.\S+$/)) {
@@ -72,7 +86,11 @@ export default {
     },
     signup(){
       this.loading = true
-      this.$http.post('/auth/signup', this.user)
+      this.$http.post('/auth/signup', {
+        name: this.user.name,
+        password: this.encryptPassword(this.user.password),
+        email: this.user.email
+      })
         .then((res)=>{
           this.loading = false
           if(res.data.success){

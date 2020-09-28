@@ -33,6 +33,8 @@
 </template>
 
 <script>
+import JSEncrypt from 'jsencrypt'
+
 export default {
   data () {
     return {
@@ -40,8 +42,15 @@ export default {
       user: {
         name: '',
         password: ''
-      }
+      },
+      publicKey: undefined
     }
+  },
+  mounted () {
+    this.$http.get('/auth/getPublicKey')
+    .then(res=>{
+      this.publicKey = res.data.publicKey
+    })
   },
   methods:{
     topw(){
@@ -53,9 +62,17 @@ export default {
     signup(){
       this.$router.push('/signup')
     },
+    encryptPassword (password) {
+      let encrypt = new JSEncrypt()
+      encrypt.setPublicKey(this.publicKey)
+      return encrypt.encrypt(password)
+    },
     login() {
       this.loading = true
-      this.$http.post('/auth/login', this.user)
+      this.$http.post('/auth/login', {
+        name: this.user.name,
+        password: this.encryptPassword(this.user.password)
+      })
         .then((res)=>{
           this.loading = false
           if(res.data.success){

@@ -38,6 +38,8 @@
 </template>
 
 <script>
+import JSEncrypt from 'jsencrypt'
+
 export default {
   data () {
     return {
@@ -46,8 +48,15 @@ export default {
         name: '',
         oldpassword: '',
         password: '',
-      }
+      },
+      publicKey: undefined
     }
+  },
+  mounted () {
+    this.$http.get('/auth/getPublicKey')
+    .then(res=>{
+      this.publicKey = res.data.publicKey
+    })
   },
   methods:{
     toLoginPage () {
@@ -58,6 +67,11 @@ export default {
     },
     topw(){
       this.$refs.password.focus()
+    },
+    encryptPassword (password) {
+      let encrypt = new JSEncrypt()
+      encrypt.setPublicKey(this.publicKey)
+      return encrypt.encrypt(password)
     },
     checkPassword () {
       if (this.user.password !== this.user.oldpassword){
@@ -78,7 +92,11 @@ export default {
     },
     changePassword(){
       this.loading = true
-      this.$http.post('/auth/cpw', this.user)
+      this.$http.post('/auth/cpw', {
+        name: this.user.name,
+        oldpassword: this.encryptPassword(this.user.oldpassword),
+        password: this.encryptPassword(this.user.password)
+      })
         .then((res)=>{
           this.loading = false
           if(res.data.success){

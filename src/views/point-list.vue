@@ -118,9 +118,15 @@
                 </template>
               </el-table-column>
               <el-table-column 
+                label="style"
+                prop="style"
+                width="80"
+                sortable
+              />
+              <el-table-column 
                 label="材质"
                 prop="材质"
-                width="160"
+                width="120"
                 sortable
               />
               <el-table-column 
@@ -147,10 +153,9 @@
                 width="160"
                 sortable
               />
-              <el-table-column label="Operate" width="120">
+              <el-table-column label="Operate" width="80">
                 <template v-slot:default="props">
                   <div class="mini-circle-btn">
-                    <!-- <el-button type="success" icon="el-third-icon-file-copy" circle plain @click="handleCopyPoint(props.row.id)"></el-button> -->
                     <el-button type="danger" icon="el-third-icon-close" circle plain @click="handleDeletePoint(props.row.id)"></el-button>
                   </div>
                 </template>
@@ -250,6 +255,7 @@ export default {
         .flatten().filter(word=>word.length > 6).map(word=>word.toLowerCase()).concat(this.preList).uniq().sortBy().value()
     },
     previewList () {
+      // data string in code
       let tempList = []
       _.forIn(this.pointList, point=>{
         let tempPoint ={}
@@ -554,6 +560,7 @@ export default {
       return (_(array).map(e=>parseInt(e)).sortBy().pop() || 0) + 1
     },
     exportPointList () {
+      // data string in code
       XlsxPopulate.fromBlankAsync()
       .then(workbook=>{
         let sheet = workbook.sheet(0)

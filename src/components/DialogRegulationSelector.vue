@@ -8,8 +8,8 @@
     </div>
     <div class="dialog-regulation__body">
       <el-switch
-        v-for="regulation in data.regulationList"
-        :key="regulation.id + regulation.method.id + regulation.method.group"
+        v-for="(regulation, index) in data.regulationList"
+        :key="regulation.id + regulation.method.id + regulation.method.group + '-' + index"
         class="regulation-switch"
         v-model="regulation.method.defaultTest"
         :active-text="regulation.grouped ? `${regulation.name} - ${regulation.method.name}` : regulation.name"
@@ -19,8 +19,8 @@
         effect="dark"
         content="开启即代替默认测试项目"
         placement="top"
-        v-for="regulation in data.regulationListForClient"
-        :key="regulation.id"
+        v-for="(regulation, index) in data.regulationListForClient"
+        :key="regulation.id + regulation.method.id + regulation.method.group + index"
       >
         <el-switch
           class="regulation-switch"

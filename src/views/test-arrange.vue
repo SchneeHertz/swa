@@ -744,7 +744,7 @@ export default {
             }
             _.forIn(regulationList, regulation=>{
               _.forIn(regulation.subclause, subclause=>{
-                if (this.checkConditionListPass({point: point, conditionList:subclause.condition, methodId:methodObj.id, group: regulation.method.group})) {
+                if (this.checkConditionListPass({point: point, conditionList:subclause.condition, methodId: regulation.method.id, group: regulation.method.group})) {
                   point.groupBy.push({
                     [regulation.id + '_' + regulation.method.group]: subclause.code
                   })
@@ -853,6 +853,7 @@ export default {
               e.index = index + 1
               return e
             }).value(),
+            conditionGroup: _.chain(methodG2).map(e=>{return {id: e.id, condition: e.condition}}).value(),
             regulationList: _.chain(methodG2).map(e=>e.regulationList).flatten().map(regulation=>{
               regulation.grouped = true
               let tempList = []
@@ -866,7 +867,9 @@ export default {
               })
               regulation.subclauseVal = tempObj
               return regulation
-            }).value()
+            }).value(),
+            regulationListBackup: _.chain(methodG2).map(e=>e.regulationListBackup).flatten().value(),
+            regulationListForClient: _.chain(methodG2).map(e=>e.regulationListForClient).flatten().value()
           })
         }
       })
@@ -876,9 +879,13 @@ export default {
     autoSolveInd (selectMethod, selectRegulation) {
       let startTime = new Date()
       const MATERIALCONDTION = 'material'
-      let backupRegulation =_.cloneDeep(_.find(selectMethod.regulationListBackup, {code: selectRegulation.code}))
+      let backupRegulation =_.cloneDeep(_.find(selectMethod.regulationListBackup, r=>{
+        return r.code == selectRegulation.code && r.method.id == selectRegulation.method.id
+      }))
       _.assign(selectRegulation, backupRegulation)
-      let filterClientRegulation  = _.filter(selectMethod.regulationListForClient, {code: selectRegulation.code})
+      let filterClientRegulation  = _.filter(selectMethod.regulationListForClient, r=>{
+        return r.code == selectRegulation.code && r.method.id == selectRegulation.method.id
+      })
       _.forIn(filterClientRegulation, regulation=>{
         if (_.difference(this.selectClient, regulation.client).length < this.selectClient.length) {
           _.assign(selectRegulation, regulation)
@@ -886,7 +893,8 @@ export default {
         }
       })
       let pointList = this.resolvePointList(_.cloneDeep(this.pointList))
-      let filterByMethodList = this.pointFilterByConditionList(pointList, selectMethod.condition)
+      let selectCondition = selectMethod.condition ? selectMethod.condition : _.find(selectMethod.conditionGroup, {id: selectRegulation.method.id}).condition
+      let filterByMethodList = this.pointFilterByConditionList(pointList, selectCondition)
       let filterByRegulationList = this.pointTagRegulation(filterByMethodList, [selectRegulation], {}, true)
       let filterPointList = _(filterByRegulationList).values().flatten().filter(point=>!_.isEmpty(point.regulation)).value()
       _.forIn(filterPointList, point=>{
@@ -901,7 +909,7 @@ export default {
         }
         _.forIn(regulationList, regulation=>{
           _.forIn(regulation.subclause, subclause=>{
-            if (this.checkConditionListPass({point: point, conditionList:subclause.condition, methodId:selectMethod.id, group: regulation.method.group})) {
+            if (this.checkConditionListPass({point: point, conditionList:subclause.condition, methodId: regulation.method.id, group: regulation.method.group})) {
               point.groupBy.push({
                 [regulation.id + '_' + regulation.method.group]: subclause.code
               })

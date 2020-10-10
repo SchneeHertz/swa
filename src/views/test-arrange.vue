@@ -26,7 +26,7 @@
                 :key="point.id"
                 class="point-list-item"
               >
-                {{point.index}}. {{viewSetting.language ? point[viewSetting.language] : point.englishDescription}}
+                {{point.index}}. {{viewSetting.language ? point[viewSetting.language] : point.englishDescription}} {{point.style ? point.style.length > 0 ? `(${point.style.join(', ')})` : '' : ''}}
               </div>
             </draggable>
           </overlay-scrollbars>
@@ -573,6 +573,7 @@ export default {
             if (foundSourcePoint) {
               point.englishDescription = foundSourcePoint.englishDescription
               point.chineseDescription = foundSourcePoint.chineseDescription
+              point.style = foundSourcePoint.style
             }
           })
         })

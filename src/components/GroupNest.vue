@@ -10,7 +10,7 @@
   >
     <div class="item-group" :key="el.id" v-for="(el, index) in realValue" @dblclick.stop="handleDbClick(el.id)">
       <div class="item">
-        <div class="item-description">{{el.index}}. {{language ? el[language] : el.englishDescription}}</div>
+        <div class="item-description">{{el.index}}. {{language ? el[language] : el.englishDescription}} {{el.style ? el.style.length > 0 ? `(${el.style.join(', ')})` : '' : ''}}</div>
         <el-button type="text" class="close-circle-button" icon="el-third-icon-close" @click="removePoint(realValue, index)" plain />
       </div>
       <group-nest class="item-sub" :sub="true" :list="el.elements" :language="language" @dbl-children="handleDblChildren"/>

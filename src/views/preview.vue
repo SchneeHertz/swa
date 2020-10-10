@@ -344,6 +344,7 @@ export default {
             if (foundSourcePoint) {
               point.englishDescription = foundSourcePoint.englishDescription
               point.chineseDescription = foundSourcePoint.chineseDescription
+              point.style = foundSourcePoint.style
             }
           })
         })
@@ -449,7 +450,11 @@ export default {
           innerArray.push(this.resolvePointTree(innerPoint))
         })
       }
-      return [{englishDescription: point.englishDescription, chineseDescription: point.chineseDescription}, innerArray]
+      if (!_.isEmpty(point.style)) {
+        return [{englishDescription: point.englishDescription + ` (${point.style.join(', ')})`, chineseDescription: point.chineseDescription + ` (${point.style.join(', ')})`}, innerArray]
+      } else {
+        return [{englishDescription: point.englishDescription, chineseDescription: point.chineseDescription}, innerArray]
+      }
     },
     updatePatch (key, index) {
       let backupTask = _.find(this.taskListBackup, task=>{

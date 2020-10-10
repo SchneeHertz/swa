@@ -9,6 +9,7 @@ module.exports = {
   },
   devServer: {
     proxy: 'http://localhost:8086'
+    // proxy: 'http://10.205.169.70'
   },
   productionSourceMap: false
 }

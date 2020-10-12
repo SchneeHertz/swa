@@ -87,6 +87,31 @@
                     @click="showRegulationPointCount = !showRegulationPointCount"
                   ></el-button>
                 </el-popover>
+                <el-button
+                  size="mini"
+                  class="regulation-tips-button"
+                  @click="showRegulationTips = !showRegulationTips"
+                >?</el-button>
+                <el-dialog
+                  title="材料选取规则"
+                  :visible.sync="showRegulationTips"
+                  v-draggable
+                  :modal="false"
+                  class="regulation-tips-dialog"
+                  width="51%"
+                  top="5vh"
+                >
+                  <overlay-scrollbars :options="{scrollbars: {autoHide: 'scroll'}}" class="regulation-tips">
+                    <el-table
+                      :data="displayRegulationTips"
+                      size="mini"
+                      stripe
+                    >
+                      <el-table-column label="Title"  prop="title" width="200" />
+                      <el-table-column label="Content"  prop="content" width="400" />
+                    </el-table>
+                  </overlay-scrollbars>
+                </el-dialog>
               </el-col>
               <el-col :span="8">
                 <el-select 
@@ -315,6 +340,36 @@ export default {
     NameFormItem,
     DialogRegulationSelector
   },
+  directives: {
+    draggable: function(el, binding, vnode) {
+			let dlg = el.getElementsByClassName("el-dialog")[0]
+			let title = el.getElementsByClassName("el-dialog__title")[0]
+			title.style.userSelect="none"
+			title.style["-ms-user-select"] = "none"
+			title.style["-moz-user-select"] = "none"
+			title.style.cursor="default"
+			dlg.offsetX = 0
+			dlg.offsetY = 0
+			let move = function(e){
+				dlg.style.marginLeft = '0px'
+				dlg.style.marginTop = '0px'
+				dlg.style.left = (e.pageX - dlg.offsetX) + 'px'
+				dlg.style.top = ((e.pageY - dlg.offsetY)<0 ? 0 :(e.pageY - dlg.offsetY)) + 'px'
+			}
+			let up = function() {
+				removeEventListener('mousemove', move)
+				removeEventListener('mouseup', up)
+			}
+			let down = function(e){
+				dlg.offsetX = (e.pageX - dlg.offsetLeft)
+				dlg.offsetY = (e.pageY - dlg.offsetTop )
+				addEventListener('mousemove', move)
+				addEventListener('mouseup', up)
+			}
+			let header = el.getElementsByClassName("el-dialog__header")[0]
+			header.addEventListener('mousedown', down)
+    }
+  },
   data () {
     return {
       dragOptions: {
@@ -337,6 +392,13 @@ export default {
       complexList: [],
       showRegulationPointCount: false,
       conditionList: {},
+      showRegulationTips: false,
+      specialConditionObj: {
+        icmethod: '测试方法',
+        icgroup: '分组',
+        icenglish: '英文描述',
+        icchinese: '中文描述'
+      }
     }
   },
   computed: {
@@ -457,6 +519,118 @@ export default {
         return pointCount
       } else {
         return {}
+      }
+    },
+    conditionObj () {
+      return _.assign({}, this.specialConditionObj, ..._(this.conditionList).values().flatten().concat(this.materialObj.materialCondition).map(c=>({[c.id]: c.name})).value())
+    },
+    complexObj () {
+      return _.assign({}, ..._(this.complexList).map(c=>({[c.id]: c.name})).value())
+    },
+    methodObj () {
+      let tempList = {}
+      _.forIn(this.caseTestitemList, testitem=>{
+        if (testitem.regulation && testitem.selected) {
+          _.forIn(testitem.regulation, regulation=>{
+            if (_.isArray(regulation.method)) {
+              _.forIn(regulation.method, method=>{
+                let foundMethod = _.find(this.methodList, {id: method.id})
+                tempList[method.id] = foundMethod.name
+              })
+            }
+          })
+        }
+      })
+      return tempList
+    },
+    displayRegulationTips () {
+      if (this.showRegulationTips && !_.isEmpty(this.selectRegulation) && !_.isEmpty(this.selectMethod)) {
+        let tipsTable = []
+        tipsTable.push({
+          title: 'Regulation',
+          content: this.selectRegulation.name
+        }, {
+          title: 'Method',
+          content: this.selectMethod.name
+        }, {
+          title: 'Client',
+          content: this.selectRegulation.client ? this.selectRegulation.client.join(', ') : ''
+        })
+        let regulationRule = '满足以下所有条件:  '
+        _.forIn(this.selectRegulation.condition, (condition, index)=>{
+          regulationRule += `
+            ${+index+1}. 
+            ${this.conditionObj[condition.id]}
+            ${condition.logic == 'no' ? '不' : ''}
+            ${condition.valueLogic == 'all' && condition.value.length > 1 ? '同时' : ''}
+            是
+            ${condition.value.join(', ')}
+            ${condition.valueLogic == 'or' && condition.value.length > 1 ? '其中之一' : ''}
+            ;
+          `
+        })
+        tipsTable.push({
+          title: 'Regulation Rule',
+          content: regulationRule
+        })
+        tipsTable.push({
+          title: 'Include Complex Material',
+          content: `${this.selectRegulation.includeComplex.map(id=>this.complexObj[id]).join(', ')}`
+        })
+        let selectMethodCondition = this.selectMethod.condition ? this.selectMethod.condition : _.find(this.selectMethod.conditionGroup, {id: this.selectRegulation.method.id}).condition
+        let methodRule = '满足以下所有条件:  '
+        _.forIn(selectMethodCondition, (condition, index)=>{
+          methodRule += `
+            ${+index+1}. 
+            ${this.conditionObj[condition.id]}
+            ${condition.logic == 'no' ? '不' : ''}
+            ${condition.valueLogic == 'all' && condition.value.length > 1 ? '同时' : ''}
+            是
+            ${condition.value.join(', ')}
+            ${condition.valueLogic == 'or' && condition.value.length > 1 ? '其中之一' : ''}
+            ;
+          `
+        })
+        methodRule += `
+          mix数是${this.selectRegulation.method.maxMix},
+          分组是${this.selectRegulation.method.group},
+          ${this.selectRegulation.method.defaultTest ? '默认测试' : '默认不测试'}
+          ${this.selectRegulation.method.disableWith ? ', 不能With' : ''}
+        `
+        tipsTable.push({
+          title: 'Method Rule',
+          content: methodRule
+        })
+        tipsTable.push({
+          title: 'SubClause Rule',
+          content: ''
+        })
+        _.forIn(this.selectRegulation.subclause, subclause=>{
+          let subclauseRule = ''
+          if (!_.isEmpty(subclause.condition)) {
+            subclauseRule = '满足以下所有条件:  '
+            _.forIn(subclause.condition, (condition, index)=>{
+              subclauseRule += `
+                ${+index+1}. 
+                ${this.conditionObj[condition.id]}
+                ${condition.logic == 'no' ? '不' : ''}
+                ${condition.valueLogic == 'all' && condition.value.length > 1 ? '同时' : ''}
+                是
+                ${condition.id == 'icmethod' ? condition.value.map(v=>this.methodObj[v]).join(', ') : condition.value.join(', ')}
+                ${condition.valueLogic == 'or' && condition.value.length > 1 ? '其中之一' : ''}
+                ;
+              `
+              subclauseRule += condition.maxMix ? `, mix数是${condition.maxMix}` : ''
+            })
+          }
+          tipsTable.push({
+            title: subclause.name,
+            content: subclauseRule
+          })
+        })
+        return tipsTable
+      } else {
+        return []
       }
     }
   },
@@ -1301,6 +1475,10 @@ export default {
 
 .regulation-point-count
   max-height: 90vh
+.regulation-tips
+  max-height: 80vh
+.regulation-tips-button
+  font-weight: bold
 .isSelectedGroup
   box-shadow: 0px 0px 2px 2px rgba(0,128,255,0.6)
 .add-group-card
@@ -1369,4 +1547,8 @@ export default {
         float: right
     .el-card__body
       padding: 6px
+.regulation-tips-dialog
+  .el-dialog__body
+    padding-top: 10px
+    padding-bottom: 10px
 </style>

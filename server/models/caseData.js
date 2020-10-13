@@ -21,7 +21,7 @@ const saveCaseData = (caseNumber, data, userData)=>{
   _.forIn(data, (value, key)=>{
     db.set(key, value).write()
   })
-  userStore.updateUserHistoryCase(caseNumber, userData)
+  userStore.updateUserHistoryCase(caseNumber, data, userData)
   db.get('log').push({
     user: userData.name,
     date: new Date().toLocaleString()

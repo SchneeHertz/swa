@@ -44,6 +44,22 @@
             </el-select>
           </NameFormItem>
         </el-card>
+        <el-card
+          class="history-count"
+        >
+          <template #header>里程</template>
+          <div class="card-line">材料计数:</div>
+          <div class="card-line">本月</div>
+          <el-progress :percentage="historyCount.monthPointPercentage" :format="()=>historyCount.monthPointValue" :color="customColors"></el-progress>
+          <div class="card-line">今年</div>
+          <el-progress :percentage="historyCount.yearPointPercentage" :format="()=>historyCount.yearPointValue"></el-progress>
+          <el-divider />
+          <div class="card-line">组数计数:</div>
+          <div class="card-line">本月</div>
+          <el-progress :percentage="historyCount.monthGroupPercentage" :format="()=>historyCount.monthGroupValue" :color="customColors"></el-progress>
+          <div class="card-line">今年</div>
+          <el-progress :percentage="historyCount.yearGroupPercentage" :format="()=>historyCount.yearGroupValue"></el-progress>
+        </el-card>
       </el-row>
     </el-main>
     <div class="bottom-function-btn">
@@ -73,7 +89,14 @@ export default {
   },
   data () {
     return {
-      historyCase: []
+      historyCase: [],
+      historyCount: {},
+      customColors: [
+        {color: '#f56c6c', percentage: 40},
+        {color: '#eed200', percentage: 64},
+        {color: '#5cb87a', percentage: 80},
+        {color: '#1989fa', percentage: 100}
+      ]
     }
   },
   computed: {
@@ -81,6 +104,7 @@ export default {
   },
   mounted () {
     this.loadHistoryCase()
+    this.loadHistoryCount()
   },
   methods: {
     saveSetting () {
@@ -93,6 +117,42 @@ export default {
       .then(res=>{
         if (res.data.success) {
           this.historyCase = res.data.result
+        }
+      })
+    },
+    loadHistoryCount () {
+      return this.$http.get('/data/getUserHistoryCount')
+      .then(res=>{
+        if (res.data.success) {
+          let countData = res.data.result
+          let countPer = (type, countData) => {
+            let m = countData['monthCount'][type]
+            let y = countData['yearCount'][type]
+            let mPer = m / ((y / ((new Date() - new Date(new Date().getFullYear(), 0, 0)) / (60*60*24*1000))) * 30) * 80
+            if (mPer > 100) {
+              mPer = 100
+            }
+            let yPer = (new Date() - new Date(new Date().getFullYear(), 0, 0)) / (60*60*24*1000*365) * 100
+            if (yPer > 100) {
+              yPer = 100
+            }
+            return {
+              month: {value: m, percentage: mPer},
+              year: {value: y, percentage: yPer}
+            }
+          }
+          let pointCount =  countPer('pointCount', countData)
+          let groupCount = countPer('groupCount', countData)
+          this.historyCount = {
+            monthPointValue: pointCount.month.value,
+            monthPointPercentage: pointCount.month.percentage,
+            monthGroupValue: groupCount.month.value,
+            monthGroupPercentage: groupCount.month.percentage,
+            yearPointValue: pointCount.year.value,
+            yearPointPercentage: pointCount.year.percentage,
+            yearGroupValue: groupCount.year.value,
+            yearGroupPercentage: groupCount.year.percentage,
+          }
         }
       })
     },
@@ -122,7 +182,7 @@ export default {
   width: 32vw
   .el-table
     max-height: 50vh
-.view-setting
+.view-setting, .history-count
   width: 28vw
   .card-line
     margin: 4px 0

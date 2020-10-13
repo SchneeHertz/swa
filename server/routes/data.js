@@ -21,5 +21,6 @@ router.post('/getCaseData', caseData.getCaseData)
 router.post('/saveCaseData', caseData.saveCaseData)
 
 router.post('/getUserHistoryCase', caseData.getUserHistoryCase)
+router.get('/getUserHistoryCount', caseData.getUserHistoryCount)
 
 module.exports = router

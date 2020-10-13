@@ -56,8 +56,18 @@ const getUserHistoryCase = async (ctx) => {
   }
 }
 
+const getUserHistoryCount = async (ctx) => {
+  let userData = getUserData(ctx)
+  let result = us.getUserHistoryCount(userData)
+  ctx.body = {
+    success: true,
+    result: result
+  }
+}
+
 module.exports = {
   getCaseData,
   saveCaseData,
-  getUserHistoryCase
+  getUserHistoryCase,
+  getUserHistoryCount
 }

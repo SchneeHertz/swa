@@ -67,7 +67,29 @@ const getUserHistoryCase = (duration, userData) => {
     .value()
 }
 
+const getUserHistoryCount = (userData) => {
+  let data = userStore.get('history')
+    .find({id: userData.id})
+    .get('case')
+    .value()
+  let yearData = _.filter(data, c=>new Date().getFullYear() == new Date(c.date).getFullYear())
+  let yearCount = {
+    pointCount: _.sum(yearData.map(c=>c.pointCount)),
+    groupCount: _.sum(yearData.map(c=>c.groupCount))
+  }
+  let monthData = _.filter(data, c=>new Date().getMonth() == new Date(c.date).getMonth())
+  let monthCount = {
+    pointCount: _.sum(monthData.map(c=>c.pointCount)),
+    groupCount: _.sum(monthData.map(c=>c.groupCount))
+  }
+  return {
+    yearCount,
+    monthCount
+  }
+}
+
 module.exports = {
   updateUserHistoryCase,
-  getUserHistoryCase
+  getUserHistoryCase,
+  getUserHistoryCount
 }

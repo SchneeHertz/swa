@@ -98,7 +98,6 @@
                   v-draggable
                   :modal="false"
                   class="regulation-tips-dialog"
-                  width="51%"
                   top="5vh"
                 >
                   <overlay-scrollbars :options="{scrollbars: {autoHide: 'scroll'}}" class="regulation-tips">
@@ -107,8 +106,8 @@
                       size="mini"
                       stripe
                     >
-                      <el-table-column label="Title"  prop="title" width="200" />
-                      <el-table-column label="Content"  prop="content" width="400" />
+                      <el-table-column label="Title"  prop="title" width="180" />
+                      <el-table-column label="Content"  prop="content" width="420" />
                     </el-table>
                   </overlay-scrollbars>
                 </el-dialog>
@@ -551,7 +550,7 @@ export default {
           content: this.selectRegulation.name
         }, {
           title: 'Method',
-          content: this.selectMethod.name
+          content: this.methodObj[this.selectRegulation.method.id]
         }, {
           title: 'Client',
           content: this.selectRegulation.client ? this.selectRegulation.client.join(', ') : ''

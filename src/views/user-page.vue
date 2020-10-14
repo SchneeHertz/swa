@@ -3,63 +3,67 @@
     <BaseHeader activeIndex="user-page"/>
     <el-main>
       <el-row>
-        <el-card class="history-case">
-          <template #header>历史Case</template>
-          <el-table
-            :data="historyCase"
-            border
-            stripe
-            height="90vh"
-          >
-            <el-table-column prop="id" label="case号">
-              <template #default="scope">
-                <router-link :to="`/case-info?case=${scope.row.id}`">{{scope.row.id}}</router-link>
-              </template>
-            </el-table-column>
-            <el-table-column prop="date" label="最后更新时间">
-              <template #default="scope">{{new Date(scope.row.date).toLocaleString()}}</template>
-            </el-table-column>
-          </el-table>
-        </el-card>
-        <el-card class="view-setting">
-          <template #header>设置</template>
-          <NameFormItem class="card-line" prependWidth="30px">
-            <template #prepend>测试界面语言</template>
-            <el-select 
-              v-model="viewSetting.language"
-              @change="saveSetting"
+        <el-col :span="10">
+          <el-card class="history-case">
+            <template #header>历史Case</template>
+            <el-table
+              :data="historyCase"
+              border
+              stripe
+              height="90vh"
             >
-              <el-option label="英文" value="englishDescription"></el-option>
-              <el-option label="中文" value="chineseDescription"></el-option>
-            </el-select>
-          </NameFormItem>
-          <NameFormItem class="card-line" prependWidth="30px">
-            <template #prepend>测试界面列数</template>
-            <el-select
-              v-model="viewSetting.column"
-              @change="saveSetting"
-            >
-              <el-option label="1" :value="1"></el-option>
-              <el-option label="2" :value="2"></el-option>
-            </el-select>
-          </NameFormItem>
-        </el-card>
-        <el-card
-          class="history-count"
-        >
-          <template #header>里程</template>
-          <div class="card-line">材料计数:</div>
-          <div class="card-line">本月</div>
-          <el-progress :percentage="historyCount.monthPointPercentage" :format="()=>historyCount.monthPointValue" :color="customColors"></el-progress>
-          <div class="card-line">今年</div>
-          <el-progress :percentage="historyCount.yearPointPercentage" :format="()=>historyCount.yearPointValue"></el-progress>
-          <el-divider />
-          <div class="card-line">组数计数:</div>
-          <div class="card-line">本月</div>
-          <el-progress :percentage="historyCount.monthGroupPercentage" :format="()=>historyCount.monthGroupValue" :color="customColors"></el-progress>
-          <div class="card-line">今年</div>
-          <el-progress :percentage="historyCount.yearGroupPercentage" :format="()=>historyCount.yearGroupValue"></el-progress>
-        </el-card>
+              <el-table-column prop="id" label="case号">
+                <template #default="scope">
+                  <router-link :to="`/case-info?case=${scope.row.id}`">{{scope.row.id}}</router-link>
+                </template>
+              </el-table-column>
+              <el-table-column prop="date" label="最后更新时间">
+                <template #default="scope">{{new Date(scope.row.date).toLocaleString()}}</template>
+              </el-table-column>
+            </el-table>
+          </el-card>
+        </el-col>
+        <el-col :span="7">
+          <el-card class="view-setting">
+            <template #header>设置</template>
+            <NameFormItem class="card-line" prependWidth="30px">
+              <template #prepend>测试界面语言</template>
+              <el-select 
+                v-model="viewSetting.language"
+                @change="saveSetting"
+              >
+                <el-option label="英文" value="englishDescription"></el-option>
+                <el-option label="中文" value="chineseDescription"></el-option>
+              </el-select>
+            </NameFormItem>
+            <NameFormItem class="card-line" prependWidth="30px">
+              <template #prepend>测试界面列数</template>
+              <el-select
+                v-model="viewSetting.column"
+                @change="saveSetting"
+              >
+                <el-option label="1" :value="1"></el-option>
+                <el-option label="2" :value="2"></el-option>
+              </el-select>
+            </NameFormItem>
+          </el-card>
+        </el-col>
+        <el-col :span="7">
+          <el-card class="history-count">
+            <template #header>里程</template>
+            <div class="card-line">材料计数:</div>
+            <div class="card-line">本月</div>
+            <el-progress :percentage="historyCount.monthPointPercentage" :format="()=>historyCount.monthPointValue" :color="customColors"></el-progress>
+            <div class="card-line">今年</div>
+            <el-progress :percentage="historyCount.yearPointPercentage" :format="()=>historyCount.yearPointValue"></el-progress>
+            <el-divider />
+            <div class="card-line">组数计数:</div>
+            <div class="card-line">本月</div>
+            <el-progress :percentage="historyCount.monthGroupPercentage" :format="()=>historyCount.monthGroupValue" :color="customColors"></el-progress>
+            <div class="card-line">今年</div>
+            <el-progress :percentage="historyCount.yearGroupPercentage" :format="()=>historyCount.yearGroupValue"></el-progress>
+          </el-card>
+        </el-col>
       </el-row>
     </el-main>
     <div class="bottom-function-btn">
@@ -179,11 +183,11 @@ export default {
 .el-main
   padding: 0
 .history-case
-  width: 32vw
+  width: 38vw
   .el-table
     max-height: 50vh
 .view-setting, .history-count
-  width: 28vw
+  width: 26vw
   .card-line
     margin: 4px 0
 .bottom-function-btn

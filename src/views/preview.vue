@@ -53,7 +53,7 @@
           >
             <el-col :span="24">
               <NameFormItem class="card-line" prependWidth="2em">
-                <template #prepend>{{component.ComponentNo}}.</template>
+                <template #prepend><span class="component-no">{{component.ComponentNo}}.</span></template>
                 <el-select
                   v-model="component.SubClass"
                   size="mini"
@@ -75,6 +75,7 @@
                 v-model="component.EnglishDescription"
                 :autosize="{minRows: 2, maxRows: 6}"
                 @change="updatePatch('EnglishDescription', index)"
+                class="task-description"
               ></el-input>
             </el-col>
             <el-col :span="12">
@@ -83,6 +84,7 @@
                 v-model="component.ChineseDescription"
                 :autosize="{minRows: 2, maxRows: 6}"
                 @change="updatePatch('ChineseDescription', index)"
+                class="task-description"
               ></el-input>
             </el-col>
           </el-row>
@@ -688,6 +690,9 @@ export default {
     margin: 4px 2px 8px 2px
     .component-select
       width: 100%
+    .component-no
+      color: #606266
+      font-weight: bold
 
 .patch-pane
   height: calc(100vh - 5em)
@@ -716,14 +721,20 @@ export default {
 
 <style lang="stylus">
 .task-list
+  .el-tree-node.is-current>.el-tree-node__content
+    background-color: #f8c280
   .el-tree-node__content
     height: auto
     padding: 4px 0
+  .el-tree-node__content:hover
+    background-color: #C0C4CC
   .el-tree-node__label
     white-space: normal 
 .task-main
   .el-input__inner
     background-color: rgba(0,0,0,0.01)
+  .task-description .el-textarea__inner
+    color: #333435
 
 .patch-card
   margin: 4px 2px

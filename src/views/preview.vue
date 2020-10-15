@@ -805,7 +805,7 @@ export default {
 .bottom-function-btn-task
   position: absolute
   bottom: 1em
-  right: 20em
+  right: 26%
   z-index: 1
 </style>
 
@@ -831,7 +831,7 @@ export default {
   .el-card__header
     padding: 8px 12px
     font-size: 15px
-    background-color: rgba(0,0,0,0.04)
+    background-color: #fef3e6
     .close-circle-button
       padding: 2px
       margin: -2px 0

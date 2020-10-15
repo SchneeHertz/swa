@@ -7,13 +7,19 @@
           <el-input v-model="caseNumber" class="case-number" size="small" @keyup.enter.native="loadTasklist">
             <template #prepend>Case:</template>
           </el-input>
-          <el-input v-model="searchString" class="pointlist-searchstring" size="small">
+          <el-autocomplete
+            v-model="searchString"
+            :fetch-suggestions="querySearch"
+            clearable
+            class="pointlist-searchstring"
+            size="small"
+          >
             <template #prepend>筛选</template>
-          </el-input>
+          </el-autocomplete>
           <overlay-scrollbars
             :options="{scrollbars: {autoHide: 'scroll'}}"
             class="ol-point-list"
-            >
+          >
             <draggable
               class="point-list-group"
               :group="{ name: 'point', pull: 'clone', put: false }"
@@ -180,9 +186,6 @@
               </el-tooltip>
               <el-tooltip effect="dark" content="新增10个" placement="top">
                 <el-button type="success" class="bigicon add-button" icon="el-third-icon-rocket" circle @click="addGroup(10)"></el-button>
-              </el-tooltip>
-              <el-tooltip effect="dark" content="新增文本组" placement="top">
-                <el-button type="success" class="bigicon add-button" icon="el-third-icon-infomation" circle @click="addTextGroup"></el-button>
               </el-tooltip>
             </el-card>
           </overlay-scrollbars>
@@ -631,6 +634,10 @@ export default {
       } else {
         return []
       }
+    },
+    pointListMaterialList () {
+      let MATERIALCONDTION = 'material'
+      return _(this.pointList).map(p=>_.get(p, ['condition', MATERIALCONDTION], [])).flatten().compact().uniq().map(m=>({value: m})).value()
     }
   },
   mounted () {
@@ -738,6 +745,11 @@ export default {
         this.hideEmptyMethod = true
       })
     },
+    querySearch (searchString, callback) {
+      callback(
+        searchString ? this.pointListMaterialList.filter(m=>m.value.toLowerCase().includes(searchString.toLowerCase())) : this.pointListMaterialList
+      )
+    },
     refreshDescription (methodBaseData) {
       _.forIn(methodBaseData, methodG=>{
         _.forIn(methodG.list, listGroup=>{
@@ -837,9 +849,6 @@ export default {
         })
         this.selectRegulation.list.push(id)
       }
-    },
-    addTextGroup () {
-
     },
     reSortGroupList () {
       this.pointGroupList = _.sortBy(this.pointGroupList, 'index')

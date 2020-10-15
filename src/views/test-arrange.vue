@@ -1385,15 +1385,23 @@ export default {
       return result
     },
     saveTasklist () {
-      this.$http.post('/data/saveCaseData', {
-        caseNumber: this.caseNumber,
-        data: {
-          methodBaseData: this.methodBaseData
-        }
-      })
-      .then(res=>{
-        this.$message({type: 'success', message: '保存成功', showClose: true})
-      })
+      let saveData = () => {
+        this.$http.post('/data/saveCaseData', {
+          caseNumber: this.caseNumber,
+          data: {
+            methodBaseData: this.methodBaseData
+          }
+        })
+        .then(res=>{
+          this.$message({type: 'success', message: '保存成功', showClose: true})
+        })
+      }
+      let testList = _(this.methodBaseData).map(m=>m.list).flatten().compact().value()
+      if (_.isEmpty(testList)) {
+        this.confirmDialog(saveData, {question: '测试列表为空，继续保存?', success: '操作完成', cancel: '已取消'})
+      }  else {
+        saveData()
+      }
     },
     toNextPage () {
       this.$router.push('/preview')

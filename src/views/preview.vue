@@ -701,15 +701,33 @@ export default {
       }
     },
     savePatchList () {
-      this.$http.post('/data/saveCaseData', {
-        caseNumber: this.caseNumber,
-        data: {
-          patchList: this.patchList,
-          additionalGroup: this.additionalGroup
-        }
+      let saveData = () => {
+        this.$http.post('/data/saveCaseData', {
+          caseNumber: this.caseNumber,
+          data: {
+            patchList: this.patchList,
+            additionalGroup: this.additionalGroup
+          }
+        })
+        .then(res=>{
+          this.$message({type: 'success', message: '保存成功', showClose: true})
+        })
+      }
+      if (_.isEmpty(this.patchList) && _.isEmpty(this.additionalGroup)) {
+        this.confirmDialog(saveData, {question: '修改列表为空，继续保存?', success: '操作完成', cancel: '已取消'})
+      }  else {
+        saveData()
+      }
+    },
+    confirmDialog(callback, message = {question: '继续?', success: '操作完成', cancel: '已取消'}, failCallback = new Function) {
+      this.$confirm(message.question, '提示', {confirmButtonText: '确定', cancelButtonText: '取消', type: 'warning'})
+      .then(() => {
+        callback()
+        this.$message({type: 'success', message: message.success, showClose: true})
       })
-      .then(res=>{
-        this.$message({type: 'success', message: '保存成功', showClose: true})
+      .catch(() => {
+        failCallback()
+        this.$message({type: 'info', message: message.cancel, showClose: true})
       })
     },
     showExportDialog () {

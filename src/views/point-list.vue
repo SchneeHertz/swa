@@ -520,15 +520,22 @@ export default {
       }
     },
     savePointList () {
-      this.$http.post('/data/saveCaseData', {
-        caseNumber: this.caseNumber,
-        data: {
-          pointList: this.pointList
-        }
-      })
-      .then(res=>{
-        this.$message({type: 'success', message: '保存成功', showClose: true})
-      })
+      let saveData = () => {
+        this.$http.post('/data/saveCaseData', {
+          caseNumber: this.caseNumber,
+          data: {
+            pointList: this.pointList
+          }
+        })
+        .then(res=>{
+          this.$message({type: 'success', message: '保存成功', showClose: true})
+        })
+      }
+      if (_.isEmpty(this.pointList)) {
+        this.confirmDialog(saveData, {question: '样品点列表为空，继续保存?', success: '操作完成', cancel: '已取消'})
+      }  else {
+        saveData()
+      }
     },
     toNextPage () {
       this.$router.push('/test-arrange')

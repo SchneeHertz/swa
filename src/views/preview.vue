@@ -47,7 +47,7 @@
         </div>
         <overlay-scrollbars class="task-body">
           <el-row
-            v-for="(component, index) in selectTask.taskObj.ComponentArray"
+            v-for="component in selectTask.taskObj.ComponentArray"
             :key="component.ComponentNo"
             class="component-block"
           >
@@ -58,7 +58,7 @@
                   v-model="component.SubClass"
                   size="mini"
                   class="component-select"
-                  @change="updatePatch('SubClass', index)"
+                  @change="updatePatch('SubClass', component.id)"
                 >
                   <el-option
                     v-for="sc in selectTask.regulation.subclause"
@@ -74,7 +74,7 @@
                 type="textarea"
                 v-model="component.EnglishDescription"
                 :autosize="{minRows: 2, maxRows: 6}"
-                @change="updatePatch('EnglishDescription', index)"
+                @change="updatePatch('EnglishDescription', component.id)"
                 class="task-description"
               ></el-input>
             </el-col>
@@ -83,17 +83,22 @@
                 type="textarea"
                 v-model="component.ChineseDescription"
                 :autosize="{minRows: 2, maxRows: 6}"
-                @change="updatePatch('ChineseDescription', index)"
+                @change="updatePatch('ChineseDescription', component.id)"
                 class="task-description"
               ></el-input>
             </el-col>
           </el-row>
         </overlay-scrollbars>
+        <div class="bottom-function-btn-task">
+          <el-tooltip effect="dark" content="新增描述" placement="top">
+            <el-button type="primary" class="bigicon" icon="el-third-icon-plus" circle @click="addAdditionalGroup"></el-button>
+          </el-tooltip>
+        </div>
       </el-col>
       <el-col :span="6">        
         <overlay-scrollbars class="patch-pane">
           <el-card
-            v-for="patch in patchList"
+            v-for="patch in additionalGroup.concat(patchList)"
             :key="patch.type+patch.CaseTestItemID+patch.TestMethodID+patch.id"
             class="patch-card"
             shadow="never"
@@ -108,8 +113,8 @@
             <div class="card-line">
               <label class="card-label">方法: <span>{{patch.info.method}}</span></label>
             </div>
-            <div class="card-line">
-              <label class="card-label">序号: <span>{{patch.info.index == undefined ? '' : patch.info.index+1}}</span></label>
+            <div class="card-line" v-show="patch.info.index">
+              <label class="card-label">序号: <span>{{patch.info.index == undefined ? '' : patch.info.index}}</span></label>
             </div>
             <div class="card-line" v-html="patch.html"></div>
           </el-card>
@@ -278,6 +283,7 @@ export default {
       },
       selectTask: {taskInfo: {}, method: {}, regulation: {method:{}}, taskObj: {}, pointIdList: []},
       taskListBackup: [],
+      additionalGroup: [],
       patchList: []
     }
   },
@@ -315,7 +321,7 @@ export default {
     loadTaskList () {
       this.$http.post('/data/getCaseData', {
         caseNumber: this.caseNumber,
-        list: ['patchList', 'pointList', 'methodBaseData']
+        list: ['patchList', 'additionalGroup', 'pointList', 'methodBaseData']
       })
       .then(res=>{
         if (res.data.success) {
@@ -330,7 +336,11 @@ export default {
           if (_.isArray(result.patchList) && !_.isEmpty(result.patchList)) {
             this.patchList = result.patchList
           }
+          if (_.isArray(result.additionalGroup) && !_.isEmpty(result.additionalGroup)) {
+            this.additionalGroup = result.additionalGroup
+          }
           this.geneTaskList()
+          this.applyAdditionalGroup(this.additionalGroup)
           this.applyPatch(this.patchList)
           this.selectTask = {taskInfo: {}, method: {}, regulation: {method:{}}, taskObj: {}, pointIdList: []}
         } else {
@@ -458,12 +468,64 @@ export default {
         return [{englishDescription: point.englishDescription, chineseDescription: point.chineseDescription}, innerArray]
       }
     },
-    updatePatch (key, index) {
+    addAdditionalGroup () {
+      if (!_.isEmpty(this.selectTask.taskObj)) {
+        let taskObj = this.selectTask.taskObj
+        let newId = _id()
+        let index = + _.last(taskObj.ComponentArray).ComponentNo + 1 + ''
+        taskObj.ComponentArray.push({
+          ComponentNo: index,
+          ComponentType: null,
+          Trial: 1,
+          SubClass: null,
+          EnglishDescription: '',
+          ChineseDescription: '',
+          IsDataTransfer: true,
+          IsShowInReport: true,
+          id: newId
+        })
+        this.additionalGroup.push({
+          type: 'additionalGroup',
+          CaseTestItemID: taskObj.CaseTestItemID,
+          TestMethodID: taskObj.TestMethodID,
+          id: newId,
+          info: {
+            regulation: this.selectTask.taskInfo.TestItemDescription,
+            method: this.selectTask.taskInfo.TestMethodName,
+            index: index
+          }
+        })
+      }
+    },
+    applyAdditionalGroup (additionalGroup) {
+      _.forIn(additionalGroup, group=>{
+        let foundTask = _.find(this.taskList, task=>{
+          return task.taskInfo.CaseTestItemID == group.CaseTestItemID && task.taskInfo.TestMethodID == group.TestMethodID
+        })
+        if (foundTask) {
+          let index = + _.last(foundTask.taskObj.ComponentArray).ComponentNo + 1 + ''
+          foundTask.taskObj.ComponentArray.push({
+            ComponentNo: index,
+            ComponentType: null,
+            Trial: 1,
+            SubClass: null,
+            EnglishDescription: '',
+            ChineseDescription: '',
+            IsDataTransfer: true,
+            IsShowInReport: true,
+            id: group.id
+          })
+        }
+      })
+    },
+    updatePatch (key, id) {
       let backupTask = _.find(this.taskListBackup, task=>{
         return task.taskInfo.CaseTestItemID == this.selectTask.taskInfo.CaseTestItemID &&task.taskInfo.TestMethodID == this.selectTask.taskInfo.TestMethodID
       })
       let diff_patch
       let foundPatch
+      let oldGroup
+      let newGroup
       switch (key) {
         case 'EnglishRemark':
         case 'ChineseRemark':
@@ -489,12 +551,16 @@ export default {
           break
         case 'EnglishDescription':
         case 'ChineseDescription':
-          diff_patch = this.diffString(backupTask.taskObj.ComponentArray[index][key], this.selectTask.taskObj.ComponentArray[index][key])
+          oldGroup = _.find(backupTask.taskObj.ComponentArray, {id: id})
+          let oldDescription = _.get(oldGroup, key, '')
+          newGroup = _.find(this.selectTask.taskObj.ComponentArray, {id: id})
+          let newDescription = newGroup[key]
+          diff_patch = this.diffString(oldDescription, newDescription)
           foundPatch = _.find(this.patchList, {
             type: key,
             CaseTestItemID: this.selectTask.taskInfo.CaseTestItemID,
             TestMethodID: this.selectTask.taskInfo.TestMethodID,
-            id:this.selectTask.taskObj.ComponentArray[index].id
+            id: id
           })
           if (foundPatch) {
             _.assign(foundPatch, diff_patch)
@@ -503,19 +569,21 @@ export default {
               type: key,
               CaseTestItemID: this.selectTask.taskInfo.CaseTestItemID,
               TestMethodID: this.selectTask.taskInfo.TestMethodID,
-              id: this.selectTask.taskObj.ComponentArray[index].id,
+              id: id,
               info: {
                 regulation: this.selectTask.taskInfo.TestItemDescription,
                 method: this.selectTask.taskInfo.TestMethodName,
-                index: index
+                index: newGroup.ComponentNo
               }
             }, diff_patch))
           }
           break
         case 'SubClass':
-          let subClauseBefore = backupTask.taskObj.ComponentArray[index][key]
+          oldGroup = _.find(backupTask.taskObj.ComponentArray, {id: id})
+          let subClauseBefore = _.get(oldGroup, key, null)
           let subClauseBeforeName = subClauseBefore  ? _.find(this.selectTask.regulation.subclause, {code: subClauseBefore}).name : ''
-          let subClauseAfter = this.selectTask.taskObj.ComponentArray[index][key]
+          newGroup = _.find(this.selectTask.taskObj.ComponentArray, {id: id})
+          let subClauseAfter = newGroup[key]
           let subClauseAfterName = subClauseAfter  ? _.find(this.selectTask.regulation.subclause, {code: subClauseAfter}).name : ''
           diff_patch = {
             subClause: subClauseAfter,
@@ -525,7 +593,7 @@ export default {
             type: key,
             CaseTestItemID: this.selectTask.taskInfo.CaseTestItemID,
             TestMethodID: this.selectTask.taskInfo.TestMethodID,
-            id:this.selectTask.taskObj.ComponentArray[index].id
+            id: id
           })
           if (foundPatch) {
             _.assign(foundPatch, diff_patch)
@@ -534,11 +602,11 @@ export default {
               type: key,
               CaseTestItemID: this.selectTask.taskInfo.CaseTestItemID,
               TestMethodID: this.selectTask.taskInfo.TestMethodID,
-              id: this.selectTask.taskObj.ComponentArray[index].id,
+              id: id,
               info: {
                 regulation: this.selectTask.taskInfo.TestItemDescription,
                 method: this.selectTask.taskInfo.TestMethodName,
-                index: index
+                index: newGroup.ComponentNo
               }
             }, diff_patch))
           }
@@ -604,8 +672,24 @@ export default {
             this.$set(foundGroup, patch.type, foundBackupGroup[patch.type])
           }
           break
+        case 'additionalGroup':
+          let foundGroupIndex = _.findIndex(foundTask.taskObj.ComponentArray, {id: patch.id})
+          foundTask.taskObj.ComponentArray.splice(foundGroupIndex, 1)
+          break
       }
-      this.patchList.splice(_.findIndex(this.patchList, patch), 1)
+      switch (patch.type) {
+        case 'EnglishRemark':
+        case 'ChineseRemark':
+        case 'EnglishDescription':
+        case 'ChineseDescription':
+        case 'SubClass':
+          this.patchList.splice(_.findIndex(this.patchList, patch), 1)
+          break
+        case 'additionalGroup':
+          this.patchList = _.filter(this.patchList, p=>p.id !== patch.id)
+          this.additionalGroup.splice(_.findIndex(this.additionalGroup, patch), 1)
+          break
+      }
     },
     addLog (log) {
       this.exportLog.push(log)
@@ -620,7 +704,8 @@ export default {
       this.$http.post('/data/saveCaseData', {
         caseNumber: this.caseNumber,
         data: {
-          patchList: this.patchList
+          patchList: this.patchList,
+          additionalGroup: this.additionalGroup
         }
       })
       .then(res=>{
@@ -717,6 +802,11 @@ export default {
   position: absolute
   bottom: 1em
   right: 1.5em
+.bottom-function-btn-task
+  position: absolute
+  bottom: 1em
+  right: 20em
+  z-index: 1
 </style>
 
 <style lang="stylus">

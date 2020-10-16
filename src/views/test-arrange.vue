@@ -1436,17 +1436,17 @@ export default {
       ))
     },
     copyList (sourceList) {
-      this.copyedList = _.cloneDeep(sourceList).map(
+      this.copyedList = _.cloneDeep(sourceList)
+      this.$message({type: 'success', message: 'Copyed!', showClose: true})
+    },
+    pasteList (method) {
+      method.list = method.list.concat(_.cloneDeep(this.copyedList).map(
         g=>{
           g.id = _id()
           g.list = g.list.map(p=>_.omit(p, 'regulation'))
           return g
         }
-      )
-      this.$message({type: 'success', message: 'Copyed!', showClose: true})
-    },
-    pasteList (method) {
-      method.list = method.list.concat(_.cloneDeep(this.copyedList))
+      ))
       this.$message({type: 'success', message: 'Pasted!', showClose: true})
     }
   }

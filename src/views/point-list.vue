@@ -437,25 +437,25 @@ export default {
       index = index || (this.findMinIndex(this.pointList.map(e=>e.index)) + '')
       let mainCount = 0
       let partCount = 1
-      let complexGroupId = _id()
+      let newComplexGroupId = _id()
       let tempList = []
       let mainPoint = {}
       _.forIn(this.selectPointGroup, part=>{
         if (part.mainPart == 'main') {
           mainPoint = _.assign({}, part, {
-            id: _id(),
+            id: part.id || _id(),
             index: index + 'M',
             complexId: this.complexId,
-            complexGroupId: complexGroupId
+            complexGroupId: part.complexGroupId || newComplexGroupId
           })
           tempList.push(mainPoint)
           mainCount++
         } else {
           tempList.push(_.assign({}, part, {
-            id: _id(),
+            id: part.id || _id(),
             index: index + 'P' + partCount,
             complexId: this.complexId,
-            complexGroupId: complexGroupId
+            complexGroupId: part.complexGroupId || newComplexGroupId
           }))
           partCount++
         }
@@ -469,7 +469,10 @@ export default {
         }
       } else {
         if (this.selectPointGroup.length == 1) {
-          this.pointList.push(_.assign({}, this.selectPointGroup[0], {id: _id(), index: index}))
+          this.pointList.push(_.assign({}, this.selectPointGroup[0], {
+            id: this.selectPointGroup[0].id || _id(),
+            index: index
+          }))
           this.resetPointForm(true, this.selectPointGroup[0])
         } else {
           this.$message({type: 'warning', message: '请选择复合类型', showClose: true})
@@ -533,7 +536,7 @@ export default {
       }
       if (_.isEmpty(this.pointList)) {
         this.confirmDialog(saveData, {question: '样品点列表为空，继续保存?', success: '操作完成', cancel: '已取消'})
-      }  else {
+      } else {
         saveData()
       }
     },

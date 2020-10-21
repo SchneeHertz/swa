@@ -1347,16 +1347,16 @@ export default {
                     forComplexCheck = false
                   }
               }
-              if (!_.isArray(pointPicked[point.id])) {
-                pointPicked[point.id] = []
+              if (!_.isArray(pointPicked[point.id + _.get(point, 'elements', []).map(e=>e.id).join('_')])) {
+                pointPicked[point.id + _.get(point, 'elements', []).map(e=>e.id).join('_')] = []
               }
-              if (_.some(pointPicked[point.id], sign=>{
+              if (_.some(pointPicked[point.id + _.get(point, 'elements', []).map(e=>e.id).join('_')], sign=>{
                   return sign.regulationId == regulation.id &&  sign.group == regulation.method.group
                 }) || !forComplexCheck
               ) {
                   checked = false
               } else {
-                pointPicked[point.id].push({regulationId: regulation.id, group: regulation.method.group})
+                pointPicked[point.id + _.get(point, 'elements', []).map(e=>e.id).join('_')].push({regulationId: regulation.id, group: regulation.method.group})
               }
               if (checked) {
                 point.regulation.push(regulation)

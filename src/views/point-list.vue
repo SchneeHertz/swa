@@ -10,6 +10,55 @@
             </el-input>
             <div class="point-function-button">
               <el-switch v-model="useStyle" active-text="Style" @change="handleStyleSwitchChange" class="style-switch"></el-switch>
+              <el-button type="primary" size="small" class="copy-pointlist-button" plain @click="showCopyPointList = !showCopyPointList">从旧Case导入</el-button>
+              <el-dialog
+                title="从旧Case导入"
+                :visible.sync="showCopyPointList"
+                class="copy-pointlist-dialog"
+                top="5vh"
+              >
+                <el-input
+                  size="mini"
+                  v-model="sourceCaseNumber"
+                  class="copy-pointlist-casenumber"
+                >
+                  <template #prepend>Case:</template>
+                  <template #append>
+                    <el-button @click="loadSourcePointList">载入</el-button>
+                  </template>
+                </el-input>
+                <el-table
+                  :data="sourceCasePointList"
+                  @selection-change="handleSelectionChange"
+                  height="70vh"
+                >
+                  <el-table-column
+                    type="selection"
+                    width="50"
+                  />
+                  <el-table-column
+                    prop="index"
+                    label="#"
+                    width="60"
+                  />
+                  <el-table-column
+                    prop="englishDescription"
+                    label="English Description"
+                    width="240"
+                  />
+                  <el-table-column
+                    prop="chineseDescription"
+                    label="Chinese Description"
+                    width="240"
+                  />
+                </el-table>
+                <template #footer>
+                  <span class="dialog-footer">
+                    <el-button type="info" @click="showCopyPointList = false">取消</el-button>
+                    <el-button type="primary" @click="copyPointList">确定</el-button>
+                  </span>
+                </template>
+              </el-dialog>
               <el-button type="primary" size="small" class="export-button" plain @click="exportPointList">导出列表</el-button>
             </div>
           </div>
@@ -222,7 +271,11 @@ export default {
       ],
       complexId: undefined,
       complexList: [],
-      enableMainPartSelect: true
+      enableMainPartSelect: true,
+      showCopyPointList: false,
+      sourceCaseNumber: undefined,
+      sourceCasePointList: [],
+      multipleSelection: []
     }
   },
   computed: {
@@ -607,6 +660,29 @@ export default {
             document.body.removeChild(a)
         })
       })
+    },
+    loadSourcePointList () {
+      return this.$http.post('/data/getCaseData', {
+        caseNumber: this.sourceCaseNumber,
+        list: ['pointList']
+      })
+      .then(res=>{
+        if (res.data.success) {
+          let result = res.data.result
+          if (_.isArray(result.pointList) && !_.isEmpty(result.pointList)) {
+            this.sourceCasePointList = result.pointList
+          }
+        } else {
+          this.$message({type: 'error', message: res.data.info, showClose: true})
+        }
+      })
+    },
+    handleSelectionChange (val) {
+      this.multipleSelection = val
+    },
+    copyPointList () {
+      this.pointList.push(..._.cloneDeep(this.multipleSelection).map(p=>{p.id = _id(); return p}))
+      this.showCopyPointList = false
     }
   }
 }
@@ -625,8 +701,11 @@ export default {
     float: right
     .style-switch
       margin-right: 10px
-    .export-button
+    .export-button, .copy-pointlist-button
       margin: 0 10px
+
+  .copy-pointlist-casenumber
+    width: 50%
 
 .point-edit-area
   .select-point-group
@@ -659,6 +738,8 @@ export default {
 <style lang="stylus">
 .table-inner-filter+.caret-wrapper
   margin: -18px 0 0
+.copy-pointlist-dialog .el-dialog__body
+  padding: 10px 20px
 ul.auto-list
   display: none
   position: absolute

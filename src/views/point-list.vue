@@ -485,7 +485,7 @@ export default {
         }
       })
     },
-    addPoint (index) {
+    addPoint (index, modify) {
       this.checkDuplicate()
       index = index || (this.findMinIndex(this.pointList.map(e=>e.index)) + '')
       let mainCount = 0
@@ -496,19 +496,19 @@ export default {
       _.forIn(this.selectPointGroup, part=>{
         if (part.mainPart == 'main') {
           mainPoint = _.assign({}, part, {
-            id: part.id || _id(),
+            id: modify ? (part.id || _id()) : _id(),
             index: index + 'M',
             complexId: this.complexId,
-            complexGroupId: part.complexGroupId || newComplexGroupId
+            complexGroupId: modify ? (part.complexGroupId || newComplexGroupId) : newComplexGroupId
           })
           tempList.push(mainPoint)
           mainCount++
         } else {
           tempList.push(_.assign({}, part, {
-            id: part.id || _id(),
+            id: modify ? (part.id || _id()) : _id(),
             index: index + 'P' + partCount,
             complexId: this.complexId,
-            complexGroupId: part.complexGroupId || newComplexGroupId
+            complexGroupId: modify ? (part.complexGroupId || newComplexGroupId) : newComplexGroupId
           }))
           partCount++
         }
@@ -523,7 +523,7 @@ export default {
       } else {
         if (this.selectPointGroup.length == 1) {
           this.pointList.push(_.assign({}, this.selectPointGroup[0], {
-            id: this.selectPointGroup[0].id || _id(),
+            id: modify ? (this.selectPointGroup[0].id || _id()) : _id(),
             index: index
           }))
           this.resetPointForm(true, this.selectPointGroup[0])
@@ -547,7 +547,7 @@ export default {
         existIndex = parseInt(this.pointList[foundExistPointIndex].index) + ''
         this.pointList.splice(foundExistPointIndex, 1)
       }
-      this.addPoint(existIndex)
+      this.addPoint(existIndex, true)
       this.resetPointForm(false)
     },
     resetPointForm (repeat, point={}) {

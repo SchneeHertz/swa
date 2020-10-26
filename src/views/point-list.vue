@@ -544,8 +544,10 @@ export default {
         })
       } else {
         let foundExistPointIndex = _.findIndex(this.pointList, {id: existId})
-        existIndex = parseInt(this.pointList[foundExistPointIndex].index) + ''
-        this.pointList.splice(foundExistPointIndex, 1)
+        if (foundExistPointIndex != -1) {
+          existIndex = parseInt(this.pointList[foundExistPointIndex].index) + ''
+          this.pointList.splice(foundExistPointIndex, 1)
+        }
       }
       this.addPoint(existIndex, true)
       this.resetPointForm(false)

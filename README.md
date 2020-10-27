@@ -11,7 +11,7 @@ rename /dbs_template to /dbs
 ### Compiles and hot-reloads for development
 ```
 npm run serve
-node koa_swa.js
+node server.js
 ```
 
 ### Compiles and minifies for production
@@ -21,7 +21,7 @@ npm run build
 
 ### Run production
 ```
-node koa_swa.js
+node server.js
 ```
 visit [http://localhost:8086](http://localhost:8086)
 

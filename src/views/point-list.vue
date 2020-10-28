@@ -148,6 +148,7 @@
                     size="mini"
                     placeholder="English"
                     class="table-inner-filter"
+                    clearable
                   />
                 </template>
               </el-table-column>
@@ -163,6 +164,7 @@
                     size="mini"
                     placeholder="Chinese"
                     class="table-inner-filter"
+                    clearable
                   />
                 </template>
               </el-table-column>

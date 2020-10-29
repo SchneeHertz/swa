@@ -3,7 +3,7 @@ const Koa = require('koa')
 const KoaRouter = require('koa-router')
 const koaBodyparser = require('koa-bodyparser')
 const logger = require('koa-logger')
-const cors = require('koa2-cors')
+// const cors = require('koa2-cors')
 const path = require('path')
 const serve = require('koa-static')
 const jwt = require('koa-jwt')
@@ -15,7 +15,7 @@ const app = new Koa()
 const router = KoaRouter()
 
 app.use(logger())
-app.use(cors())
+// app.use(cors())
 app.use(koaBodyparser({
   jsonLimit: '32mb'
 }))

@@ -258,7 +258,7 @@ export default {
     let that = this
     $(`#input-${that.data.id}`).areacomplete({
       wordCount: 1,
-      mode: 'outer',
+      mode: 'inner',
       on: {
         query (text, cb) {
           if(/[A-Z]/.test(text[0])){

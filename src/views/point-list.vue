@@ -470,16 +470,8 @@ export default {
       this.selectPointGroup.push({id: _id(), condition: {}})
     },
     checkDuplicate () {
-      let englishArray = this.pointList.map(p=>{
-        return {
-          trimEnglish: (p.englishDescription || '').split('(', 1)[0],
-          index: p.index,
-          englishDescription: p.englishDescription
-        }
-      })
       _.forIn(this.selectPointGroup, point=>{
-        let trimEnglish = (point.englishDescription || '').split('(', 1)[0]
-        let foundMatch = _.find(englishArray, {trimEnglish: trimEnglish})
+        let foundMatch = _.find(this.pointList, {englishDescription: point.englishDescription})
         if (foundMatch) {
           this.$alert(`${point.englishDescription}与${foundMatch.index} ${foundMatch.englishDescription} 描述重复, 请注意。`, '提示', {
             confirmButtonText: '确定'

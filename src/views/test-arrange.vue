@@ -1354,7 +1354,7 @@ export default {
                   return sign.regulationId == regulation.id &&  sign.group == regulation.method.group
                 }) || !forComplexCheck
               ) {
-                  checked = false
+                checked = false
               } else {
                 pointPicked[point.id + _.get(point, 'elements', []).map(e=>e.id).join('_')].push({regulationId: regulation.id, group: regulation.method.group})
               }

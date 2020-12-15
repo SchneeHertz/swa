@@ -192,7 +192,8 @@ import NameFormItem from '@/components/NameFormItem.vue'
 import {generate as _id } from 'shortid'
 import DiffMatchPatch from 'diff-match-patch'
 
-// const OTSHOST = '10.168.128.44/OTS_UAT'
+const PROTOCOL = 'http'
+// const OTSHOST = 'cnots-uat.sgs.net/OTS_UAT'
 const OTSHOST = 'cnots.sgs.net/OTS'
 
 function geneVuexValue (property) {
@@ -217,7 +218,7 @@ async function exportData (taskList) {
     })
     await $.ajax({
       type:'POST',
-      url:`http://${OTSHOST}/Services/CaseService.asmx/ImportTestItemTask`,
+      url:`${PROTOCOL}://${OTSHOST}/Services/CaseService.asmx/ImportTestItemTask`,
       data:{json: JSON.stringify({ImportData: [uploadTask]})}
     })
     .then(res=>{
@@ -238,7 +239,7 @@ async function exportData (taskList) {
     exportPercentage.value =  Math.round(inCount / taskCount * 100)
     await $.ajax({
       type:'POST',
-      url:`http://${OTSHOST}/Services/CaseService.asmx/GetTaskList`,
+      url:`${PROTOCOL}://${OTSHOST}/Services/CaseService.asmx/GetTaskList`,
       data: {
         CaseNumber: null, 
         ReportNumber: null, 

@@ -7,15 +7,24 @@
           <el-input v-model="caseNumber" class="case-number" size="small" @keyup.enter.native="loadTasklist">
             <template #prepend>Case:</template>
           </el-input>
-          <el-autocomplete
-            v-model="searchString"
-            :fetch-suggestions="querySearch"
+          <el-select
+            v-model="searchStrArray"
+            allow-create
+            filterable
+            multiple
             clearable
-            class="pointlist-searchstring"
+            collapse-tags
             size="small"
+            placeholder="筛选"
+            class="pointlist-searchstring"
           >
-            <template #prepend>筛选</template>
-          </el-autocomplete>
+            <el-option
+              v-for="prop in pointListPropList"
+              :key="prop.value"
+              :value="prop.value"
+              :label="prop.label"
+            ></el-option>
+          </el-select>
           <overlay-scrollbars
             :options="{scrollbars: {autoHide: 'scroll'}}"
             class="ol-point-list"
@@ -387,7 +396,6 @@ export default {
       dialogVisible: false,
       mixByStyle: false,
       selectClient: [],
-      searchString: undefined,
       loadTasklistLoading: false,
       copyedList: [],
       hideEmptyMethod: false,
@@ -400,7 +408,8 @@ export default {
         icgroup: '分组',
         icenglish: '英文描述',
         icchinese: '中文描述'
-      }
+      },
+      searchStrArray: []
     }
   },
   computed: {
@@ -419,7 +428,11 @@ export default {
       }
     },
     displayPointList () {
-      return this.pointList.filter(data => !this.searchString || JSON.stringify(data).toLowerCase().includes(this.searchString.toLowerCase()))
+      if (_.isEmpty(this.searchStrArray)) {
+        return this.pointList
+      } else {
+        return this.pointList.filter(data => _.every(this.searchStrArray, str=> JSON.stringify(data).toLowerCase().includes(str.toLowerCase())))
+      }
     },
     pointGroupList: {
       get () {
@@ -635,9 +648,15 @@ export default {
         return []
       }
     },
-    pointListMaterialList () {
+    pointListPropList () {
+      let PARTCONDITION = '_a12VsWvQ'
+      let ACCESSCONDITION = '1yrtsYdd12'
       let MATERIALCONDTION = 'material'
-      return _(this.pointList).map(p=>_.get(p, ['condition', MATERIALCONDTION], [])).flatten().compact().uniq().map(m=>({value: m})).value()
+      return _(
+        this.pointList.map(p=>_.get(p, ['condition', PARTCONDITION]))
+        .concat(this.pointList.map(p=>_.get(p, ['condition', ACCESSCONDITION])))
+        .concat(this.pointList.map(p=>_.get(p, ['condition', MATERIALCONDTION], [])))
+      ).flatten().compact().uniq().map(p=>({label: _.truncate(p, {length: 16}), value: p})).value()
     }
   },
   mounted () {
@@ -744,11 +763,6 @@ export default {
         this.loadTasklistLoading = false
         this.hideEmptyMethod = true
       })
-    },
-    querySearch (searchString, callback) {
-      callback(
-        searchString ? this.pointListMaterialList.filter(m=>m.value.toLowerCase().includes(searchString.toLowerCase())) : this.pointListMaterialList
-      )
     },
     refreshDescription (methodBaseData) {
       _.forIn(methodBaseData, methodG=>{
@@ -1460,13 +1474,13 @@ export default {
   opacity: 0.5
 .point-list
   border-right: solid 1px rgba(0,0,0,0.125)
+  height: 100vh
 .pointlist-searchstring
-  margin-top: 1px
-
+  margin: 1px 1px 0 0
 .group-function .batch-subclause
   width: 100%
 .ol-point-list
-  height: calc(100vh - 4em - 1px)
+  height: calc(100vh - 4em - 2px)
 .point-list-item, .method-list-item
   margin: 1px
   padding: 6px
@@ -1521,6 +1535,7 @@ export default {
   position: absolute
   bottom: 1em
   right: 1.5em
+  z-index: 10
 
 .solve-option
   .card-line

@@ -1,5 +1,6 @@
 const generalData = require('../controllers/generalData')
 const caseData = require('../controllers/caseData')
+const sgsAPI = require('../controllers/sgsAPI')
 const router = require('koa-router')()
 
 router.get('/getMaterialList', generalData.getMaterialList)
@@ -22,5 +23,8 @@ router.post('/saveCaseData', caseData.saveCaseData)
 
 router.post('/getUserHistoryCase', caseData.getUserHistoryCase)
 router.get('/getUserHistoryCount', caseData.getUserHistoryCount)
+
+router.post('/getTranslate', sgsAPI.getTranslate)
+router.post('/getSpellcheck', sgsAPI.getSpellcheck)
 
 module.exports = router

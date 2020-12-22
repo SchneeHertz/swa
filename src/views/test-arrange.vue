@@ -1477,6 +1477,7 @@ export default {
   height: 100vh
 .pointlist-searchstring
   margin: 1px 1px 0 0
+  width: 100%
 .group-function .batch-subclause
   width: 100%
 .ol-point-list

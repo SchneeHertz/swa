@@ -146,7 +146,9 @@ export default {
     styleList: Array,
     wordList: Array,
     nextIndex: String,
-    enableMainPartSelect: Boolean
+    enableMainPartSelect: Boolean,
+    spellcheck: Boolean,
+    translate: Boolean
   },
   data () {
     return {
@@ -283,7 +285,30 @@ export default {
     },
     fixAreaComplete () {
       this.$set(this.data, 'englishDescription', _.upperFirst($(`#input-${this.data.id}`)[0].value))
+      if (this.spellcheck && this.data.englishDescription) {
+        this.$http.post('/data/getSpellcheck', {
+          text: this.data.englishDescription
+        })
+        .then(res=>{
+          if (res.data.isCorrected) {
+            this.$set(this.data, 'englishDescription', res.data.correction)
+          }
+          this.getTranslate(res.data.correction)
+        })
+      } else {
+        this.getTranslate(this.data.englishDescription)
+      }
     },
+    getTranslate (englishDescription) {
+      if (this.translate && englishDescription && !this.data.chineseDescription) {
+        this.$http.post('/data/getTranslate', {
+          text: englishDescription
+        })
+        .then(res=>{
+          this.$set(this.data, 'chineseDescription', res.data.texts.join(''))
+        })
+      }
+    }
   }
 }
 </script>

@@ -9,6 +9,8 @@
               <template #prepend>Case:</template>
             </el-input>
             <div class="point-function-button">
+              <el-switch v-model="useTranslate" active-text="Translate" class="style-switch"></el-switch>
+              <el-switch v-model="useSpellcheck" active-text="Spellcheck" class="style-switch"></el-switch>
               <el-switch v-model="useStyle" active-text="Style" @change="handleStyleSwitchChange" class="style-switch"></el-switch>
               <el-button type="primary" size="small" class="copy-pointlist-button" plain @click="showCopyPointList = !showCopyPointList">从旧Case导入</el-button>
               <el-dialog
@@ -82,6 +84,8 @@
                     :styleList="styleList"
                     :wordList="wordList"
                     :enableMainPartSelect="enableMainPartSelect"
+                    :spellcheck="useSpellcheck"
+                    :translate="useTranslate"
                     @copy-point="handleCopyPart(point.id)"
                     @delete-point="handleDeletePart(point.id)"
                   />
@@ -260,6 +264,8 @@ export default {
       loadPointListLoading: false,
       materialObj: {},
       useStyle: false,
+      useSpellcheck: true,
+      useTranslate: false,
       selectPointGroup: [{id: _id(), condition: {}}],
       searchEnglishString: '',
       searchChineseString: '',
@@ -285,6 +291,7 @@ export default {
     caseTestitemList: geneVuexValue('caseTestitemList'),
     existCaseInfo: geneVuexValue('existCaseInfo'),
     pointList: geneVuexValue('pointList'),
+    viewSetting: geneVuexValue('viewSetting'),
     simpleConditionList () {
       return _.chain(this.conditionList).pick(['single', 'multiple', 'special']).values().flatten().filter(e=>!e.caseRank).sortBy('rank').value()
     },
@@ -348,6 +355,8 @@ export default {
     if (this.caseNumber) {
       this.preLoad()
     }
+    this.useSpellcheck = _.isUndefined(this.viewSetting.useSpellcheck) ? true : this.viewSetting.useSpellcheck
+    this.useTranslate = _.isUndefined(this.viewSetting.useTranslate) ? false : this.viewSetting.useTranslate
   },
   watch: {
 
@@ -548,7 +557,7 @@ export default {
     },
     resetPointForm (repeat, point={}) {
       if (repeat) {
-        this.selectPointGroup = [{id: _id(), condition: _.cloneDeep(point)['condition']}]
+        this.selectPointGroup = [{id: _id(), condition: _.cloneDeep(point)['condition'], style: _.cloneDeep(point)['style']}]
       } else {
         this.selectPointGroup = [{id: _id(), condition: {}}]
       }

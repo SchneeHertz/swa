@@ -26,7 +26,7 @@
         <el-col :span="7">
           <el-card class="view-setting">
             <template #header>设置</template>
-            <NameFormItem class="card-line" prependWidth="30px">
+            <NameFormItem class="card-line" prependWidth="90px">
               <template #prepend>测试界面语言</template>
               <el-select 
                 v-model="viewSetting.language"
@@ -36,7 +36,7 @@
                 <el-option label="中文" value="chineseDescription"></el-option>
               </el-select>
             </NameFormItem>
-            <NameFormItem class="card-line" prependWidth="30px">
+            <NameFormItem class="card-line" prependWidth="90px">
               <template #prepend>测试界面列数</template>
               <el-select
                 v-model="viewSetting.column"
@@ -44,6 +44,26 @@
               >
                 <el-option label="1" :value="1"></el-option>
                 <el-option label="2" :value="2"></el-option>
+              </el-select>
+            </NameFormItem>
+            <NameFormItem class="card-line" prependWidth="90px">
+              <template #prepend>使用拼写纠正</template>
+              <el-select 
+                v-model="viewSetting.useSpellcheck"
+                @change="saveSetting"
+              >
+                <el-option label="是" :value="true"></el-option>
+                <el-option label="否" :value="false"></el-option>
+              </el-select>
+            </NameFormItem>
+            <NameFormItem class="card-line" prependWidth="90px">
+              <template #prepend>使用翻译</template>
+              <el-select 
+                v-model="viewSetting.useTranslate"
+                @change="saveSetting"
+              >
+                <el-option label="是" :value="true"></el-option>
+                <el-option label="否" :value="false"></el-option>
               </el-select>
             </NameFormItem>
           </el-card>

@@ -920,7 +920,7 @@ export default {
     autoSolve () {
       let startTime = new Date()
       const MATERIALCONDTION = 'material'
-      let pointList = this.resolvePointList(_.cloneDeep(this.pointList))
+      let pointList = this.resolvePointList(_.sortBy(_.cloneDeep(this.pointList), p=>parseInt(p.index)))
       let pointHashObj = {}
       let pointPicked = {}
       _.forIn(this.methodBaseData, methodObj=>{
@@ -1089,7 +1089,7 @@ export default {
           return false
         }
       })
-      let pointList = this.resolvePointList(_.cloneDeep(this.pointList))
+      let pointList = this.resolvePointList(_.sortBy(_.cloneDeep(this.pointList), p=>parseInt(p.index)))
       let selectCondition = selectMethod.condition ? selectMethod.condition : _.find(selectMethod.conditionGroup, {id: selectRegulation.method.id}).condition
       let filterByMethodList = this.pointFilterByConditionList(pointList, selectCondition)
       let filterByRegulationList = this.pointTagRegulation(filterByMethodList, [selectRegulation], {}, true)

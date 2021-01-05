@@ -18,12 +18,19 @@
             placeholder="筛选"
             class="pointlist-searchstring"
           >
-            <el-option
+            <el-tooltip 
+              effect="dark"
+              :content="prop.value"
+              placement="right"
+              :open-delay="500"
               v-for="prop in pointListPropList"
               :key="prop.value"
-              :value="prop.value"
-              :label="prop.label"
-            ></el-option>
+            >
+              <el-option
+                :value="prop.value"
+                :label="prop.label"
+              ></el-option>
+            </el-tooltip>
           </el-select>
           <overlay-scrollbars
             :options="{scrollbars: {autoHide: 'scroll'}}"
@@ -910,7 +917,7 @@ export default {
         _.forIn(methodGroup.regulationListForClient, regulation=>{
           if ( (_.difference(this.selectClient, regulation.client).length < this.selectClient.length) || regulation.switchTo ) {
             let foundGeneralRegulationIndex = _.findIndex(methodGroup.regulationList, {code: regulation.code})
-            foundGeneralRegulationIndex != -1 ? methodGroup.regulationList.splice(foundGeneralRegulationIndex, 1, regulation) : ''
+            foundGeneralRegulationIndex != -1 ? methodGroup.regulationList.splice(foundGeneralRegulationIndex, 1, regulation) : methodGroup.regulationList.push(regulation)
           }
         })
       })

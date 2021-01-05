@@ -271,6 +271,7 @@ export default {
       })
       .done(res=>{
         this.caseTestitemList = JSON.parse($(res).find('string').html())
+        this.caseTestitemList = _.filter(this.caseTestitemList, item=>/CM/ig.test(item.JobNumber))
         _.forIn(this.caseTestitemList, testitem=>{
           this.$set(testitem, 'selected', true)
           this.$set(testitem, 'isIndTest', false)

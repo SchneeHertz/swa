@@ -283,7 +283,8 @@ export default {
       showCopyPointList: false,
       sourceCaseNumber: undefined,
       sourceCasePointList: [],
-      multipleSelection: []
+      multipleSelection: [],
+      changePointListCount: 0
     }
   },
   computed: {
@@ -359,7 +360,13 @@ export default {
     this.useTranslate = _.isUndefined(this.viewSetting.useTranslate) ? false : this.viewSetting.useTranslate
   },
   watch: {
-
+    changePointListCount(newValue, oldValue){
+      if (newValue >= 10) {
+        this.savePointList()
+        this.$message({type: 'info', message: '已自动保存样品点列表', showClose: true})
+        this.changePointListCount = 0
+      }
+    }
   },
   methods: {
     handleCellClick (row, column) {
@@ -534,6 +541,7 @@ export default {
           this.$message({type: 'warning', message: '请选择复合类型', showClose: true})
         }
       }
+      this.changePointListCount ++
     },
     modifyPoint () {
       let existComplexGroupId = _.get(this.selectPointGroup[0], 'complexGroupId')

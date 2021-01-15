@@ -1425,7 +1425,31 @@ export default {
       }
     },
     toNextPage () {
-      this.$router.push('/preview')
+      this.$msgbox({
+        title: '提示',
+        message: '即将跳转，请确认是否需要保存当前数据？',
+        showCancelButton: true,
+        confirmButtonText: '下一步',
+        cancelButtonText: '保存',
+        distinguishCancelAndClose: true,
+        beforeClose: (action, instance, done) => {
+          if (action == 'cancel'){
+            let testList = _(this.methodBaseData).map(m=>m.list).flatten().compact().value()
+            if (_.isEmpty(testList)) {
+              this.$message({type: 'warning', message: '测试列表为空', showClose: true})
+            } else {
+              this.saveTasklist()
+            }
+          } else {
+            done()
+          }
+        }
+      })
+      .then(action=>{
+        if (action == 'confirm') {
+          this.$router.push('/preview')
+        }
+      })
     },
     confirmDialog(callback, message = {question: '继续?', success: '操作完成', cancel: '已取消'}, failCallback = new Function) {
       this.$confirm(message.question, '提示', {confirmButtonText: '确定', cancelButtonText: '取消', type: 'warning'})

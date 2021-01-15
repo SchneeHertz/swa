@@ -108,6 +108,7 @@ import BaseHeader from '@/components/BaseHeader.vue'
 
 const PROTOCOL = 'http'
 // const OTSHOST = 'cnots-uat.sgs.net/OTS_UAT'
+// const OTSHOST = '10.168.136.40:8001'
 const OTSHOST = 'cnots.sgs.net/OTS'
 
 function geneVuexValue (property) {
@@ -316,7 +317,26 @@ export default {
       })
     },
     toNextPage () {
-      this.$router.push('/point-list')
+      this.$msgbox({
+        title: '提示',
+        message: '即将跳转，请确认是否需要保存当前数据？',
+        showCancelButton: true,
+        confirmButtonText: '下一步',
+        cancelButtonText: '保存',
+        distinguishCancelAndClose: true,
+        beforeClose: (action, instance, done) => {
+          if (action == 'cancel'){
+            this.saveCaseInfo()
+          } else {
+            done()
+          }
+        }
+      })
+      .then(action=>{
+        if (action == 'confirm') {
+          this.$router.push('/point-list')
+        }
+      })
     },
   }
 }

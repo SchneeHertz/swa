@@ -340,6 +340,10 @@ import DialogRegulationSelector from '@/components/DialogRegulationSelector.vue'
 
 import {generate as _id } from 'shortid'
 
+const PARTCONDITION = '_a12VsWvQ'
+const MATERIALCONDTION = 'material'
+const ACCESSCONDITION = '1yrtsYdd12'
+
 function geneVuexValue (property) {
   return {
     get () { return this.$store.state[property] },
@@ -471,15 +475,11 @@ export default {
       }
     },
     ContactList () {
-      const ACCESSIBLE = '1yrtsYdd12'
-      let foundCondition =  _.find(this.conditionList['single'], {id: ACCESSIBLE})
+      let foundCondition =  _.find(this.conditionList['single'], {id: ACCESSCONDITION})
       return _.get(foundCondition, 'list', []).map(o=>o.value)
     },
     displayCheckTable () {
       if (this.showRegulationPointCount) {
-        const ACCESSIBLE = '1yrtsYdd12'
-        const MATERIAL = 'material'
-        const PARTTYPE = '_a12VsWvQ'
         let groupList = _(_.filter(this.selectMethod.list, o=>this.selectRegulation.list.includes(o.id))).map(o=>o.list).flatten().value()
         let popElement = (groupList) => {
           let tempList = []
@@ -503,12 +503,12 @@ export default {
         let geneCountObj = (list) => {
           let tempObj = {}
           _.forIn(list, point=>{
-            let partType = point.condition[PARTTYPE]
+            let partType = point.condition[PARTCONDITION]
             if (!tempObj[partType]) {
               tempObj[partType] = []
             }
-            let material = point.condition[MATERIAL]
-            let accessible = point.condition[ACCESSIBLE]
+            let material = point.condition[MATERIALCONDTION]
+            let accessible = point.condition[ACCESSCONDITION]
             let findExist = _.find(tempObj[partType], {[partType]: material})
             if (!findExist) {
               tempObj[partType].push({
@@ -656,9 +656,6 @@ export default {
       }
     },
     pointListPropList () {
-      let PARTCONDITION = '_a12VsWvQ'
-      let ACCESSCONDITION = '1yrtsYdd12'
-      let MATERIALCONDTION = 'material'
       return _(
         this.pointList.map(p=>_.get(p, ['condition', PARTCONDITION]))
         .concat(this.pointList.map(p=>_.get(p, ['condition', ACCESSCONDITION])))
@@ -780,6 +777,16 @@ export default {
               point.englishDescription = foundSourcePoint.englishDescription
               point.chineseDescription = foundSourcePoint.chineseDescription
               point.style = foundSourcePoint.style
+            }
+            if (!_.isEmpty(point.elements)) {
+              _.forIn(point.elements, ePoint=>{
+                let foundSourcePoint = _.find(this.pointList, {id: ePoint.id})
+                if (foundSourcePoint) {
+                  ePoint.englishDescription = foundSourcePoint.englishDescription
+                  ePoint.chineseDescription = foundSourcePoint.chineseDescription
+                  ePoint.style = foundSourcePoint.style
+                }
+              })
             }
           })
         })
@@ -926,7 +933,6 @@ export default {
     },
     autoSolve () {
       let startTime = new Date()
-      const MATERIALCONDTION = 'material'
       let pointList = this.resolvePointList(_.sortBy(_.cloneDeep(this.pointList), p=>parseInt(p.index)))
       let pointHashObj = {}
       let pointPicked = {}
@@ -961,6 +967,8 @@ export default {
             })
             point.groupBy.push({
               material: JSON.stringify(_.sortBy(point.condition[MATERIALCONDTION]))
+            }, {
+              accessible: point.condition[ACCESSCONDITION]
             })
           })
         })
@@ -1082,7 +1090,6 @@ export default {
     },
     autoSolveInd (selectMethod, selectRegulation) {
       let startTime = new Date()
-      const MATERIALCONDTION = 'material'
       let backupRegulation =_.cloneDeep(_.find(selectMethod.regulationListBackup, r=>{
         return r.code == selectRegulation.code && r.method.id == selectRegulation.method.id
       }))
@@ -1126,6 +1133,8 @@ export default {
         })
         point.groupBy.push({
           material: JSON.stringify(_.sortBy(point.condition[MATERIALCONDTION]))
+        }, {
+          accessible: point.condition[ACCESSCONDITION]
         })
       })
       let groupList = _.groupBy(filterPointList, point=>{

@@ -368,16 +368,18 @@ export default {
       _.forIn(this.methodBaseData, methodGroup=>{
         let mainGroupList = []
         _.forIn(methodGroup.list, group=>{
-          let pointList = []
-          _.forIn(group.list, point=>{
-            pointList.push(
-              _.assignWith(
-                ..._.flattenDeep(this.resolvePointTree(point)),
-                (obj, src)=>[obj, src].join(' w/ ')
+          if (!_.isEmpty(group.list)) {
+            let pointList = []
+            _.forIn(group.list, point=>{
+              pointList.push(
+                _.assignWith(
+                  ..._.flattenDeep(this.resolvePointTree(point)),
+                  (obj, src)=>[obj, src].join(' w/ ')
+                )
               )
-            )
-          })
-          group.description = _.assignWith(...pointList, (obj, src)=>[obj, src].join(' + '))
+            })
+            group.description = _.assignWith(...pointList, (obj, src)=>[obj, src].join(' + '))
+          }
         })
         let methodPointList = methodGroup.list.map(p=>p.id)
         _.forIn(methodGroup.regulationList, regulation=>{
@@ -385,7 +387,7 @@ export default {
           let sortedList = _.filter(methodPointList, pointId=>_.includes(regulation.list, pointId))
           _.forIn(sortedList, (pointId, index)=>{
             let foundPoint = _.find(methodGroup.list, {id: pointId})
-            if (foundPoint) {
+            if (foundPoint && foundPoint.description) {
               let tempComponent = {
                 ComponentNo: + index + 1 + '',
                 ComponentType: null,

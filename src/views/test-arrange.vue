@@ -989,12 +989,15 @@ export default {
             let regulationList
             let subclauseValList = {}
             let minMix = _.min(_.head(group).maxMixArray)
+            let enoughCount = _.filter(group, p=>p.condition['weightType'] == 'Enough').length
+            let maxWith = Math.ceil((group.length - enoughCount) / enoughCount)
+            maxWith < 2 ? maxWith = 2 : ''
             _.forIn(group, point=>{
               regulationList = point.regulation
               if (!point.disableWith  && point.condition['weightType'] != 'Enough') {
                 let inwith = false
                 _.forIn(group, parentPoint=>{
-                  if (parentPoint.condition['weightType'] == 'Enough' && parentPoint.elements.length < 2) {
+                  if (parentPoint.condition['weightType'] == 'Enough' && parentPoint.elements.length < maxWith) {
                     parentPoint.elements.push(_.cloneDeep(point))
                     point.minorType = 'withed'
                     inwith = true
@@ -1153,12 +1156,15 @@ export default {
         let regulationList
         let subclauseValList = {}
         let minMix = _.min(_.head(group).maxMixArray)
+        let enoughCount = _.filter(group, p=>p.condition['weightType'] == 'Enough').length
+        let maxWith = Math.ceil((group.length - enoughCount) / enoughCount)
+        maxWith < 2 ? maxWith = 2 : ''
         _.forIn(group, point=>{
           regulationList = point.regulation
           if (!point.disableWith  && point.condition['weightType'] != 'Enough') {
             let inwith = false
             _.forIn(group, parentPoint=>{
-              if (parentPoint.condition['weightType'] == 'Enough' && parentPoint.elements.length < 2) {
+              if (parentPoint.condition['weightType'] == 'Enough' && parentPoint.elements.length < maxWith) {
                 parentPoint.elements.push(_.cloneDeep(point))
                 point.minorType = 'withed'
                 inwith = true

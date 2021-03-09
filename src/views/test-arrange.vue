@@ -78,7 +78,7 @@
                     >
                       <el-table-column :label="type" width="100">
                         <template #default="scope">
-                          {{scope.row[type].join(' & ')}}
+                          {{scope.row[type]}}
                         </template>
                       </el-table-column>
                       <el-table-column 
@@ -500,6 +500,13 @@ export default {
           }
         }
         let selectPointList = popElement(_.cloneDeep(groupList))
+        let solveMaterial = (material) => {
+          if (_.isArray(material)) {
+            return _.sortBy(material).join(' & ')
+          } else {
+            return JSON.stringify(material)
+          }
+        }
         let geneCountObj = (list) => {
           let tempObj = {}
           _.forIn(list, point=>{
@@ -509,10 +516,10 @@ export default {
             }
             let material = point.condition[MATERIALCONDTION]
             let accessible = point.condition[ACCESSCONDITION]
-            let findExist = _.find(tempObj[partType], {[partType]: material})
+            let findExist = _.find(tempObj[partType], {[partType]: solveMaterial(material)})
             if (!findExist) {
               tempObj[partType].push({
-                [partType]: material,
+                [partType]: solveMaterial(material),
                 [accessible]: 1
               })
             } else {
@@ -523,15 +530,15 @@ export default {
         }
         let selectCount = geneCountObj(selectPointList)
         let pointCount = geneCountObj(this.pointList)
-        _.forIn(pointCount, (table, partType)=>{
-          if (selectCount[partType]) {
+        _.forIn(selectCount, (table, partType)=>{
+            if (pointCount[partType]) {
             _.forIn(table, row=>{
-              let findSelect = _.find(selectCount[partType], {[partType]: row[partType]})
-              _.assignWith(row, findSelect, (obj, src)=>{
-                if (!_.isArray(obj)) {
+              let findSelect = _.find(pointCount[partType], {[partType]: row[partType]})
+              _.assignWith(findSelect, row, (f, r)=>{
+                if (!_.isString(f)) {
                   return {
-                    all: obj,
-                    select: src
+                    all: f,
+                    select: r
                   }
                 }
               })

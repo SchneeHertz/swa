@@ -61,6 +61,9 @@ export default {
       this.$emit("input", value)
     },
     removePoint (list, index) {
+      if (!_.isEmpty(list[index].elements)) {
+        list.push(...list[index].elements)
+      }
       list.splice(index, 1)
     },
     handleDbClick (id) {

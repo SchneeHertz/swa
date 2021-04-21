@@ -20,6 +20,7 @@
               class="testitem-card"
             >
               <template #header>({{testitem.TestItemID}}) {{testitem.TestItemDescription}}</template>
+              <p class="testitem-info">{{testitem.ReportNumber}} - {{testitem.JobNumber}}</p>
               <el-checkbox v-model="testitem.selected">Lab in</el-checkbox>
               <el-checkbox v-model="testitem.isIndTest">Ind test</el-checkbox>
             </el-card>
@@ -362,6 +363,10 @@ export default {
 
 .testitem-card, .condition-card
   margin: 6px 4px
+  .testitem-info
+    margin: 0 0 6px
+    color: #999999
+    font-size: 12px
 
 .bottom-function-btn
   position: absolute

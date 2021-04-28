@@ -416,6 +416,9 @@ export default {
               let middleIndex = _.last(findExistTask.taskObj.ComponentArray).ComponentNo
               ComponentArray = ComponentArray.map(c=>{c.ComponentNo = + c.ComponentNo + (+ middleIndex) + ''; return c})
               findExistTask.taskObj.ComponentArray = findExistTask.taskObj.ComponentArray.concat(ComponentArray)
+              let findExistTaskIndex = _.findIndex(taskList, task=>_.isEqual(_.omit(task.taskInfo, 'TestMethodName'), _.omit(taskInfo, 'TestMethodName')))
+              taskList.splice(findExistTaskIndex, 1)
+              taskList.push(findExistTask)
             } else {
               taskList.push({
                 id: _id(),

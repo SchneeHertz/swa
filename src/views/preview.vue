@@ -366,7 +366,7 @@ export default {
     geneTaskList () {
       let taskList = []
       _.forIn(this.methodBaseData, methodGroup=>{
-        let mainGroupList = []
+        // let mainGroupList = []
         _.forIn(methodGroup.list, group=>{
           if (!_.isEmpty(group.list)) {
             let pointList = []
@@ -411,13 +411,13 @@ export default {
               TestMethodName: regulation.method.name,
               ..._.pick(regulation.caseInfo, ['CaseNumber', 'JobNumber', 'ReportNumber', 'CaseTestItemID', 'TestItemDescription'])
             }
-            let findExistTask = _.find(mainGroupList, task=>_.isEqual(_.omit(task.taskInfo, 'TestMethodName'), _.omit(taskInfo, 'TestMethodName')))
+            let findExistTask = _.find(taskList, task=>_.isEqual(_.omit(task.taskInfo, 'TestMethodName'), _.omit(taskInfo, 'TestMethodName')))
             if (findExistTask) { //merge same source task
               let middleIndex = _.last(findExistTask.taskObj.ComponentArray).ComponentNo
               ComponentArray = ComponentArray.map(c=>{c.ComponentNo = + c.ComponentNo + (+ middleIndex) + ''; return c})
               findExistTask.taskObj.ComponentArray = findExistTask.taskObj.ComponentArray.concat(ComponentArray)
             } else {
-              mainGroupList.push({
+              taskList.push({
                 id: _id(),
                 taskInfo: {
                   TestMethodID: +regulation.method.code,
@@ -451,10 +451,11 @@ export default {
             }
           }
         })
-        taskList.push(mainGroupList)
+        // taskList.push(mainGroupList)
       })
-      taskList = _.filter(taskList, t=>!_.isEmpty(t))
-      this.taskList = _.flatten(taskList)
+      // taskList = _.filter(taskList, t=>!_.isEmpty(t))
+      // this.taskList = _.flatten(taskList)
+      this.taskList = taskList
       this.taskListBackup = _.cloneDeep(this.taskList)
       return taskList
     },

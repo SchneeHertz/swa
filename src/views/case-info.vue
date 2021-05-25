@@ -278,7 +278,7 @@ export default {
           this.$set(testitem, 'selected', true)
           this.$set(testitem, 'isIndTest', false)
         })
-        this.caseTestitemList = _.sortBy(this.caseTestitemList, 'JobNumber')
+        this.caseTestitemList = _.sortBy(this.caseTestitemList, ['JobNumber', 'TestItemID'])
         this.$http.post('/data/getRegulation', {
           idList: this.caseTestitemList.map(e=>e.TestItemID.toString())
         })
